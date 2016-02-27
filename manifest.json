@@ -1,0 +1,19 @@
+{
+  "name": "Clearbit",
+  "description": "Enrich Customer data with Clearbit",
+  "picture": "picture.png",
+  "ui": false,
+  "readme" : "readme.md",
+  "version": "0.0.1",
+  "private_settings": [
+    {
+      "name":"api_key",
+      "title": "Clearbit API Key",
+      "description":"Clearbit API Key, found in https://dashboard.clearbit.com/keys",
+      "type": "string",
+      "format": "text"
+    }
+  ],
+  "resources": [],
+  "subscriptions" : [ { "url" : "/notify" } ]
+}

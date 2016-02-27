@@ -12,9 +12,8 @@ End-Users: [See Readme here](https://dashboard.hullapp.io/readme?url=https://hul
 
 - Go to your `Hull Dashboard > Ships > Add new`
 - Paste the URL for your Heroku deployment, or use ours : `https://hull-clearbit.herokuapp.com/`
-- Enter the Segment Write Key
-- Visit the Setup Page (see below)
-- Add your ship to a Platform.
+- Enter the Clearbit API Key
+- Go to Clearbit and save the following webhook url: `https://hull-clearbit.herokuapp.com/clearbit`
 
 ### Developing :
 
@@ -26,4 +25,3 @@ npm install -g gulp
 npm install
 gulp
 ```
-# hull-clearbit
