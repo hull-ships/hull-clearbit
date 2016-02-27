@@ -39,10 +39,11 @@
   },
   "dependencies": {
     "axios": "^0.9.1",
-    "babel-core": "^6.5.2",
-    "babel-preset-es2015": "^6.5.0",
-    "babel-preset-stage-0": "^6.5.0",
-    "babel-register": "^6.5.2",
+    "babel-core": "^6.4.5",
+    "babel-preset-es2015": "^6.3.13",
+    "babel-preset-stage-0": "^6.3.13",
+    "babel-register": "^6.4.3",
+    "babel-runtime": "^6.5.0",
     "body-parser": "^1.15.0",
     "clearbit": "^1.2.1",
     "connect": "^3.4.1",
@@ -51,6 +52,7 @@
     "jwt-simple": "^0.4.1",
     "lodash": "^4.5.1",
     "minimist": "^1.2.0",
-    "moment": "^2.11.2"
+    "moment": "^2.11.2",
+    "object-mapper": "^3.0.0"
   }
 }
