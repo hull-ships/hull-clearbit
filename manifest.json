@@ -1,6 +1,7 @@
 {
   "name": "Clearbit",
-  "description": "Enrich Customer data with Clearbit",
+  "description": "Fetch additional customer data from Clearbit",
+  "tags": ["incoming", "outgoing"],
   "picture": "picture.png",
   "ui": false,
   "readme" : "readme.md",
