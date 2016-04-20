@@ -25,7 +25,7 @@ module.exports = function ({ message={} }, { ship, hull }) {
   // Only fetch if we have no initial fetch date, or if we have one older than
   // 1hr ago, and we have not stored a result
 
-  if (true || !fetched_at || (moment(fetched_at).isBefore(one_hour_ago) && !!cbId)) {
+  if (!fetched_at || (moment(fetched_at).isBefore(one_hour_ago) && !!cbId)) {
     const webhookId = jwt.encode({ organization, id, secret, userId }, shipToken);
 
     const identities = _.reduce(identities, (m, v) => {
