@@ -7,7 +7,7 @@ export default function({ hull, user = {}, person = {} }) {
   cb.fetched_at = moment().format();
   const hullUser = hull.as(user.id);
   const userProps = _.omit(props, _.keys(user));
-  hullUser.traits(cb, { source: 'cb' });
+  hullUser.traits(cb, { source: 'clearbit' });
   // Update user, skipping properties that already exist.
   return hullUser.put('me', userProps);
 }
