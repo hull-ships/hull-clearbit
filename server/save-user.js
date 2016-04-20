@@ -3,12 +3,11 @@ import map from './clearbit-mapping';
 import moment from 'moment';
 
 export default function({ hull, user = {}, person = {} }) {
-  const { props, traits } = map(person);
-  traits.cb_fetched_at = moment().format();
+  const { props, cb } = map(person);
+  cb.fetched_at = moment().format();
   const hullUser = hull.as(user.id);
-  return hullUser
-  .put('me', _.omit(props, _.keys(user)))
-  .then(() => {
-    hullUser.traits(traits);
-  });
+  const userProps = _.omit(props, _.keys(user));
+  hullUser.traits(cb, { source: 'cb' });
+  // Update user, skipping properties that already exist.
+  return hullUser.put('me', userProps);
 }

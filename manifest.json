@@ -8,6 +8,13 @@
   "version": "0.0.1",
   "private_settings": [
     {
+      "name":"excluded_domains",
+      "title": "Email Domain Excludes",
+      "description":"Domains to exclude from fetching. Comma Separated",
+      "type": "string",
+      "format": "text"
+    },
+    {
       "name":"api_key",
       "title": "Clearbit API Key",
       "description":"Clearbit API Key, found in https://dashboard.clearbit.com/keys",
