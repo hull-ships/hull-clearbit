@@ -28,13 +28,12 @@ module.exports = function (config = {}) {
 
   app.use(bodyParser.urlencoded({ extended: false }));
   app.use(bodyParser.json());
-  app.use(express.static(path.resolve(__dirname, '..', 'dist')));
-  app.use(express.static(path.resolve(__dirname, '..', 'assets')));
-  app.post('/notify', hullHandlers);
-  app.post('/clearbit', clearbitHandlers.webhooks);
 
   app.use(express.static(path.resolve(__dirname, '..', 'dist')));
   app.use(express.static(path.resolve(__dirname, '..', 'assets')));
+
+  app.post('/notify', hullHandlers);
+  app.post('/clearbit', clearbitHandlers.webhooks);
 
   app.get('/', readmeRedirect);
   app.get('/readme', readmeRedirect);
