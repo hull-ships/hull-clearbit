@@ -13,7 +13,7 @@ module.exports = function ({ message={} }, { ship, hull }) {
   const { id: cbId , fetched_at } = clearbit;
   const one_hour_ago = moment().subtract(1, 'hours');
   const { api_key, excluded_domains="" } = ship.private_settings;
-  const skip_search = _.includes(_.map((excluded_domains.split(',')||[]),(d)=>d.trim()), email.split('@')[1]|'');
+  const skip_search = _.includes(_.map((excluded_domains.split(',')||[]),(d)=>d.trim()), email.split('@')[1]||'');
 
   if (!api_key) {
     console.log('No Clearbit API key detected');
