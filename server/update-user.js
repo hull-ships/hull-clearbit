@@ -9,8 +9,8 @@ const shipToken = process.env.SHIP_TOKEN || '3095jv02939jfd';
 module.exports = function ({ message={} }, { ship, hull }) {
   const { organization, id, secret } = hull.configuration();
   const { user={} } = message;
-  const { first_name, last_name, email, id: userId, identities={}, cb={} } = user;
-  const { id: cbId , fetched_at } = cb;
+  const { first_name, last_name, email, id: userId, identities={}, clearbit={} } = user;
+  const { id: cbId , fetched_at } = clearbit;
   const one_hour_ago = moment().subtract(1, 'hours');
   const { api_key, excluded_domains="" } = ship.private_settings;
   const skip_search = _.includes(_.map((excluded_domains.split(',')||[]),(d)=>d.trim()), email.split('@')[1]|'');
@@ -52,7 +52,7 @@ module.exports = function ({ message={} }, { ship, hull }) {
 
     .catch(Person.QueuedError, (err) => {
       console.log(err);
-      return hull.as(userId).traits({ fetched_at: moment().format() }, { source: 'cb' });
+      return hull.as(userId).traits({ fetched_at: moment().format() }, { source: 'clearbit' });
     })
 
     .catch(Person.NotFoundError, (err) => {
