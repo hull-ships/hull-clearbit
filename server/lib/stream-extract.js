@@ -14,6 +14,7 @@ export default function(handler) {
       client.utils.log("batch: ", { url, format });
 
       function handleUser(user = {}) {
+        client.utils.log('bottleneck', { nbQueued: limiter.nbQueued(), isBlocked: limiter.isBlocked() });
         return handler({ message: { user: client.utils.groupTraits(user) } }, { hull: client, ship, stream: true });
       }
 
