@@ -15,7 +15,7 @@ export default function(handler) {
 
       function handleUser(user = {}) {
         client.utils.log('bottleneck', { nbQueued: limiter.nbQueued(), isBlocked: limiter.isBlocked() });
-        return handler({ message: { user: client.utils.groupTraits(user) } }, { hull: client, ship, stream: true });
+        return handler({ message: { user: client.utils.groupTraits(user) } }, { hull: client, ship, stream: false });
       }
 
       const limiter = new Bottleneck(5);
