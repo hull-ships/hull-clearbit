@@ -1,11 +1,11 @@
 {
   "name": "Clearbit",
   "description": "Fetch additional customer data from Clearbit",
-  "tags": ["incoming", "outgoing"],
+  "tags": ["incoming", "outgoing", "batch"],
   "picture": "picture.png",
   "ui": false,
   "readme" : "readme.md",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "private_settings": [
     {
       "name":"excluded_domains",

@@ -1,20 +1,28 @@
 import cache from './hull-cache';
 import Hull from 'hull';
 
-function parseConfig(params = {}) {
-  return ['organization', 'id', 'secret'].reduce((cfg, k) => {
-    const val = (params[k] || '').trim();
+function parseConfig(req = {}) {
+  const params = {
+    organization: ['organization'],
+    secret: ['secret'],
+    id: ['ship', 'id']
+  };
+  return Object.keys(params).reduce((cfg, key) => {
+    const val =  params[key].reduce((v, k) => { return v || req.params[k] || req.query[k] }, null)
+    console.warn("Hello ", { key, val })
     if (typeof val === 'string') {
-      cfg[k] = val;
+      cfg[key] = val.trim();
     } else if (val && val[0] && typeof val[0] === 'string') {
-      cfg[k] = val[0].trim();
+      cfg[key] = val[0].trim();
     }
     return cfg;
   }, {});
 }
 
 export default function (req, res, next) {
-  const config = parseConfig(req.params);
+  const config = parseConfig(req);
+
+  console.warn("Hello Config", config);
 
   if (config.organization && config.id && config.secret) {
     req.hull = req.hull || {};

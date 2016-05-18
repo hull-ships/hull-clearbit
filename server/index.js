@@ -4,13 +4,16 @@ import path from 'path';
 import { NotifHandler } from 'hull';
 import readmeRedirect from './lib/readme-redirect-middleware';
 import hullDecorator from './lib/hull-decorator';
+import streamExtract from './lib/stream-extract';
+import updateUser from './update-user';
+import webhookHandler from './clearbit-webhooks.js';
 
 const hullHandlers = NotifHandler({
   onSubscribe() {
     console.warn('Hello new subscriber !');
   },
   events: {
-    'user_report:update': require('./update-user')
+    'user_report:update': updateUser
   }
 });
 
@@ -19,7 +22,8 @@ const clearbitHandlers = hullDecorator({
     console.warn('Boom error', err, err.stack);
   },
   handlers: {
-    webhooks: require('./clearbit-webhooks.js')
+    webhooks: webhookHandler,
+    batch: streamExtract(updateUser)
   }
 });
 
@@ -33,6 +37,7 @@ module.exports = function (config = {}) {
   app.use(express.static(path.resolve(__dirname, '..', 'assets')));
 
   app.post('/notify', hullHandlers);
+  app.post('/batch', clearbitHandlers.batch);
   app.post('/clearbit', clearbitHandlers.webhooks);
 
   app.get('/', readmeRedirect);
