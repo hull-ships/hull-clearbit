@@ -1,13 +1,33 @@
 import _ from 'lodash';
-import map from './clearbit-mapping';
-import moment from 'moment';
+import mapper from 'object-mapper'
+import MAPPING from './clearbit-mapping';
 
 export default function({ hull, user = {}, person = {} }) {
-  const { props, clearbit } = map(person);
-  clearbit.fetched_at = moment().format();
-  const hullUser = hull.as(user.id);
-  const userProps = _.omit(props, _.keys(user));
-  hullUser.traits(clearbit, { source: 'clearbit' });
-  // Update user, skipping properties that already exist.
-  return hullUser.put('me', userProps);
+  const { id: shipId } = hull.configuration();
+  const mapping = _.reduce(MAPPING, (map, key, val) => {
+    return Object.assign(map, {
+      [val]: {
+        key,
+        transform: (v) => {
+          const accessor = key.replace('.', '_').replace('/', '.');
+          const userVal = _.get(user, accessor);
+          if (_.isUndefined(v)) return;
+          if (_.isUndefined(userVal)) return v;
+          if (key.match(/^clearbit/) && userVal !== v) {
+            return v
+          }
+        }
+      }
+    });
+  }, {})
+
+  const traits = mapper.merge(person, {}, mapping);
+
+  if (!_.isEmpty(traits)) {
+    hull.utils.log("[user.traits]", user.id, JSON.stringify(traits));
+    return hull.as(user.id).traits(traits);
+  } else {
+    hull.utils.log("[user.skip]", user.id);
+  }
+
 }

@@ -3,7 +3,8 @@ import bodyParser from 'body-parser';
 import path from 'path';
 import { NotifHandler } from 'hull';
 import readmeRedirect from './lib/readme-redirect-middleware';
-import hullDecorator from './lib/hull-decorator';
+import errorHandler from './lib/error-handler';
+import hullMiddleware from './lib/hull-middleware';
 import streamExtract from './lib/stream-extract';
 import updateUser from './update-user';
 import webhookHandler from './clearbit-webhooks.js';
@@ -17,15 +18,6 @@ const hullHandlers = NotifHandler({
   }
 });
 
-const clearbitHandlers = hullDecorator({
-  onError(err) {
-    console.warn('Boom error', err, err.stack);
-  },
-  handlers: {
-    webhooks: webhookHandler,
-    batch: streamExtract(updateUser)
-  }
-});
 
 module.exports = function (config = {}) {
   const app = express();
@@ -36,9 +28,11 @@ module.exports = function (config = {}) {
   app.use(express.static(path.resolve(__dirname, '..', 'dist')));
   app.use(express.static(path.resolve(__dirname, '..', 'assets')));
 
+  app.use(errorHandler());
+
   app.post('/notify', hullHandlers);
-  app.post('/batch', clearbitHandlers.batch);
-  app.post('/clearbit', clearbitHandlers.webhooks);
+  app.post('/batch', hullMiddleware, streamExtract(updateUser));
+  app.post('/clearbit', webhookHandler);
 
   app.get('/', readmeRedirect);
   app.get('/readme', readmeRedirect);

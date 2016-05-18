@@ -6,61 +6,80 @@ import moment from 'moment';
 
 const shipToken = process.env.SHIP_TOKEN || '3095jv02939jfd';
 
-module.exports = function ({ message={} }, { ship, hull }) {
-  const { organization, id, secret } = hull.configuration();
-  const { user={} } = message;
-  const { first_name, last_name, email, id: userId, identities={}, clearbit={} } = user;
-  const { id: cbId , fetched_at } = clearbit;
-  const one_hour_ago = moment().subtract(1, 'hours');
-  const { api_key, excluded_domains="" } = ship.private_settings;
-  const skip_search = _.includes(_.map((excluded_domains.split(',')||[]),(d)=>d.trim()), email.split('@')[1]||'');
+module.exports = function ({ message={} }, { ship, hull, stream = false }) {
+  try {
+    const { organization, id, secret } = hull.configuration();
+    const { user={} } = message;
+    const { first_name, last_name, email = '', id: userId, identities={}, clearbit={} } = user;
+    const { id: cbId , fetched_at } = clearbit;
+    const one_hour_ago = moment().subtract(1, 'hours');
+    const { api_key, excluded_domains="" } = ship.private_settings;
 
-  if (!api_key) {
-    console.log('No Clearbit API key detected');
-    return;
-  }
+    const emailDomain = (email || "").split('@')[1];
+    const excludedDomains = excluded_domains.split(',').map(d => d.trim());
+    const skippedDomain = _.includes(excludedDomains, emailDomain);
 
-  const { Person } = new Client({ key: api_key });
+    if (!api_key) {
+      const errorMessage = "No Clearbit API key detected";
+      hull.utils.log(errorMessage);
+      return Promise.reject(new Error(errorMessage));
+    }
 
-  // Only fetch if we have no initial fetch date, or if we have one older than
-  // 1hr ago, and we have not stored a result
+    if (!email) {
+      hull.utils.log("Skip user with id = " + user.id);
+      return Promise.resolve(user);
+    }
 
-  if (!fetched_at || (moment(fetched_at).isBefore(one_hour_ago) && !!cbId)) {
-    const webhookId = jwt.encode({ organization, id, secret, userId }, shipToken);
+    const { Person } = new Client({ key: api_key });
 
-    const identities = _.reduce(identities, (m, v) => {
-      m[`${v.provider}_handle`] = v.uid;
-      return m;
-    }, {});
+    // Only fetch if we have no initial fetch date, or if we have one older than
+    // 1hr ago, and we have not stored a result
 
-    const payload = {
-      ...identities,
-      webhook_id: webhookId,
-      email: email,
-      subscribe: true
-    };
+    if (!fetched_at || (moment(fetched_at).isBefore(one_hour_ago) && !!cbId && !skippedDomain)) {
+      const webhookId = jwt.encode({ organization, id, secret, userId }, shipToken);
 
-    // More data for Clearbit to find user if we have it.
-    if (first_name) { payload.given_name = first_name; }
-    if (last_name)  { payload.family_name = last_name; }
+      const identities = _.reduce(identities, (m, v) => {
+        m[`${v.provider}_handle`] = v.uid;
+        return m;
+      }, {});
 
-    Person.find(payload)
+      const payload = {
+        ...identities,
+        webhook_id: webhookId,
+        email: email,
+        subscribe: true,
+        stream
+      };
 
-    .then((person) => {
-      saveUser({ hull, user, person });
-    })
+      // More data for Clearbit to find user if we have it.
+      if (first_name) { payload.given_name = first_name; }
+      if (last_name)  { payload.family_name = last_name; }
 
-    .catch(Person.QueuedError, (err) => {
-      console.log(err);
-      return hull.as(userId).traits({ fetched_at: moment().format() }, { source: 'clearbit' });
-    })
+      return Person.find(payload)
 
-    .catch(Person.NotFoundError, (err) => {
-      console.log(err); // Person could not be found
-    })
+      .then((person) => {
+        return saveUser({ hull, user, person });
+      })
 
-    .catch((err) => {
-      console.log('Bad/invalid request, unauthorized, Clearbit error, or failed request', err);
-    });
+      .catch(Person.QueuedError, (err) => {
+        hull.utils.log(err);
+        const fetched_at = new Date().toISOString();
+        return hull.as(userId).traits({ fetched_at }, { source: 'clearbit' });
+      })
+
+      .catch(Person.NotFoundError, (err) => {
+        hull.utils.log(err); // Person could not be found
+      })
+
+      .catch((err) => {
+        hull.utils.log('Bad/invalid request, unauthorized, Clearbit error, or failed request', err);
+      });
+
+    } else {
+      hull.utils.log("Skip user with id = " + user.id);
+      return Promise.resolve(user);
+    }
+  } catch(err) {
+    return Promise.reject(err);
   }
 }

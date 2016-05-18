@@ -3,43 +3,41 @@ import JSONStream from 'JSONStream';
 import es from 'event-stream';
 import Promise from 'bluebird';
 import _ from 'lodash';
+import Bottleneck from "bottleneck";
 
 export default function(handler) {
 
   return (req, res, next) => {
+    try {
+      const { url, format } = req.body || {};
+      const { client, ship } = req.hull;
+      client.utils.log("batch: ", { url, format });
 
-    const { url } = req.body || {};
-    const { client, ship } = req.hull;
+      function handleUser(user = {}) {
+        return handler({ message: { user: client.utils.groupTraits(user) } }, { hull: client, ship, stream: true });
+      }
 
-    if (url && client && ship) {
-      client.get('segments', { limit: 500 }).then((segments_list) => {
-        const segments = segments_list.reduce((ss,s) => {
-          ss[s.id] = s;
-          return ss;
-        }, {});
+      const limiter = new Bottleneck(4);
 
-        function getSegments(ids=[]) {
-          return ids.map ? ids.map(id => segments[id]) : [];
-        }
-
-        return request({ url })
-          .pipe(JSONStream.parse())
-          .pipe(es.mapSync(function (data) {
-            const segments = getSegments(data.segment_ids || []);
-            const user = _.omit(data, 'segment_ids');
-
-            if (process.env.DEBUG) {
-              console.warn('[batch] ', { id: user.id, email: user.email });
-            }
-
-            return handler && handler({ message: { user, segments } }, { hull: client, ship });
-          }));
-      });
-      next();
-    } else {
-      res.status(400);
-      res.send({ reason: 'missing_params' });
+      if (handler && url && client && ship && format === 'json') {
+        request({ url })
+        .pipe(JSONStream.parse())
+        .pipe(es.mapSync(function (user) {
+          limiter.schedule(handleUser, user);
+        }));
+        res.status(200);
+        res.end('ok');
+      } else {
+        res.status(400);
+        res.send({ reason: 'missing_params' });
+        res.end();
+      }
+    } catch(err) {
+      console.warn("Error", err);
+      res.status(500);
+      res.send({ reason: err.message });
       res.end();
     }
+
   }
 }

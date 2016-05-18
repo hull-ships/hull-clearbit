@@ -9,7 +9,6 @@ function parseConfig(req = {}) {
   };
   return Object.keys(params).reduce((cfg, key) => {
     const val =  params[key].reduce((v, k) => { return v || req.params[k] || req.query[k] }, null)
-    console.warn("Hello ", { key, val })
     if (typeof val === 'string') {
       cfg[key] = val.trim();
     } else if (val && val[0] && typeof val[0] === 'string') {
@@ -21,19 +20,26 @@ function parseConfig(req = {}) {
 
 export default function (req, res, next) {
   const config = parseConfig(req);
-
-  console.warn("Hello Config", config);
-
   if (config.organization && config.id && config.secret) {
     req.hull = req.hull || {};
     const hull = req.hull.client = new Hull(config);
-    const handleError = function (err) { res.handleError(err, 400); };
     cache(hull, config.id).then((ship) => {
       req.hull.ship = ship;
       next();
-    }, handleError).catch(handleError);
-  } else {
-    res.handleError(new Error('Cannot find required credentials to build a Hull instance'), 404);
+    }).catch((err) => {
+      let msg;
+      const status = 400;
+      if (typeof message !== 'string') {
+        msg = message.toString();
+        if (message.stack) {
+          console.log(message.stack);
+        }
+      } else {
+        msg = message;
+      }
+      res.status(status);
+      res.end(msg);
+    });
   }
 }
 
