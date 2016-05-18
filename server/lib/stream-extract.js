@@ -17,7 +17,7 @@ export default function(handler) {
         return handler({ message: { user: client.utils.groupTraits(user) } }, { hull: client, ship, stream: true });
       }
 
-      const limiter = new Bottleneck(4);
+      const limiter = new Bottleneck(5);
 
       if (handler && url && client && ship && format === 'json') {
         request({ url })
