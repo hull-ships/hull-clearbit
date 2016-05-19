@@ -72,13 +72,12 @@ module.exports = function ({ message={} }, { ship, hull, stream = false }) {
 
       .catch(Person.QueuedError, (err) => {
         log("User queued");
-        const fetched_at = new Date().toISOString();
-        return hull.as(userId).traits({ fetched_at }, { source: 'clearbit' });
+        return hull.as(userId).traits({ fetched_at: new Date().toISOString() }, { source: 'clearbit' });
       })
 
       .catch(Person.NotFoundError, (err) => {
         log("User not found"); // Person could not be found
-        return hull.as(userId).traits({ fetched_at }, { source: 'clearbit' });
+        return hull.as(userId).traits({ fetched_at: new Date().toISOString() }, { source: 'clearbit' });
       })
 
       .catch((err) => {
