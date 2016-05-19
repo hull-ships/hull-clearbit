@@ -68,8 +68,8 @@ module.exports = function ({ message={} }, { ship, hull, stream = false }) {
       })
 
       .catch(Person.NotFoundError, (err) => {
-        return hull.as(userId).traits({ fetched_at }, { source: 'clearbit' });
         hull.utils.log(err); // Person could not be found
+        return hull.as(userId).traits({ fetched_at }, { source: 'clearbit' });
       })
 
       .catch((err) => {
