@@ -9,10 +9,21 @@ export default function({ hull, user = {}, person = {} }) {
       [val]: {
         key,
         transform: (v) => {
+          // Replace the key to build an accessor compatible with lodash's _.get
+          // address.city -> address_city
+          // name -> name
+          // clearbit/foo -> clearbit.foo
           const accessor = key.replace('.', '_').replace('/', '.');
           const userVal = _.get(user, accessor);
+
+          // Return early is undefined
           if (_.isUndefined(v)) return;
+
+          // Only return the value if :
+          // - it's a user property and it's undefined
           if (_.isUndefined(userVal)) return v;
+
+          // - it's a clearbit trait and it has changed
           if (key.match(/^clearbit/) && userVal !== v) {
             return v
           }
@@ -25,6 +36,7 @@ export default function({ hull, user = {}, person = {} }) {
 
   if (!_.isEmpty(traits)) {
     hull.utils.log("[user.traits]", user.id, JSON.stringify(traits));
+    traits.fetched_at = new Date().toISOString();
     return hull.as(user.id).traits(traits);
   } else {
     hull.utils.log("[user.skip]", user.id);
