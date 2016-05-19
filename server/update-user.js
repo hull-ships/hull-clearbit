@@ -77,12 +77,12 @@ module.exports = function ({ message={} }, { ship, hull, stream = false }) {
       })
 
       .catch(Person.NotFoundError, (err) => {
-        hull.utils.log(err); // Person could not be found
+        log("User not found"); // Person could not be found
         return hull.as(userId).traits({ fetched_at }, { source: 'clearbit' });
       })
 
       .catch((err) => {
-        hull.utils.log('Bad/invalid request, unauthorized, Clearbit error, or failed request', err);
+        log('Bad/invalid request, unauthorized, Clearbit error, or failed request', err);
       });
 
     } else {
