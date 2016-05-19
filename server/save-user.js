@@ -39,7 +39,7 @@ export default function({ hull, user = {}, person = {} }) {
     traits['clearbit/fetched_at'] = new Date().toISOString();
     return hull.as(user.id).traits(traits);
   } else {
-    hull.utils.log("[user.skip] no changes", user.id, JSON.stringify({ person, user });
+    hull.utils.log("[user.skip] no changes", user.id, JSON.stringify({ person, user }));
   }
 
 }
