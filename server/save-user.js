@@ -36,7 +36,7 @@ export default function({ hull, user = {}, person = {} }) {
 
   if (!_.isEmpty(traits)) {
     hull.utils.log("[user.traits]", user.id, JSON.stringify(traits));
-    traits.fetched_at = new Date().toISOString();
+    traits['clearbit/fetched_at'] = new Date().toISOString();
     return hull.as(user.id).traits(traits);
   } else {
     hull.utils.log("[user.skip]", user.id);

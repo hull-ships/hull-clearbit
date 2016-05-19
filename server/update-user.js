@@ -19,14 +19,23 @@ module.exports = function ({ message={} }, { ship, hull, stream = false }) {
     const excludedDomains = excluded_domains.split(',').map(d => d.trim());
     const skippedDomain = _.includes(excludedDomains, emailDomain);
 
+
+    function log(msg, data) {
+      if (data) {
+        msg += JSON.stringify(data);
+      }
+      hull.utils.log(`[userId=${userId}]`, msg);
+    }
+
+
     if (!api_key) {
       const errorMessage = "No Clearbit API key detected";
-      hull.utils.log(errorMessage);
+      log(errorMessage);
       return Promise.reject(new Error(errorMessage));
     }
 
     if (!email) {
-      hull.utils.log("Skip user with id = " + user.id);
+      log("Skip user - no email");
       return Promise.resolve(user);
     }
 
@@ -62,7 +71,7 @@ module.exports = function ({ message={} }, { ship, hull, stream = false }) {
       })
 
       .catch(Person.QueuedError, (err) => {
-        hull.utils.log(err);
+        log("User queued");
         const fetched_at = new Date().toISOString();
         return hull.as(userId).traits({ fetched_at }, { source: 'clearbit' });
       })
