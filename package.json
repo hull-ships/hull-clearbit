@@ -40,10 +40,7 @@
     "hull-ship"
   ],
   "devDependencies": {
-    "babel-cli": "^6.10.1",
-    "babel-core": "^6.10.4",
     "babel-eslint": "^6.0.5",
-    "babel-loader": "^6.2.4",
     "eslint": "^2.13.1",
     "eslint-config-airbnb-base": "^3.0.1",
     "eslint-plugin-import": "^1.9.2",
@@ -55,6 +52,9 @@
     "watch": "^0.19.1"
   },
   "dependencies": {
+    "babel-cli": "^6.10.1",
+    "babel-core": "^6.10.4",
+    "babel-loader": "^6.2.4",
     "JSONStream": "^1.1.1",
     "axios": "^0.9.1",
     "babel-register": "^6.7.2",
