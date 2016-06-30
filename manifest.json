@@ -5,14 +5,15 @@
   "picture": "picture.png",
   "ui": false,
   "readme" : "readme.md",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "private_settings": [
     {
       "name":"excluded_domains",
       "title": "Email Domain Excludes",
-      "description":"Domains to exclude from fetching. Comma Separated",
-      "type": "string",
-      "format": "text"
+      "description":"Domains to exclude from fetching.",
+      "type": "array",
+      "items" : { "type" : "string" },
+      "format": "domains"
     },
     {
       "name":"api_key",
@@ -20,6 +21,32 @@
       "description":"Clearbit API Key, found in https://dashboard.clearbit.com/keys",
       "type": "string",
       "format": "text"
+    },
+    {
+      "name": "enrich_segments",
+      "title": "Filter users",
+      "description": "Only enrich users who match these segments.",
+      "type": "array",
+      "format": "segment",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    }, {
+      "name" : "prospect",
+      "title" : "Use Discover and Prospect APIs to generate new leads",
+      "type" : "boolean",
+      "default" : false
+    }, {
+      "name": "prospect_segments",
+      "title": "Prospect users",
+      "description": "Prospect new leads that look like users from these segments.",
+      "type": "array",
+      "format": "segment",
+      "items": {
+        "type": "string"
+      },
+      "default": []
     }
   ],
   "resources": [],
