@@ -36,7 +36,11 @@ export default class Clearbit {
 
   handleUserUpdate(message = {}) {
     // Stop right here if we do not match filters
-    if (!this.shouldEnrich(message)) return false;
+    const { user = {} } = message;
+    if (!this.shouldEnrich(message)) {
+      this.log("skipEnrich for", _.pick(user, 'email', 'name', 'id'));
+      return false;
+    }
 
     return this.enrichUser(message.user).then(
       ({ person }) => {
