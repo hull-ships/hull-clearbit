@@ -21,26 +21,10 @@ export default class Clearbit {
     this.hull = hull;
   }
 
-  static handleWebhook(req, res) {
-    const { status, type, body } = req.body;
-    const { client: hull, ship } = req.hull;
-    if (type === 'person' && status === 200) {
-      const configuration = hull.configuration();
+  // Triggers
 
-      const user = { id: req.hull.config.userId };
-      const person = body;
-      const clearbit = new Clearbit({ hull, ship });
 
-      clearbit.saveUser({ user, person }).then(
-        () => res.json({ message: "thanks" }),
-        (error) => res.status(500).json({ error })
-      )
-
-    } else {
-      res.json({ message: 'ignored' });
-    }
-  }
-
+  // NotifHandler
   static handleUserUpdate(options = {}) {
     return ({ message }, { hull, ship, req }) => {
       const clearbit = new Clearbit({
@@ -51,6 +35,69 @@ export default class Clearbit {
       return clearbit.handleUserUpdate(message);
     }
   }
+
+
+  handleUserUpdate(message = {}) {
+
+    // Stop right here if we do not match filters
+    if (!this.shouldEnrich(message)) return false;
+
+    return this.enrichUser(message.user).then(
+      ({ user, person }) => {
+        if (this.shouldProspect(message)) {
+          return this.findSimilarPersons(
+            person,
+            this.getFilterProspectOptions()
+          );
+        }
+        return person;
+      }
+    );
+  }
+
+  // BatchHandler
+  static handleWebhook({ hostSecret }) {
+    return (req, res) => {
+      const { status, type, body } = req.body;
+      const { client: hull, ship } = req.hull;
+      const user = { id: req.hull.config.userId };
+
+      if (type === 'person' && status === 200 && user.id) {
+        const configuration = hull.configuration();
+
+        console.warn('Webhook: ', JSON.stringify({
+          config: req.hull.config,
+          token: req.hull.token
+        }));
+
+        const person = body;
+        const clearbit = new Clearbit({
+          hull, ship,
+          hostSecret
+        });
+
+        Promise.all([
+          clearbit.saveUser({ user, person }),
+          hull.get(user.id + '/segments')
+        ])
+        .then(([saved, segments]) => {
+          if (clearbit.shouldProspect({ segments })) {
+            clearbit.findSimilarPersons(
+              person,
+              clearbit.getFilterProspectOptions()
+            );
+          }
+          res.json({ message: "thanks" });
+        })
+        .catch(error => {
+          res.status(error.status || 500).json({ error: error.message })
+        });
+      } else {
+        res.json({ message: 'ignored' });
+      }
+    }
+  }
+
 
   static handleBatchUpdate(options = {}) {
     return (messages = [], { hull, ship, req }) => {
@@ -81,10 +128,16 @@ export default class Clearbit {
   }
 
   alreadyHasFetchedData(user) {
+    return false;
+    const cbId = user["traits_clearbit/id"];
+    return !!cbId;
+  }
+
+  lookupIsPending(user) {
     const fetched_at = user["traits_clearbit/fetched_at"];
     const cbId = user["traits_clearbit/id"];
     const one_hour_ago = moment().subtract(1, 'hours');
-    return !!cbId;
+    return fetched_at && moment(fetched_at).isAfter(one_hour_ago) && !cbId;
   }
 
   shouldEnrich(message = {}) {
@@ -96,25 +149,29 @@ export default class Clearbit {
 
     // Merge enrich and prospect segments lists
     // To check if the user matches one of them
-    const filterSegments = enrich_segments.concat(prospect_segments);
+    const filterSegments = enrich_segments.length && enrich_segments.concat(prospect_segments);
 
-    const shouldSkipEnrichment = _.isEmpty(user.email)
-      || this.alreadyHasFetchedData(user)
-      || this.isEmailDomainExcluded(user.email)
-      || !this.isInSegments(segments, filterSegments);
+    const checks = {
+      empty: _.isEmpty(user.email),
+      alreadyFetched: this.alreadyHasFetchedData(user),
+      excludedDomain: this.isEmailDomainExcluded(user.email),
+      lookupIsPending: this.lookupIsPending(user),
+      notInSegment: !this.isInSegments(segments, filterSegments)
+    };
+
+    const shouldSkipEnrichment = _.some(checks);
 
     if (shouldSkipEnrichment) {
-      this.log("Skip enrichment for ", { id: user.id, email: user.email });
+      this.log("Skip enrichment for ", { id: user.id, email: user.email, checks });
     }
 
     return !shouldSkipEnrichment;
   }
 
   shouldProspect({ segments = [] }) {
-    this.log("shouldProspect");
-    return this.isInSegments(
+    return this.settings.enable_prospect && this.isInSegments(
       segments,
-      this.settings.enrich_segments
+      this.settings.prospect_segments
     );
   }
 
@@ -122,27 +179,23 @@ export default class Clearbit {
     this.hull.utils.log(msg, data);
   }
 
-  handleUserUpdate(message = {}, options = {}) {
-
-    this.log("handleUserUpdate");
-
-    // Stop right here if we do not match filters
-    if (!this.shouldEnrich(message)) return false;
-
-    return this.enrichUser(message.user).then(
-      ({ user, person }) => {
-
-        if (this.shouldProspect(message)) {
-          return this.findSimilarPersons(person, options);
-        }
-
-        return person;
+  getFilterProspectOptions() {
+    return [
+      'prospect_role',
+      'prospect_seniority',
+      'prospect_titles'
+    ].reduce((opts, k) => {
+      const [ cat, key ] = k.split('_')
+      const val = this.settings[k];
+      if (!_.isEmpty(val)) {
+        opts[cat] = opts[cat] || {};
+        opts[cat][key] = val;
       }
-    );
+      return opts;
+    }, { prospect: {}, company: {} });
   }
 
   getUserTraitsFromPerson({ user = {}, person = {} }, mappings) {
-    this.log("getUserTraitsFromPerson");
     const mapping = _.reduce(mappings, (map, key, val) => {
       return Object.assign(map, {
         [val]: {
@@ -179,12 +232,27 @@ export default class Clearbit {
   }
 
   saveUser({ user = {}, person = {} }) {
-    this.log("saveUser", user.id || { email: user.email })
+    let ident = user.id;
+    if (!ident && user.external_id) {
+      ident = { external_id: user.external_id };
+    }
+
+    if (!ident && user.email) {
+      ident = { email: user.email };
+    }
+
+    if (!ident) {
+      const error = new Error("Missing identifier for user");
+      error.status = 400;
+      return Promise.reject(error);
+    }
+
     const traits = this.getUserTraitsFromPerson(
       { user, person },
       Mappings.Person
     );
     traits["clearbit/fetched_at"] = new Date().toISOString();
+
     return this.hull
       .as(user.id || { email: user.email })
       .traits(traits)
@@ -192,9 +260,9 @@ export default class Clearbit {
   }
 
   saveProspect(person = {}) {
-    this.log("saveProspect", person.email);
     const traits = this.getUserTraitsFromPerson({ person }, Mappings.Prospect);
     traits["clearbit/prospected_at"] = new Date().toISOString();
+    this.log("saveProspect", { email: person.email, traits })
     this.hull
       .as({ email: person.email })
       .traits(traits)
@@ -208,7 +276,6 @@ export default class Clearbit {
   }
 
   enrichUser(user = {}) {
-    this.log("enrichUser");
     const touchUser = this.saveUser.bind(this, { user });
 
     const payload = {
@@ -225,6 +292,8 @@ export default class Clearbit {
       payload.webhook_id = this.getWebhookId(user.id);
     }
 
+    this.log("enrichUser", payload);
+
     const { Person } = this.client;
 
     return Person.find(payload)
@@ -233,29 +302,40 @@ export default class Clearbit {
       .catch(Person.NotFoundError, touchUser);
   }
 
-  findSimilarPersons(person = {}, options) {
-    const { role, seniority, domain } = person.employment || {};
-    return this.discoverSimilarCompanies(domain, options)
+  findSimilarPersons(person = {}, options = {}) {
+    const { domain } = person.employment || {};
+    const { role, seniority, titles } = options.prospect;
+    this.log("findSimilarPersons", { domain, options });
+    return this.discoverSimilarCompanies(domain, options.company)
       .then((companies = []) => {
+
+        console.warn(`>> Found ${companies.length} companies !`);
+
         return Promise.all(companies.map(company =>
-          this.fetchProspectsFromCompany(company, {
-            role, seniority
-          })
+          this.fetchProspectsFromCompany(company, options.prospect)
         ));
-      });
+      }).catch(err => console.warn("Boom clearbit error", err));
   }
 
-  fetchProspectsFromCompany(company = {}, { role, seniority }) {
+  fetchProspectsFromCompany(company = {}, { role, seniority, titles }) {
+    const limit = this.settings.limit_prospects;
     const { domain } = company;
     const query = {
       domain,
-      seniority, role,
+      seniority,
+      role,
+      titles,
+      limit,
       email: true
     };
 
+    this.log("fetchProspectsFromCompany", { domain, seniority, role });
+
     this.client.Prospector.search(query)
       .then((people) => {
+        this.log(`++ found ${people.length} Prospects for `, query);
         people.map(prospect => {
+          this.log(">> foundProspect", prospect);
           prospect.company = company;
           this.saveProspect(prospect);
           this.enrichUser({ email: prospect.email });
@@ -264,9 +344,10 @@ export default class Clearbit {
   }
 
   discoverSimilarCompanies(similar, filters = {}) {
-    this.log("discoverSimilarCompanies: ", similar, filters);
+    const limit = this.settings.limit_companies;
     const query = { ...filters, similar };
-    const search = similar ? this.client.Discovery.search({ query }) : Promise.resolve({ results: [] });
+    this.log("discoverSimilarCompanies: ", { query, limit });
+    const search = similar ? this.client.Discovery.search({ query, limit }) : Promise.resolve({ results: [] });
     return search.then(response => response.results);
   }
 

@@ -26,7 +26,7 @@ module.exports = function Server(options = {}) {
     bodyParser.json(),
     extractToken,
     Middlewares.hullClient({ hostSecret }),
-    Clearbit.handleWebhook
+    Clearbit.handleWebhook({ hostSecret })
   )
 
   app.post("/batch", BatchHandler({
