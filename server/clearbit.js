@@ -4,8 +4,8 @@ import _ from "lodash";
 import Promise from "bluebird";
 import ObjectMapper from "object-mapper";
 import Mappings from "./clearbit-mapping";
-import DOMAINS from './domains';
-import jwt from 'jwt-simple';
+import DOMAINS from "./domains";
+import jwt from "jwt-simple";
 
 export default class Clearbit {
 
@@ -21,29 +21,24 @@ export default class Clearbit {
     this.hull = hull;
   }
 
-  // Triggers
-
-
   // NotifHandler
   static handleUserUpdate(options = {}) {
-    return ({ message }, { hull, ship, req }) => {
+    return ({ message }, { hull, ship }) => {
       const clearbit = new Clearbit({
         hull, ship,
         hostSecret: options.hostSecret,
         stream: false
       });
       return clearbit.handleUserUpdate(message);
-    }
+    };
   }
 
-
   handleUserUpdate(message = {}) {
-
     // Stop right here if we do not match filters
     if (!this.shouldEnrich(message)) return false;
 
     return this.enrichUser(message.user).then(
-      ({ user, person }) => {
+      ({ person }) => {
         if (this.shouldProspect(message)) {
           return this.findSimilarPersons(
             person,
@@ -62,14 +57,7 @@ export default class Clearbit {
       const { client: hull, ship } = req.hull;
       const user = { id: req.hull.config.userId };
 
-      if (type === 'person' && status === 200 && user.id) {
-        const configuration = hull.configuration();
-
-        console.warn('Webhook: ', JSON.stringify({
-          config: req.hull.config,
-          token: req.hull.token
-        }));
-
+      if (type === "person" && status === 200 && user.id) {
         const person = body;
         const clearbit = new Clearbit({
           hull, ship,
@@ -77,10 +65,10 @@ export default class Clearbit {
         });
 
         Promise.all([
-          clearbit.saveUser({ user, person }),
-          hull.get(user.id + '/segments')
+          hull.get(`${user.id}/segments`),
+          clearbit.saveUser({ user, person })
         ])
-        .then(([saved, segments]) => {
+        .then(([segments]) => {
           if (clearbit.shouldProspect({ segments })) {
             clearbit.findSimilarPersons(
               person,
@@ -90,22 +78,24 @@ export default class Clearbit {
           res.json({ message: "thanks" });
         })
         .catch(error => {
-          res.status(error.status || 500).json({ error: error.message })
+          res.status(error.status || 500).json({
+            error: error.message
+          });
         });
       } else {
-        res.json({ message: 'ignored' });
+        res.json({ message: "ignored" });
       }
-    }
+    };
   }
 
 
-  static handleBatchUpdate(options = {}) {
-    return (messages = [], { hull, ship, req }) => {
+  static handleBatchUpdate() {
+    return (messages = [], { hull, ship }) => {
       const clearbit = new Clearbit({ hull, ship, stream: true });
       return messages.map(
         m => clearbit.handleUserUpdate(m.message)
       );
-    }
+    };
   }
 
   // Checks if the email's domain is in the excluded email domains list
@@ -113,7 +103,7 @@ export default class Clearbit {
     this.log("isEmailDomainExcluded");
     const excluded_domains = DOMAINS.concat(
       this.settings.excluded_domains || []
-    ).map((d = '') => d.toLowerCase().trim());
+    ).map((d = "") => d.toLowerCase().trim());
     const domain = (email || "").split("@")[1];
     return domain && _.includes(excluded_domains, domain);
   }
@@ -128,15 +118,13 @@ export default class Clearbit {
   }
 
   alreadyHasFetchedData(user) {
-    return false;
-    const cbId = user["traits_clearbit/id"];
-    return !!cbId;
+    return !!user["traits_clearbit/id"];
   }
 
   lookupIsPending(user) {
     const fetched_at = user["traits_clearbit/fetched_at"];
     const cbId = user["traits_clearbit/id"];
-    const one_hour_ago = moment().subtract(1, 'hours');
+    const one_hour_ago = moment().subtract(1, "hours");
     return fetched_at && moment(fetched_at).isAfter(one_hour_ago) && !cbId;
   }
 
@@ -175,17 +163,17 @@ export default class Clearbit {
     );
   }
 
-  log(msg, data = '') {
+  log(msg, data = "") {
     this.hull.utils.log(msg, data);
   }
 
   getFilterProspectOptions() {
     return [
-      'prospect_role',
-      'prospect_seniority',
-      'prospect_titles'
+      "prospect_role",
+      "prospect_seniority",
+      "prospect_titles"
     ].reduce((opts, k) => {
-      const [ cat, key ] = k.split('_')
+      const [cat, key] = k.split("_");
       const val = this.settings[k];
       if (!_.isEmpty(val)) {
         opts[cat] = opts[cat] || {};
@@ -256,17 +244,17 @@ export default class Clearbit {
     return this.hull
       .as(user.id || { email: user.email })
       .traits(traits)
-      .then(() => { return { user, person } });
+      .then(() => { return { user, person }; });
   }
 
   saveProspect(person = {}) {
     const traits = this.getUserTraitsFromPerson({ person }, Mappings.Prospect);
     traits["clearbit/prospected_at"] = new Date().toISOString();
-    this.log("saveProspect", { email: person.email, traits })
+    this.log("saveProspect", { email: person.email, traits });
     this.hull
       .as({ email: person.email })
       .traits(traits)
-      .then(() => { return { person } });
+      .then(() => { return { person }; });
   }
 
   getWebhookId(userId) {
@@ -287,7 +275,7 @@ export default class Clearbit {
     };
 
     if (this.settings.stream) {
-      payload.stream = true
+      payload.stream = true;
     } else {
       payload.webhook_id = this.getWebhookId(user.id);
     }
@@ -304,11 +292,9 @@ export default class Clearbit {
 
   findSimilarPersons(person = {}, options = {}) {
     const { domain } = person.employment || {};
-    const { role, seniority, titles } = options.prospect;
     this.log("findSimilarPersons", { domain, options });
     return this.discoverSimilarCompanies(domain, options.company)
       .then((companies = []) => {
-
         console.warn(`>> Found ${companies.length} companies !`);
 
         return Promise.all(companies.map(company =>
@@ -337,9 +323,11 @@ export default class Clearbit {
         people.map(prospect => {
           this.log(">> foundProspect", prospect);
           prospect.company = company;
-          this.saveProspect(prospect);
-          this.enrichUser({ email: prospect.email });
-        })
+          return Promise.all(
+            this.saveProspect(prospect),
+            this.enrichUser({ email: prospect.email })
+          );
+        });
       });
   }
 

@@ -1,10 +1,9 @@
 import express from "express";
 import path from "path";
 import Clearbit from "./clearbit";
-import bodyParser from 'body-parser'
+import bodyParser from "body-parser";
 
 module.exports = function Server(options = {}) {
-
   const { port, Hull, hostSecret } = options;
   const { BatchHandler, NotifHandler, Routes, Middlewares } = Hull;
 
@@ -27,7 +26,7 @@ module.exports = function Server(options = {}) {
     extractToken,
     Middlewares.hullClient({ hostSecret }),
     Clearbit.handleWebhook({ hostSecret })
-  )
+  );
 
   app.post("/batch", BatchHandler({
     groupTraits: false,
