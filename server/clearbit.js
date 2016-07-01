@@ -38,7 +38,7 @@ export default class Clearbit {
     // Stop right here if we do not match filters
     const { user = {} } = message;
     if (!this.shouldEnrich(message)) {
-      this.log("skipEnrich for", _.pick(user, 'email', 'name', 'id'));
+      this.log("skipEnrich for", _.pick(user, "email", "name", "id"));
       return false;
     }
 
@@ -60,9 +60,9 @@ export default class Clearbit {
     return (req, res) => {
       const { status, type, body } = req.body;
       const { client: hull, ship } = req.hull;
-      const user = { id: req.hull.config.userId };
+      const userId = req.hull.config.userId;
 
-      if (type === "person" && status === 200 && user.id) {
+      if (type === "person" && status === 200 && userId) {
         const person = body;
         const clearbit = new Clearbit({
           hull, ship,
@@ -70,9 +70,9 @@ export default class Clearbit {
         });
 
         Promise.all([
-          hull.get(`${user.id}/user_report`),
-          hull.get(`${user.id}/segments`),
-          clearbit.saveUser({ user, person })
+          hull.get(`${userId}/user_report`),
+          hull.get(`${userId}/segments`),
+          clearbit.saveUser({ user: { id: userId }, person })
         ])
         .then(([user, segments]) => {
           if (clearbit.shouldProspect({ user, segments })) {
@@ -167,8 +167,8 @@ export default class Clearbit {
     // Skip if we are waiting for the webhook
     if (this.lookupIsPending(user)) return false;
 
-    const cbId = user['traits_clearbit/id'];
-    const fetched_at = user['traits_clearbit/fetched_at'];
+    const cbId = user["traits_clearbit/id"];
+    const fetched_at = user["traits_clearbit/fetched_at"];
 
     // Enrich if we have no clearbit data
     if (!cbId || !fetched_at) return true;
@@ -185,11 +185,12 @@ export default class Clearbit {
       );
   }
 
-  shouldProspect({ user = {},  segments = [] }) {
-    return this.settings.enable_prospect && this.isInSegments(
-      segments,
-      this.settings.prospect_segments
-    );
+  shouldProspect({ segments = [] }) {
+    return this.settings.enable_prospect
+      && this.isInSegments(
+        segments,
+        this.settings.prospect_segments
+      );
   }
 
   log(msg, data = "") {
