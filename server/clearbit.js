@@ -329,10 +329,10 @@ export default class Clearbit {
         people.map(prospect => {
           this.log(">> foundProspect", prospect);
           prospect.company = company;
-          return Promise.all(
+          return Promise.all([
             this.saveProspect(prospect),
             this.enrichUser({ email: prospect.email })
-          );
+          ]);
         });
       });
   }
