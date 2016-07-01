@@ -33,7 +33,7 @@
       },
       "default": []
     }, {
-      "name" : "prospect",
+      "name" : "enable_prospect",
       "title" : "Use Discover and Prospect APIs to generate new leads",
       "type" : "boolean",
       "default" : false
@@ -47,7 +47,47 @@
         "type": "string"
       },
       "default": []
+    }, {
+      "name" : "prospect_role",
+      "title" : "Prospect role lookup",
+      "description" : "Get prospects who match the folling role",
+      "type" : "string",
+      "enum" : ["", "ceo", "communications", "consulting", "customer_service", "education", "engineering", "finance", "founder", "health_professional", "human_resources", "information_technology", "legal", "marketing", "operations", "owner", "president", "product", "public_relations", "real_estate", "recruiting", "research", "sales"]
+    }, {
+      "name" : "prospect_seniority",
+      "title" : "Prospect seniority lookup",
+      "description" : "Get prospects who match the folling seniority",
+      "type" : "string",
+      "enum" : ["", "executive", "director", "manager"]
+    }, {
+      "name" : "prospect_titles",
+      "title" : "Prospect Job title lookup",
+      "description" : "Get prospects who match the folling job titles",
+      "type" : "array",
+      "items" : { "type" : "string" },
+      "format" : "select"
+    }, {
+      "name" : "limit_companies",
+      "title" : "Limit number of companies to fetch",
+      "type" : "number",
+      "format" : "range",
+      "default" : 5,
+      "minimum" : 1,
+      "maximum" : 10,
+      "multipleOf": 1.0
+    }, {
+      "name" : "limit_prospects",
+      "title" : "Limit number of prospects to fetch per company found",
+      "type" : "number",
+      "format" : "range",
+      "default" : 5,
+      "minimum" : 1,
+      "maximum" : 20,
+      "multipleOf": 1.0
     }
+
+
+
   ],
   "resources": [],
   "subscriptions" : [ { "url" : "/notify" } ]

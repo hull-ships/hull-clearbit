@@ -18,8 +18,6 @@ module.exports = function Server(options = {}) {
 
   function extractToken(req, res, next) {
     req.hull = req.hull || {};
-    console.warn("Voici mon token: ", req.body.id);
-    console.warn("Voici hull: ", req.hull);
     req.hull.token = req.body.id;
     next();
   }
