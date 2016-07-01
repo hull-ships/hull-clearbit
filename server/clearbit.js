@@ -66,11 +66,12 @@ export default class Clearbit {
         });
 
         Promise.all([
+          hull.get(`${user.id}/user_report`),
           hull.get(`${user.id}/segments`),
           clearbit.saveUser({ user, person })
         ])
-        .then(([segments]) => {
-          if (clearbit.shouldProspect({ segments })) {
+        .then(([user, segments]) => {
+          if (clearbit.shouldProspect({ user, segments })) {
             clearbit.findSimilarPersons(
               person,
               clearbit.getFilterProspectOptions()
@@ -123,10 +124,6 @@ export default class Clearbit {
     ).length > 0;
   }
 
-  alreadyHasFetchedData(user) {
-    return !!user["traits_clearbit/id"];
-  }
-
   lookupIsPending(user) {
     const fetched_at = user["traits_clearbit/fetched_at"];
     const cbId = user["traits_clearbit/id"];
@@ -134,7 +131,7 @@ export default class Clearbit {
     return fetched_at && moment(fetched_at).isAfter(one_hour_ago) && !cbId;
   }
 
-  shouldEnrich(message = {}) {
+  canEnrich(message = {}) {
     const { user, segments = [] } = message;
     const {
       enrich_segments = [],
@@ -146,23 +143,45 @@ export default class Clearbit {
     const filterSegments = enrich_segments.length && enrich_segments.concat(prospect_segments);
 
     const checks = {
-      empty: _.isEmpty(user.email),
-      alreadyFetched: !this.settings.forceFetch && this.alreadyHasFetchedData(user),
-      excludedDomain: this.isEmailDomainExcluded(user.email),
-      lookupIsPending: this.lookupIsPending(user),
-      notInSegment: !this.isInSegments(segments, filterSegments)
+      emptyEmail: !_.isEmpty(user.email),
+      domain: !this.isEmailDomainExcluded(user.email),
+      inSegment: this.isInSegments(segments, filterSegments)
     };
 
-    const shouldSkipEnrichment = _.some(checks);
-
-    if (shouldSkipEnrichment) {
-      this.log("Skip enrichment for ", { id: user.id, email: user.email, checks });
-    }
-
-    return !shouldSkipEnrichment;
+    return _.every(checks);
   }
 
-  shouldProspect({ segments = [] }) {
+  shouldEnrich(message = {}) {
+    const { user = {} } = message;
+
+    // Stop here if we cannot fetch him
+    if (!this.canEnrich(message)) return false;
+
+    // Force fetch even if we already have the data
+    if (this.settings.forceFetch) return true;
+
+    // Skip if we are waiting for the webhook
+    if (this.lookupIsPending(user)) return false;
+
+    const cbId = user['traits_clearbit/id'];
+    const fetched_at = user['traits_clearbit/fetched_at'];
+
+    // Enrich if we have no clearbit data
+    if (!cbId || !fetched_at) return true;
+
+    // Enrich again and prospect if the user
+    // just entered in one of the segments to prospect
+    const entered = _.get(message, "changes.segments.entered", false);
+
+    return this.settings.enable_prospect
+      && entered
+      && this.isInSegments(
+        entered,
+        this.settings.prospect_segments
+      );
+  }
+
+  shouldProspect({ user = {},  segments = [] }) {
     return this.settings.enable_prospect && this.isInSegments(
       segments,
       this.settings.prospect_segments
@@ -245,6 +264,7 @@ export default class Clearbit {
       { user, person },
       Mappings.Person
     );
+
     traits["clearbit/fetched_at"] = new Date().toISOString();
 
     return this.hull
