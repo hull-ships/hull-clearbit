@@ -1,30 +1,46 @@
 {
   "name": "Clearbit",
   "description": "Fetch additional customer data from Clearbit",
-  "tags": ["incoming", "outgoing", "batch"],
   "picture": "picture.png",
-  "ui": false,
-  "readme" : "readme.md",
   "version": "0.0.3",
+  "tags": [
+    "incoming",
+    "outgoing",
+    "batch"
+  ],
   "private_settings": [
+
     {
-      "name":"excluded_domains",
+      "type": "string", "format": "title", "name": "config_info",
+      "title": "Configuration"
+    },
+
+    {
+      "name": "excluded_domains",
       "title": "Email Domain Excludes",
-      "description":"Domains to exclude from fetching.",
+      "description": "Domains to exclude from fetching.",
       "type": "array",
-      "items" : { "type" : "string" },
+      "items": {
+        "type": "string"
+      },
       "format": "domains"
     },
     {
-      "name":"api_key",
+      "name": "api_key",
       "title": "Clearbit API Key",
-      "description":"Clearbit API Key, found in https://dashboard.clearbit.com/keys",
+      "description": "Clearbit API Key, found in https://dashboard.clearbit.com/keys",
       "type": "string",
       "format": "text"
     },
+
+    {
+      "type": "string", "format": "title", "name": "enrich_info",
+      "title": "Enrichment"
+    },
+
     {
       "name": "enrich_segments",
-      "title": "Filter users",
+      "title": "Filter",
       "description": "Only enrich users who match these segments.",
       "type": "array",
       "format": "segment",
@@ -32,63 +48,112 @@
         "type": "string"
       },
       "default": []
-    }, {
-      "name" : "enable_prospect",
-      "title" : "Use Discover and Prospect APIs to generate new leads",
-      "type" : "boolean",
-      "default" : false
-    }, {
+    },
+
+
+    {
+      "type": "string", "format": "title", "name": "prospect_info",
+      "title": "Similar Lead Discovery"
+    },
+
+    {
+      "name": "enable_prospect",
+      "title": "Enable similar lead discovery",
+      "type": "boolean",
+      "default": false
+    },
+    {
       "name": "prospect_segments",
-      "title": "Prospect users",
-      "description": "Prospect new leads that look like users from these segments.",
+      "title": "Filter",
+      "description": "Search for similar leads for users who enter these segments",
       "type": "array",
       "format": "segment",
       "items": {
         "type": "string"
       },
       "default": []
-    }, {
-      "name" : "prospect_role",
-      "title" : "Prospect role lookup",
-      "description" : "Get prospects who match the folling role",
-      "type" : "string",
-      "enum" : ["", "ceo", "communications", "consulting", "customer_service", "education", "engineering", "finance", "founder", "health_professional", "human_resources", "information_technology", "legal", "marketing", "operations", "owner", "president", "product", "public_relations", "real_estate", "recruiting", "research", "sales"]
-    }, {
-      "name" : "prospect_seniority",
-      "title" : "Prospect seniority lookup",
-      "description" : "Get prospects who match the folling seniority",
-      "type" : "string",
-      "enum" : ["", "executive", "director", "manager"]
-    }, {
-      "name" : "prospect_titles",
-      "title" : "Prospect Job title lookup",
-      "description" : "Get prospects who match the folling job titles",
-      "type" : "array",
-      "items" : { "type" : "string" },
-      "format" : "select"
-    }, {
-      "name" : "limit_companies",
-      "title" : "Limit number of companies to fetch",
-      "type" : "number",
-      "format" : "range",
-      "default" : 5,
-      "minimum" : 1,
-      "maximum" : 10,
-      "multipleOf": 1.0
-    }, {
-      "name" : "limit_prospects",
-      "title" : "Limit number of prospects to fetch per company found",
-      "type" : "number",
-      "format" : "range",
-      "default" : 5,
-      "minimum" : 1,
-      "maximum" : 20,
-      "multipleOf": 1.0
+    },
+    {
+      "name": "limit_companies",
+      "title": "Max number of companies to fetch",
+      "type": "number",
+      "format": "range",
+      "default": 5,
+      "minimum": 1,
+      "maximum": 10,
+      "multipleOf": 1
+    },
+    {
+      "name": "limit_prospects",
+      "title": "Max number of prospects to fetch per company",
+      "type": "number",
+      "format": "range",
+      "default": 5,
+      "minimum": 1,
+      "maximum": 20,
+      "multipleOf": 1
+    },
+    {
+      "name": "prospect_role",
+      "title": "Prospect Role: ",
+      "description": "Get prospects with role",
+      "type": "string",
+      "enum": [
+        "",
+        "ceo",
+        "communications",
+        "consulting",
+        "customer_service",
+        "education",
+        "engineering",
+        "finance",
+        "founder",
+        "health_professional",
+        "human_resources",
+        "information_technology",
+        "legal",
+        "marketing",
+        "operations",
+        "owner",
+        "president",
+        "product",
+        "public_relations",
+        "real_estate",
+        "recruiting",
+        "research",
+        "sales"
+      ]
+    },
+    {
+      "name": "prospect_seniority",
+      "title": "Prospect Seniority: ",
+      "description": "Get prospects with seniority: ",
+      "type": "string",
+      "enum": [
+        "",
+        "executive",
+        "director",
+        "manager"
+      ]
+    },
+    {
+      "name": "prospect_titles",
+      "title": "Prospect Job title: ",
+      "description": "Get prospects matching these job titles. Leave empty for same as trigger user",
+      "type": "array",
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "format": "select"
     }
-
-
-
   ],
   "resources": [],
-  "subscriptions" : [ { "url" : "/notify" } ]
+  "readme": "readme.md",
+  "ui": false,
+  "subscriptions": [
+    {
+      "url": "/notify"
+    }
+  ]
 }
