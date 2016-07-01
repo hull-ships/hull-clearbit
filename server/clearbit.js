@@ -9,12 +9,13 @@ import jwt from "jwt-simple";
 
 export default class Clearbit {
 
-  constructor({ hull, ship, stream = false, hostSecret }) {
+  constructor({ hull, ship, stream = false, forceFetch = false, hostSecret }) {
     this.ship = ship;
     const { api_key } = ship.private_settings;
     this.settings = {
       ...ship.private_settings,
       hostSecret,
+      forceFetch,
       stream
     };
     this.client = new Client({ key: api_key });
@@ -50,7 +51,7 @@ export default class Clearbit {
     );
   }
 
-  // BatchHandler
+  // Handle Webhooks
   static handleWebhook({ hostSecret }) {
     return (req, res) => {
       const { status, type, body } = req.body;
@@ -89,9 +90,14 @@ export default class Clearbit {
   }
 
 
+  // BatchHandler
   static handleBatchUpdate() {
     return (messages = [], { hull, ship }) => {
-      const clearbit = new Clearbit({ hull, ship, stream: true });
+      const clearbit = new Clearbit({
+        hull, ship,
+        stream: true,
+        forceFetch: true
+      });
       return messages.map(
         m => clearbit.handleUserUpdate(m.message)
       );
@@ -141,7 +147,7 @@ export default class Clearbit {
 
     const checks = {
       empty: _.isEmpty(user.email),
-      alreadyFetched: this.alreadyHasFetchedData(user),
+      alreadyFetched: !this.settings.forceFetch && this.alreadyHasFetchedData(user),
       excludedDomain: this.isEmailDomainExcluded(user.email),
       lookupIsPending: this.lookupIsPending(user),
       notInSegment: !this.isInSegments(segments, filterSegments)
