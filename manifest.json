@@ -139,7 +139,7 @@
     {
       "name": "prospect_titles",
       "title": "Prospect Job title: ",
-      "description": "Get prospects matching these job titles. Leave empty for same as trigger user",
+      "description": "You can add multiple entries to search for multiple titles.",
       "type": "array",
       "default": [],
       "items": {
