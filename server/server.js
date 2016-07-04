@@ -1,6 +1,10 @@
 import express from "express";
 import path from "path";
-import Clearbit from "./clearbit";
+
+import handleUserUpdate from "./handlers/user-update";
+import handleBatchUpdate from "./handlers/batch-update";
+import handleClearbitWebhook from "./handlers/clearbit-webhook";
+
 import bodyParser from "body-parser";
 
 module.exports = function Server(options = {}) {
@@ -25,12 +29,12 @@ module.exports = function Server(options = {}) {
     bodyParser.json(),
     extractToken,
     Middlewares.hullClient({ hostSecret }),
-    Clearbit.handleWebhook({ hostSecret })
+    handleClearbitWebhook(options)
   );
 
   app.post("/batch", BatchHandler({
     groupTraits: false,
-    handler: Clearbit.handleBatchUpdate(options)
+    handler: handleBatchUpdate(options)
   }));
 
   app.post("/notify", NotifHandler({
@@ -39,7 +43,7 @@ module.exports = function Server(options = {}) {
       console.warn("Hello new subscriber !");
     },
     handlers: {
-      "user:update": Clearbit.handleUserUpdate(options)
+      "user:update": handleUserUpdate(options)
     }
   }));
 

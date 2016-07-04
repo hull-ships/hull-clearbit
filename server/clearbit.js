@@ -22,94 +22,19 @@ export default class Clearbit {
     this.hull = hull;
   }
 
-  // NotifHandler
-  static handleUserUpdate(options = {}) {
-    return ({ message }, { hull, ship }) => {
-      const clearbit = new Clearbit({
-        hull, ship,
-        hostSecret: options.hostSecret,
-        stream: false
-      });
-      return clearbit.handleUserUpdate(message);
-    };
+  log(msg, data = "") {
+    this.hull.utils.log(msg, data);
   }
 
-  handleUserUpdate(message = {}) {
-    // Stop right here if we do not match filters
-    const { user = {} } = message;
-    if (!this.shouldEnrich(message)) {
-      this.log("skipEnrich for", _.pick(user, "email", "name", "id"));
-      return false;
-    }
+  /** *********************************************************
+   * Clearbit Enrichment
+   */
 
-    return this.enrichUser(message.user).then(
-      ({ person }) => {
-        if (this.shouldProspect(message)) {
-          return this.findSimilarPersons(
-            person,
-            this.getFilterProspectOptions()
-          );
-        }
-        return person;
-      }
-    );
-  }
-
-  // Handle Webhooks
-  static handleWebhook({ hostSecret }) {
-    return (req, res) => {
-      const { status, type, body } = req.body;
-      const { client: hull, ship } = req.hull;
-      const userId = req.hull.config.userId;
-
-      if (type === "person" && status === 200 && userId) {
-        const person = body;
-        const clearbit = new Clearbit({
-          hull, ship,
-          hostSecret
-        });
-
-        Promise.all([
-          hull.get(`${userId}/user_report`),
-          hull.get(`${userId}/segments`),
-          clearbit.saveUser({ user: { id: userId }, person })
-        ])
-        .then(([user, segments]) => {
-          if (clearbit.shouldProspect({ user, segments })) {
-            clearbit.findSimilarPersons(
-              person,
-              clearbit.getFilterProspectOptions()
-            );
-          }
-          res.json({ message: "thanks" });
-        })
-        .catch(error => {
-          res.status(error.status || 500).json({
-            error: error.message
-          });
-        });
-      } else {
-        res.json({ message: "ignored" });
-      }
-    };
-  }
-
-
-  // BatchHandler
-  static handleBatchUpdate() {
-    return (messages = [], { hull, ship }) => {
-      const clearbit = new Clearbit({
-        hull, ship,
-        stream: true,
-        forceFetch: true
-      });
-      return messages.map(
-        m => clearbit.handleUserUpdate(m.message)
-      );
-    };
-  }
-
-  // Checks if the email's domain is in the excluded email domains list
+  /**
+   * Checks if the email's domain is in the excluded email domains list
+   * @param  {String} email - An email address
+   * @return {Boolean}
+   */
   isEmailDomainExcluded(email = "") {
     this.log("isEmailDomainExcluded");
     const excluded_domains = DOMAINS.concat(
@@ -119,7 +44,12 @@ export default class Clearbit {
     return domain && _.includes(excluded_domains, domain);
   }
 
-  // Check if a user belongs to one of the segments listed
+  /**
+   * Check if a user belongs to one of the segments listed
+   * @param  {Array<Segment>} userSegments - A list of segments
+   * @param  {Array<ObjectId>} segmentsListIds - A list of segment ids
+   * @return {Boolean}
+   */
   isInSegments(userSegments = [], segmentsListIds = []) {
     this.log("isInSegments");
     return _.isEmpty(segmentsListIds) || _.intersection(
@@ -128,6 +58,12 @@ export default class Clearbit {
     ).length > 0;
   }
 
+  /**
+   * Check an enrich call has been made in the last hour
+   * and we are still waiting for the webhook to ping us
+   * @param  {User} user - A User
+   * @return {Boolean}
+   */
   lookupIsPending(user) {
     const fetched_at = user["traits_clearbit/fetched_at"];
     const cbId = user["traits_clearbit/id"];
@@ -135,6 +71,12 @@ export default class Clearbit {
     return fetched_at && moment(fetched_at).isAfter(one_hour_ago) && !cbId;
   }
 
+
+  /**
+   * Check if we can Enrich the User (based on user data and ship configuration)
+   * @param  {Message({ user, segments })} message - A user:update message
+   * @return {Boolean}
+   */
   canEnrich(message = {}) {
     const { user, segments = [] } = message;
     const {
@@ -155,6 +97,11 @@ export default class Clearbit {
     return _.every(checks);
   }
 
+  /**
+   * Check if we should Enrich the User (based on user data and ship configuration)
+   * @param  {Message({ user, segments })} message - A user:update message
+   * @return {Boolean}
+   */
   shouldEnrich(message = {}) {
     const { user = {} } = message;
 
@@ -185,34 +132,13 @@ export default class Clearbit {
       );
   }
 
-  shouldProspect({ segments = [] }) {
-    return this.settings.enable_prospect
-      && this.isInSegments(
-        segments,
-        this.settings.prospect_segments
-      );
-  }
-
-  log(msg, data = "") {
-    this.hull.utils.log(msg, data);
-  }
-
-  getFilterProspectOptions() {
-    return [
-      "prospect_role",
-      "prospect_seniority",
-      "prospect_titles"
-    ].reduce((opts, k) => {
-      const [cat, key] = k.split("_");
-      const val = this.settings[k];
-      if (!_.isEmpty(val)) {
-        opts[cat] = opts[cat] || {};
-        opts[cat][key] = val;
-      }
-      return opts;
-    }, { prospect: {}, company: {} });
-  }
-
+  /**
+   * Builds the list of traits to apply on the user
+   * from data pulled from Clearbit
+   * @param  {Object({ user, person })} payload - Hull/User and Clearbit/Person objects
+   * @param  {mappings} mappings - mappings to user
+   * @return {Object}
+   */
   getUserTraitsFromPerson({ user = {}, person = {} }, mappings) {
     const mapping = _.reduce(mappings, (map, key, val) => {
       return Object.assign(map, {
@@ -249,6 +175,12 @@ export default class Clearbit {
     return traits;
   }
 
+
+  /**
+   * Save traits on Hull user
+   * @param  {Object({ user, person })} payload - Hull/User and Clearbit/Person objects
+   * @return {Promise -> Object({ user, person })}
+   */
   saveUser({ user = {}, person = {} }) {
     let ident = user.id;
     if (!ident && user.external_id) {
@@ -278,22 +210,24 @@ export default class Clearbit {
       .then(() => { return { user, person }; });
   }
 
-  saveProspect(person = {}) {
-    const traits = this.getUserTraitsFromPerson({ person }, Mappings.Prospect);
-    traits["clearbit/prospected_at"] = new Date().toISOString();
-    this.log("saveProspect", { email: person.email, traits });
-    this.hull
-      .as({ email: person.email })
-      .traits(traits)
-      .then(() => { return { person }; });
-  }
 
+  /**
+   * Build context to pass a webhook_id
+   * @param  {String} userId - Hull User id
+   * @return {String}
+   */
   getWebhookId(userId) {
     const { id, secret, organization } = this.hull.configuration();
     const claims = { ship: id, secret, organization, userId };
     return jwt.encode(claims, this.settings.hostSecret);
   }
 
+  /**
+   * Fetch data from Clearbit's Enrichment API and save it as
+   * traits on the Hull user
+   * @param  {User} user - Hull User
+   * @return {Promise -> Object({ user, person })}
+   */
   enrichUser(user = {}) {
     const touchUser = this.saveUser.bind(this, { user });
 
@@ -321,6 +255,52 @@ export default class Clearbit {
       .catch(Person.NotFoundError, touchUser);
   }
 
+  /** *********************************************************
+   * Clearbit Prospection
+   */
+
+  /**
+   * Check if we should fetch similar users from clearbit (based on user data and ship configuration)
+   * @param  {Message({ user, segments })} message - A user:update message
+   * @return {Boolean}
+   */
+  shouldProspect({ segments = [] }) {
+    return this.settings.enable_prospect
+      && this.isInSegments(
+        segments,
+        this.settings.prospect_segments
+      );
+  }
+
+  /**
+   * Builds the objects to use as filters in the
+   * Discovery and Prospector APIs
+   * @return {Object}
+   */
+  getFilterProspectOptions() {
+    return [
+      "prospect_role",
+      "prospect_seniority",
+      "prospect_titles"
+    ].reduce((opts, k) => {
+      const [cat, key] = k.split("_");
+      const val = this.settings[k];
+      if (!_.isEmpty(val)) {
+        opts[cat] = opts[cat] || {};
+        opts[cat][key] = val;
+      }
+      return opts;
+    }, { prospect: {}, company: {} });
+  }
+
+  /**
+   * Find persons similar to a giver Clearbit Person
+   * fetches companies via the Discovery API
+   * then people from the Prospector APi
+   * @param  {Person} person - A Clearbit Person
+   * @param  {Object} options - Options
+   * @return {Promise}
+   */
   findSimilarPersons(person = {}, options = {}) {
     const { domain } = person.employment || {};
     this.log("findSimilarPersons", { domain, options });
@@ -334,6 +314,41 @@ export default class Clearbit {
       }).catch(err => console.warn("Boom clearbit error", err));
   }
 
+  /**
+   * Create a new user on Hull from a discrovered Prospect
+   * @param  {Object({ person })} payload - Clearbit/Person object
+   * @return {Promise -> Object({ person })}
+   */
+  saveProspect(person = {}) {
+    const traits = this.getUserTraitsFromPerson({ person }, Mappings.Prospect);
+    traits["clearbit/prospected_at"] = new Date().toISOString();
+    this.log("saveProspect", { email: person.email, traits });
+    this.hull
+      .as({ email: person.email })
+      .traits(traits)
+      .then(() => { return { person }; });
+  }
+
+  /**
+   * Find companies similar to a given company
+   * @param  {Company} domain - A company domain name
+   * @param  {Object} filters - Criteria to use as filters
+   * @return {Promise}
+   */
+  discoverSimilarCompanies(domain, filters = {}) {
+    const limit = this.settings.limit_companies;
+    const query = { ...filters, similar: domain };
+    this.log("discoverSimilarCompanies: ", { query, limit });
+    const search = domain ? this.client.Discovery.search({ query, limit }) : Promise.resolve({ results: [] });
+    return search.then(response => response.results);
+  }
+
+  /**
+   * Find matching some criteria with a given company
+   * @param  {Company} company - A Clearbit Company
+   * @param  {Object} filters - Criteria to use as filters
+   * @return {Promise}
+   */
   fetchProspectsFromCompany(company = {}, { role, seniority, titles }) {
     const limit = this.settings.limit_prospects;
     const { domain } = company;
@@ -362,12 +377,5 @@ export default class Clearbit {
       });
   }
 
-  discoverSimilarCompanies(similar, filters = {}) {
-    const limit = this.settings.limit_companies;
-    const query = { ...filters, similar };
-    this.log("discoverSimilarCompanies: ", { query, limit });
-    const search = similar ? this.client.Discovery.search({ query, limit }) : Promise.resolve({ results: [] });
-    return search.then(response => response.results);
-  }
 
 }
