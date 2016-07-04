@@ -35,7 +35,6 @@ if (process.env.LIBRATO_TOKEN && process.env.LIBRATO_USER) {
   });
 
   Hull.onMetric(function onMetricProduction(metric = "", value = 1, ctx = {}) {
-    console.warn("metric: ", { metric, value, ctx });
     try {
       if (librato) {
         librato.measure(`clearbit.${metric}`, value, Object.assign({}, { source: ctx.id }));
