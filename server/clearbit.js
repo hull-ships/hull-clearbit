@@ -26,6 +26,10 @@ export default class Clearbit {
     this.hull.utils.log(msg, data);
   }
 
+  metric(metric, value = 1) {
+    this.hull.utils.metric(metric, value);
+  }
+
   /** *********************************************************
    * Clearbit Enrichment
    */
@@ -204,6 +208,8 @@ export default class Clearbit {
 
     traits["clearbit/fetched_at"] = new Date().toISOString();
 
+    this.metric("user.save");
+
     return this.hull
       .as(user.id || { email: user.email })
       .traits(traits)
@@ -246,6 +252,7 @@ export default class Clearbit {
     }
 
     this.log("enrichUser", payload);
+    this.metric("user.enrich");
 
     const { Person } = this.client;
 
@@ -304,6 +311,7 @@ export default class Clearbit {
   findSimilarPersons(person = {}, options = {}) {
     const { domain } = person.employment || {};
     this.log("findSimilarPersons", { domain, options });
+    this.metric("prospect.discover");
     return this.discoverSimilarCompanies(domain, options.company)
       .then((companies = []) => {
         console.warn(`>> Found ${companies.length} companies !`);
@@ -323,6 +331,7 @@ export default class Clearbit {
     const traits = this.getUserTraitsFromPerson({ person }, Mappings.Prospect);
     traits["clearbit/prospected_at"] = new Date().toISOString();
     this.log("saveProspect", { email: person.email, traits });
+    this.metric("prospect.save");
     this.hull
       .as({ email: person.email })
       .traits(traits)
