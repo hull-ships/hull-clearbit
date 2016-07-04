@@ -18,8 +18,10 @@ export default class Clearbit {
       forceFetch,
       stream
     };
-    this.client = new Client({ key: api_key });
     this.hull = hull;
+    if (api_key) {
+      this.client = new Client({ key: api_key });
+    }
   }
 
   log(msg, data = "") {
@@ -108,6 +110,8 @@ export default class Clearbit {
    */
   shouldEnrich(message = {}) {
     const { user = {} } = message;
+
+    if (!this.client) return false;
 
     // Stop here if we cannot fetch him
     if (!this.canEnrich(message)) return false;
@@ -272,6 +276,7 @@ export default class Clearbit {
    * @return {Boolean}
    */
   shouldProspect({ segments = [] }) {
+    if (!this.client) return false;
     return this.settings.enable_prospect
       && this.isInSegments(
         segments,
