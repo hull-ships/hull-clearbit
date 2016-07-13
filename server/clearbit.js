@@ -292,8 +292,7 @@ export default class Clearbit {
   getFilterProspectOptions() {
     return [
       "prospect_role",
-      "prospect_seniority",
-      "prospect_titles"
+      "prospect_seniority"
     ].reduce((opts, k) => {
       const [cat, key] = k.split("_");
       const val = this.settings[k];

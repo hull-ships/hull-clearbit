@@ -135,17 +135,6 @@
         "director",
         "manager"
       ]
-    },
-    {
-      "name": "prospect_titles",
-      "title": "Prospect Job title: ",
-      "description": "You can add multiple entries to search for multiple titles.",
-      "type": "array",
-      "default": [],
-      "items": {
-        "type": "string"
-      },
-      "format": "select"
     }
   ],
   "resources": [],
