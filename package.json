@@ -73,6 +73,7 @@
     "lodash": "^4.11.1",
     "minimist": "^1.2.0",
     "moment": "^2.13.0",
+    "newrelic": "^1.28.3",
     "object-mapper": "^3.0.0",
     "request": "^2.72.0",
     "rimraf": "^2.5.2"
