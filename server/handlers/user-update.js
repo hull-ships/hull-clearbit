@@ -15,8 +15,10 @@ export default function handleUserUpdate({ hostSecret, stream = false, forceFetc
 
     return cb
       .enrichUser(user)
-      .then(({ person }) => {
-        if (cb.shouldProspect({ user, segments })) {
+      .then((enriched = {}) => {
+        const { person } = enriched;
+        const shouldProspect = cb.shouldProspect({ user, segments });
+        if (person && shouldProspect) {
           const filters = cb.getFilterProspectOptions();
           return cb.findSimilarPersons(person, filters);
         }
