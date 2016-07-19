@@ -96,7 +96,7 @@ export default class Clearbit {
 
     const checks = {
       emptyEmail: !_.isEmpty(user.email),
-      domain: !this.isEmailDomainExcluded(user.email),
+      // domain: !this.isEmailDomainExcluded(user.email),
       inSegment: this.isInSegments(segments, filterSegments)
     };
 
@@ -263,7 +263,14 @@ export default class Clearbit {
     return Person.find(payload)
       .then(person => this.saveUser({ user, person }))
       .catch(Person.QueuedError, touchUser)
-      .catch(Person.NotFoundError, touchUser);
+      .catch(Person.NotFoundError, touchUser)
+      .catch(this.client.ClearbitError, (err) => {
+        if (err.type === "email_invalid") {
+          touchUser();
+        } else {
+          throw err;
+        }
+      });
   }
 
   /** *********************************************************
