@@ -267,44 +267,21 @@ export default class Clearbit {
     this.log("enrichUser", payload);
     this.metric("user.enrich");
 
-    const { Person } = this.client;
+    const { Enrichment } = this.client;
 
-    return Person.find(payload)
-      .then(this.enrichWithCompany.bind(this, user))
+
+    return Enrichment.find(payload)
+      .then(({ person = {}, company = {} }) => {
+        return { ...person, company };
+      })
       .then(saveUser)
-      .catch(Person.QueuedError, saveUser)
-      .catch(Person.NotFoundError, saveUser)
-      .catch(this.client.ClearbitError, (err) => {
-        if (err.type === "email_invalid") {
-          saveUser();
-        } else {
-          throw err;
-        }
-      });
+      .catch(
+        Enrichment.QueuedError,
+        Enrichment.NotFoundError,
+        () => saveUser()
+      );
   }
 
-  enrichWithCompany(user = {}, person = {}) {
-    const { domain } = (person.employment || {});
-    const { Company } = this.client;
-
-    if (domain && this.settings.enrich_with_company) {
-      const payload = { domain };
-
-      if (this.settings.stream) {
-        payload.stream = true;
-      } else {
-        payload.webhook_id = this.getWebhookId(user.id);
-      }
-
-      this.metric("company.enrich");
-
-      return Company.find(payload)
-        .then(company => { return { ...person, company }; })
-        .catch(() => person);
-    }
-
-    return person;
-  }
 
   /** *********************************************************
    * Clearbit Prospection
