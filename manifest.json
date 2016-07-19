@@ -51,6 +51,13 @@
       "default": []
     },
 
+    {
+      "name":"enrich_with_company",
+      "title" : "Enrich with company information",
+      "description" : "Fetch additional company information from Clearbit Enrichment API",
+      "type" : "boolean",
+      "default" : false
+    },
 
     {
       "type": "string", "format": "title", "name": "prospect_info",

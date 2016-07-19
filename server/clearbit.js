@@ -183,13 +183,21 @@ export default class Clearbit {
     return traits;
   }
 
+  getMapping(key) {
+    const companyMapping = this.settings.enrich_with_company ? Mappings.Company : {};
+    return {
+      ...companyMapping,
+      ...Mappings[key]
+    };
+  }
 
   /**
    * Save traits on Hull user
-   * @param  {Object({ user, person })} payload - Hull/User and Clearbit/Person objects
+   * @param  {Object} user - Hull User object
+   * @param  {Object} person - Clearbit Person object
    * @return {Promise -> Object({ user, person })}
    */
-  saveUser({ user = {}, person = {} }) {
+  saveUser(user = {}, person = {}) {
     let ident = user.id;
     if (!ident && user.external_id) {
       ident = { external_id: user.external_id };
@@ -207,7 +215,7 @@ export default class Clearbit {
 
     const traits = this.getUserTraitsFromPerson(
       { user, person },
-      Mappings.Person
+      this.getMapping("Person")
     );
 
     traits["clearbit/fetched_at"] = new Date().toISOString();
@@ -227,9 +235,10 @@ export default class Clearbit {
    * @return {String}
    */
   getWebhookId(userId) {
+    const { hostSecret } = this.settings;
     const { id, secret, organization } = this.hull.configuration();
     const claims = { ship: id, secret, organization, userId };
-    return jwt.encode(claims, this.settings.hostSecret);
+    return hostSecret && jwt.encode(claims, hostSecret);
   }
 
   /**
@@ -239,7 +248,7 @@ export default class Clearbit {
    * @return {Promise -> Object({ user, person })}
    */
   enrichUser(user = {}) {
-    const touchUser = this.saveUser.bind(this, { user });
+    const saveUser = this.saveUser.bind(this, user);
 
     const payload = {
       email: user.email,
@@ -261,16 +270,40 @@ export default class Clearbit {
     const { Person } = this.client;
 
     return Person.find(payload)
-      .then(person => this.saveUser({ user, person }))
-      .catch(Person.QueuedError, touchUser)
-      .catch(Person.NotFoundError, touchUser)
+      .then(this.enrichWithCompany.bind(this, user))
+      .then(saveUser)
+      .catch(Person.QueuedError, saveUser)
+      .catch(Person.NotFoundError, saveUser)
       .catch(this.client.ClearbitError, (err) => {
         if (err.type === "email_invalid") {
-          touchUser();
+          saveUser();
         } else {
           throw err;
         }
       });
+  }
+
+  enrichWithCompany(user = {}, person = {}) {
+    const { domain } = (person.employment || {});
+    const { Company } = this.client;
+
+    if (domain && this.settings.enrich_with_company) {
+      const payload = { domain };
+
+      if (this.settings.stream) {
+        payload.stream = true;
+      } else {
+        payload.webhook_id = this.getWebhookId(user.id);
+      }
+
+      this.metric("company.enrich");
+
+      return Company.find(payload)
+        .then(company => { return { ...person, company }; })
+        .catch(() => person);
+    }
+
+    return person;
   }
 
   /** *********************************************************
@@ -326,7 +359,6 @@ export default class Clearbit {
     return this.discoverSimilarCompanies(domain, options.company)
       .then((companies = []) => {
         console.warn(`>> Found ${companies.length} companies !`);
-
         return Promise.all(companies.map(company =>
           this.fetchProspectsFromCompany(company, options.prospect)
         ));
@@ -339,7 +371,7 @@ export default class Clearbit {
    * @return {Promise -> Object({ person })}
    */
   saveProspect(person = {}) {
-    const traits = this.getUserTraitsFromPerson({ person }, Mappings.Prospect);
+    const traits = this.getUserTraitsFromPerson({ person }, this.getMapping("Prospect"));
     traits["clearbit/prospected_at"] = new Date().toISOString();
     this.log("saveProspect", { email: person.email, traits });
     this.metric("prospect.save");
