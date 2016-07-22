@@ -21,14 +21,11 @@ module.exports = function Server(options = {}) {
 
   function extractToken(req, res, next) {
     req.hull = req.hull || {};
-
-    const { id, type, status } = req.body;
-
-    req.hull.token = id;
-    if (process.env.DEBUG) {
-      console.warn("/clearbit webhook", JSON.stringify({ id, type, status }));
+    const token = req.body.id;
+    if (!token) {
+      return res.end("unknown id");
     }
-    next();
+    return next();
   }
 
   app.post("/clearbit",
