@@ -9,7 +9,7 @@ exports.config = {
   /**
    * Array of application names.
    */
-  app_name: [process.env.NEW_RELIC_APP_NAME || "Hull Clearbit"],
+  app_name: [process.env.NEW_RELIC_APP_NAME || "hull-clearbit"],
   /**
    * Your New Relic license key.
    */
