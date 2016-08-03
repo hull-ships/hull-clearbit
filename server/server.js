@@ -25,6 +25,7 @@ module.exports = function Server(options = {}) {
     if (!token) {
       return res.end("unknown id");
     }
+    req.hull.token = token;
     return next();
   }
 
