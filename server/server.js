@@ -50,6 +50,22 @@ module.exports = function Server(options = {}) {
     }
   }));
 
+  app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
+    if (err) {
+      const data = {
+        status: err.status,
+        method: req.method,
+        headers: req.headers,
+        url: req.url,
+        params: req.params,
+        body: req.body
+      };
+      console.log("Error ----------------", err.message, err.status, data);
+    }
+
+    return res.status(err.status || 500).send({ message: err.message });
+  });
+
   Hull.log(`Listening on port ${port}`);
 
   app.listen(port);
