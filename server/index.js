@@ -1,11 +1,11 @@
-import Hull from "hull";
-import Server from "./server";
-import librato from "librato-node";
-
 if (process.env.NEW_RELIC_LICENSE_KEY) {
   console.warn("Starting newrelic agent with key: ", process.env.NEW_RELIC_LICENSE_KEY);
   require("newrelic"); // eslint-disable-line global-require
 }
+
+const Hull = require("hull");
+const Server = require("./server");
+const librato = require("librato-node");
 
 Hull.onLog(function onLog(message, data, ctx = {}) {
   console.log(`[ ${ctx.id} ] segment.${message}`, JSON.stringify(data || ""));
