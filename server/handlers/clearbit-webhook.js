@@ -6,8 +6,15 @@ export default function handleWebhook({ hostSecret }) {
     const { client: hull, ship } = req.hull;
     const userId = req.hull.config.userId;
 
-    if (type === "person" && status === 200 && userId) {
-      const person = body;
+    if ((type === "person" || type === "person_company") && status === 200 && userId) {
+      let person;
+
+      if (type === "person") {
+        person = body;
+      } else if (type === "person_company") {
+        person = { ...body.person, company: body.company };
+      }
+
       const cb = new Clearbit({ hull, ship, hostSecret });
 
       Promise.all([
@@ -24,6 +31,7 @@ export default function handleWebhook({ hostSecret }) {
       })
       .catch(error => {
         res.status(error.status || 500).json({
+          stats: error.status,
           error: error.message
         });
       });
