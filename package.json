@@ -52,7 +52,6 @@
     "watch": "^0.19.1"
   },
   "dependencies": {
-    "JSONStream": "^1.1.1",
     "babel-cli": "^6.10.1",
     "babel-core": "^6.10.4",
     "babel-loader": "^6.2.4",
@@ -68,14 +67,15 @@
     "event-stream": "^3.3.2",
     "express": "^4.13.4",
     "hull": "0.10.3",
+    "jquery": "^3.1.0",
     "jwt-simple": "^0.5.0",
     "librato-node": "^4.1.0",
     "lodash": "^4.11.1",
-    "minimist": "^1.2.0",
     "moment": "^2.13.0",
     "newrelic": "^1.28.3",
     "object-mapper": "^3.0.0",
-    "request": "^2.72.0",
-    "rimraf": "^2.5.2"
+    "rimraf": "^2.5.2",
+    "webpack": "^1.13.1",
+    "webpack-dev-middleware": "^1.6.1"
   }
 }

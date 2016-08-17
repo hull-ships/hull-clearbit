@@ -404,7 +404,7 @@ export default class Clearbit {
     traits["clearbit/prospected_at"] = new Date().toISOString();
     this.log("saveProspect", { email: person.email, traits });
     this.metric("prospect.save");
-    this.hull
+    return this.hull
       .as({ email: person.email })
       .traits(traits)
       .then(() => { return { person }; });
@@ -444,17 +444,17 @@ export default class Clearbit {
 
     this.log("fetchProspectsFromCompany", { domain, seniority, role });
 
-    this.client.Prospector.search(query)
+    return this.client.Prospector.search(query)
       .then((people) => {
         this.log(`++ found ${people.length} Prospects for `, query);
-        people.map(prospect => {
+        return Promise.all(people.map(prospect => {
           this.log(">> foundProspect", prospect);
           prospect.company = company;
           return Promise.all([
             this.saveProspect(prospect),
             this.enrichUser({ email: prospect.email })
-          ]);
-        });
+          ]).then(() => prospect);
+        }));
       });
   }
 

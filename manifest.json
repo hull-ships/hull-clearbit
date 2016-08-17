@@ -2,6 +2,7 @@
   "name": "Clearbit",
   "description": "Fetch additional customer data from Clearbit",
   "picture": "picture.png",
+  "admin" : "/admin.html",
   "version": "0.0.3",
   "tags": [
     "incoming",
