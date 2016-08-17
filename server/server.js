@@ -17,6 +17,7 @@ module.exports = function Server(options = {}) {
 
   if (dev) app.use(devMode());
 
+  app.use(express.static(path.resolve(__dirname, "..", "dist")));
   app.use(express.static(path.resolve(__dirname, "..", "assets")));
 
   app.get("/manifest.json", Routes.Manifest(__dirname));
