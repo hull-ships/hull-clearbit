@@ -12,8 +12,10 @@ export default function handleProspect({ hostSecret }) {
       });
       Promise.all(prospecting).then(
         (prospects) => res.json({ prospects }),
-        (error) => res.json({ error })
-      );
+      ).catch((error) => {
+        console.warn("Error prospecting...", error);
+        res.json({ error });
+      });
     } else {
       res.json({ message: "Empty list of domains..." });
     }
