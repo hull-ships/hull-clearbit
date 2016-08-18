@@ -21,6 +21,10 @@ $(() => {
         }
       });
 
+      if (data.tiles && data.titles.length > 0) {
+        data.titles = data.titles.split(",").map(t => t.trim());
+      }
+
       $.ajax({
         type: "POST",
         url: `/prospect${document.location.search}`,
