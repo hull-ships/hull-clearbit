@@ -14,16 +14,12 @@ $(() => {
     if (domains.length > 0) {
       const data = { domains };
       $btn.text("Prospecting...").attr("disabled", true);
-      ["role", "seniority", "titles"].forEach(k => {
+      ["role", "seniority", "title"].forEach(k => {
         const val = $(`#${k}`).val().trim();
         if (val && val.length > 0) {
           data[k] = val;
         }
       });
-
-      if (data.titles && data.titles.length > 0) {
-        data.titles = data.titles.split(",").map(t => t.trim());
-      }
 
       $.ajax({
         type: "POST",
