@@ -21,7 +21,7 @@ $(() => {
         }
       });
 
-      if (data.tiles && data.titles.length > 0) {
+      if (data.titles && data.titles.length > 0) {
         data.titles = data.titles.split(",").map(t => t.trim());
       }
 
