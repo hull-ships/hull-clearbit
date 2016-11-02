@@ -15,7 +15,7 @@ const printLimits = _.throttle(function printLimits() {
       }));
     }
   });
-}, 1000)
+}, 1000);
 
 setInterval(printLimits, 5000);
 
@@ -32,7 +32,8 @@ export default function handleBatchUpdate({ hostSecret }) {
       done(m);
     };
     return messages.map(
-      m => limiter.submit(handleMessage, m, (res) => {
+      m => limiter.submit(handleMessage, m, () => {
+        // DO NOT REMOVE THIS CALLBACK
         printLimits();
       })
     );
