@@ -1,9 +1,10 @@
+import _ from "lodash";
 import Bottleneck from "bottleneck";
 import userUpdateHandler from "./user-update";
 
 const Limiter = new Bottleneck.Cluster(3, 250);
 
-function printLimits() {
+const printLimits = _.throttle(function printLimits() {
   Limiter.all((limiter) => {
     const nbRunning = limiter.nbRunning();
     const nbQueued = limiter.nbQueued();
@@ -14,9 +15,9 @@ function printLimits() {
       }));
     }
   });
-}
+}, 1000)
 
-setInterval(printLimits, 1000);
+setInterval(printLimits, 5000);
 
 export default function handleBatchUpdate({ hostSecret }) {
   const handleUserUpdate = userUpdateHandler({
@@ -28,10 +29,12 @@ export default function handleBatchUpdate({ hostSecret }) {
     hull.logger.info("processing batch", { processed });
     const handleMessage = (m, done) => {
       handleUserUpdate(m, context);
-      done();
+      done(m);
     };
     return messages.map(
-      m => limiter.submit(handleMessage, m)
+      m => limiter.submit(handleMessage, m, (res) => {
+        printLimits();
+      })
     );
   };
 }
