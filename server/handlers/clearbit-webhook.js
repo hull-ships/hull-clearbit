@@ -22,40 +22,38 @@ export default function handleWebhook({ hostSecret, onMetric }) {
       // Return early if propector is not enabled
       if (!cb.propectorEnabled()) {
         res.json({ message: "thanks" });
-        return cb.saveUser({ id: userId }, person);
-      } 
-
-      // TODO batch those calls
-      Promise.all([
-        hull.get(`${userId}/user_report`),
-        hull.get(`${userId}/segments`),
-        cb.saveUser({ id: userId }, person)
-      ])
-      .then(([user, segments]) => {
-        if (cb.shouldProspect({ user, segments })) {
-          const filters = cb.getFilterProspectOptions();
-          cb.findSimilarPersons(person, filters);
-        }
-        res.json({ message: "thanks" });
-      })
-      .catch(error => {
-        res.status(error.status || 500).json({
-          stats: error.status,
-          error: error.message
+        cb.saveUser({ id: userId }, person);
+      } else {
+        // TODO batch those calls
+        Promise.all([
+          hull.get(`${userId}/user_report`),
+          hull.get(`${userId}/segments`),
+          cb.saveUser({ id: userId }, person)
+        ])
+        .then(([user, segments]) => {
+          if (cb.shouldProspect({ user, segments })) {
+            const filters = cb.getFilterProspectOptions();
+            cb.findSimilarPersons(person, filters);
+          }
+          res.json({ message: "thanks" });
+        })
+        .catch(error => {
+          res.status(error.status || 500).json({
+            stats: error.status,
+            error: error.message
+          });
         });
-      });
+      }
     } else {
       res.json({ message: "ignored" });
     }
 
-
     try {
       if (_.isFunction(onMetric)) {
-        onMetric('webhook', 1, { id: ship.id });
-      }      
+        onMetric("webhook", 1, { id: ship.id });
+      }
     } catch (err) {
-      console.warn('Error on webhook onMetric: ', err);
+      console.warn("Error on webhook onMetric: ", err);
     }
-
   };
 }

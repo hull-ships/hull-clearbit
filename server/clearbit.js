@@ -292,7 +292,7 @@ export default class Clearbit {
         () => saveUser()
       )
       .catch(err => {
-        console.warn("clearbit error", err)
+        console.warn("clearbit error", err);
       });
   }
 
@@ -302,7 +302,7 @@ export default class Clearbit {
    */
 
   propectorEnabled() {
-    return this.client && this.settings.enable_prospect;
+    return !!(this.client && this.settings.enable_prospect);
   }
 
   /**

@@ -3,14 +3,15 @@ if (process.env.NEW_RELIC_LICENSE_KEY) {
   require("newrelic"); // eslint-disable-line global-require
 }
 
-const Hull = require("hull");
-const Server = require("./server");
-const librato = require("librato-node");
+function noop() {}
 
-let onMetric = function(metric = "", value = 1, ctx = {}) {};
+const Hull = require("hull");
+const librato = require("librato-node");
+const Server = require("./server");
+
+let onMetric = noop;
 
 if (process.env.LIBRATO_TOKEN && process.env.LIBRATO_USER) {
-  const librato = require("librato-node");
   librato.configure({
     email: process.env.LIBRATO_USER,
     token: process.env.LIBRATO_TOKEN
