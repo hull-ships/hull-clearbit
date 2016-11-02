@@ -61,7 +61,7 @@
     "babel-register": "^6.9.0",
     "bluebird": "^3.4.0",
     "body-parser": "^1.15.0",
-    "bottleneck": "^1.12.0",
+    "bottleneck": "1.15.0",
     "clearbit": "^1.2.1",
     "connect": "^3.4.1",
     "ejs": "^2.4.1",
