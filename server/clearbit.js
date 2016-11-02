@@ -291,8 +291,9 @@ export default class Clearbit {
         Enrichment.NotFoundError,
         () => saveUser()
       )
-      .catch(err => {
-        console.warn("clearbit error", err);
+      .catch((err = {}) => {
+        const { message } = err;
+        this.hull.logger.warn(`clearbit error for ${user.email}: ${message}`);
       });
   }
 
@@ -357,7 +358,7 @@ export default class Clearbit {
         return Promise.all(companies.map(company =>
           this.fetchProspectsFromCompany(company, options.prospect)
         ));
-      }).catch(err => console.warn("Boom clearbit error", err));
+      }).catch(err => console.warn("clearbit error", err && err.message));
   }
 
   /**
