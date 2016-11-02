@@ -9,7 +9,7 @@ import jwt from "jwt-simple";
 
 export default class Clearbit {
 
-  constructor({ hull, ship, stream = false, forceFetch = false, hostSecret }) {
+  constructor({ hull, ship, stream = false, forceFetch = false, hostSecret, onMetric, hostname }) {
     this.ship = ship;
     const { api_key } = ship.private_settings;
     this.settings = {
@@ -19,17 +19,21 @@ export default class Clearbit {
       stream
     };
     this.hull = hull;
+    this.hostname = hostname;
+    this.onMetric = onMetric;
     if (api_key) {
       this.client = new Client({ key: api_key });
     }
   }
 
   log(msg, data = "") {
-    this.hull.utils.log(msg, data);
+    this.hull.logger.info(msg, data);
   }
 
   metric(metric, value = 1) {
-    this.hull.utils.metric(metric, value);
+    if (_.isFunction(this.onMetric)) {
+      this.onMetric(metric, value, { id: this.ship.id });
+    }
   }
 
   /** *********************************************************
@@ -199,12 +203,14 @@ export default class Clearbit {
    */
   saveUser(user = {}, person = {}) {
     let ident = user.id;
+    const email = user.email || person.email;
+
     if (!ident && user.external_id) {
       ident = { external_id: user.external_id };
     }
 
-    if (!ident && user.email) {
-      ident = { email: user.email };
+    if (!ident && email) {
+      ident = { email };
     }
 
     if (!ident) {
@@ -223,7 +229,7 @@ export default class Clearbit {
     this.metric("user.save");
 
     return this.hull
-      .as(user.id || { email: user.email })
+      .as(ident)
       .traits(traits)
       .then(() => { return { user, person }; });
   }
@@ -254,7 +260,6 @@ export default class Clearbit {
       email: user.email,
       given_name: user.first_name,
       family_name: user.last_name,
-      subscribe: true,
       stream: this.settings.stream
     };
 
@@ -264,11 +269,17 @@ export default class Clearbit {
       payload.webhook_id = this.getWebhookId(user.id);
     }
 
+    if (this.hostname) {
+      payload.webhook_url = `https://${this.hostname}/clearbit?ship=${this.ship.id}&id=${this.getWebhookId(user.id)}`;
+    }
+
+    payload.stream = false;
+
+
     this.log("enrichUser", payload);
     this.metric("user.enrich");
 
     const { Enrichment } = this.client;
-
 
     return Enrichment.find(payload)
       .then(({ person = {}, company = {} }) => {
@@ -279,13 +290,20 @@ export default class Clearbit {
         Enrichment.QueuedError,
         Enrichment.NotFoundError,
         () => saveUser()
-      );
+      )
+      .catch(err => {
+        console.warn("clearbit error", err)
+      });
   }
 
 
   /** *********************************************************
    * Clearbit Prospection
    */
+
+  propectorEnabled() {
+    return this.client && this.settings.enable_prospect;
+  }
 
   /**
    * Check if we should fetch similar users from clearbit (based on user data and ship configuration)

@@ -8,8 +8,8 @@ import handleClearbitWebhook from "./handlers/clearbit-webhook";
 import bodyParser from "body-parser";
 
 module.exports = function Server(options = {}) {
-  const { port, Hull, hostSecret } = options;
-  const { BatchHandler, NotifHandler, Routes, Middlewares } = Hull;
+  const { port, Hull, hostSecret, onMetric } = options;
+  const { BatchHandler, NotifHandler, Routes, Middleware: hullClient } = Hull;
 
   const app = express();
 
@@ -21,9 +21,9 @@ module.exports = function Server(options = {}) {
 
   function extractToken(req, res, next) {
     req.hull = req.hull || {};
-    const token = req.body.id;
+    const token = req.body.id || req.query.id;
     if (!token) {
-      return res.end("unknown id");
+      return res.json({ error: "unknown id" });
     }
     req.hull.token = token;
     return next();
@@ -32,17 +32,19 @@ module.exports = function Server(options = {}) {
   app.post("/clearbit",
     bodyParser.json(),
     extractToken,
-    Middlewares.hullClient({ hostSecret }),
+    hullClient({ hostSecret, onMetric }),
     handleClearbitWebhook(options)
   );
 
   app.post("/batch", BatchHandler({
     groupTraits: false,
+    hostSecret,
     handler: handleBatchUpdate(options)
   }));
 
   app.post("/notify", NotifHandler({
     groupTraits: false,
+    hostSecret,
     onSubscribe: function onSubscribe() {
       console.warn("Hello new subscriber !");
     },
@@ -67,7 +69,7 @@ module.exports = function Server(options = {}) {
     return res.status(err.status || 500).send({ message: err.message });
   });
 
-  Hull.log(`Listening on port ${port}`);
+  console.log(`Listening on port ${port}`);
 
   app.listen(port);
 
