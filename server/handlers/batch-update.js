@@ -3,7 +3,7 @@ import userUpdateHandler from "./user-update";
 
 const Limiter = new Bottleneck.Cluster(3, 250);
 
-setInterval(() => {
+function printLimits() {
   Limiter.all((limiter) => {
     const nbRunning = limiter.nbRunning();
     const nbQueued = limiter.nbQueued();
@@ -13,8 +13,10 @@ setInterval(() => {
         nbQueued
       }));
     }
-  });
-}, 1000);
+  });  
+}
+
+setInterval(printLimits, 1000);
 
 export default function handleBatchUpdate({ hostSecret }) {
   const handleUserUpdate = userUpdateHandler({
@@ -27,7 +29,7 @@ export default function handleBatchUpdate({ hostSecret }) {
     const handleMessage = (m, done) => {
       handleUserUpdate(m, context);
       done();
-    }
+    };
     return messages.map(
       m => limiter.submit(handleMessage, m)
     );
