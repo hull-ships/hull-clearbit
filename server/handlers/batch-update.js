@@ -13,7 +13,7 @@ function printLimits() {
         nbQueued
       }));
     }
-  });  
+  });
 }
 
 setInterval(printLimits, 1000);
