@@ -273,9 +273,6 @@ export default class Clearbit {
       payload.webhook_url = `https://${this.hostname}/clearbit?ship=${this.ship.id}&id=${this.getWebhookId(user.id)}`;
     }
 
-    payload.stream = false;
-
-
     this.log("enrichUser", payload);
     this.metric("user.enrich");
 
