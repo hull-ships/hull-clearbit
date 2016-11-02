@@ -4,10 +4,9 @@ export default function handleBatchUpdate({ hostSecret }) {
   const handleUserUpdate = userUpdateHandler({
     hostSecret, stream: true, forceFetch: true
   });
-
-  return (messages = [], { hull, ship }) => {
+  return (messages = [], context) => {
     return messages.map(
-      m => handleUserUpdate(m, { hull, ship })
+      m => handleUserUpdate(m, context)
     );
   };
 }

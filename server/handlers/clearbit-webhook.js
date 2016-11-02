@@ -1,9 +1,11 @@
+import _ from "lodash";
 import Clearbit from "../clearbit";
 
-export default function handleWebhook({ hostSecret }) {
+export default function handleWebhook({ hostSecret, onMetric }) {
   return (req, res) => {
     const { status, type, body } = req.body;
     const { client: hull, ship } = req.hull;
+    const { hostname } = req;
     const userId = req.hull.config.userId;
 
     if ((type === "person" || type === "person_company") && status === 200 && userId) {
@@ -15,12 +17,19 @@ export default function handleWebhook({ hostSecret }) {
         person = { ...body.person, company: body.company };
       }
 
-      const cb = new Clearbit({ hull, ship, hostSecret });
+      const cb = new Clearbit({ hull, ship, hostSecret, hostname, onMetric });
 
+      // Return early if propector is not enabled
+      if (!cb.propectorEnabled()) {
+        res.json({ message: "thanks" });
+        return cb.saveUser({ id: userId }, person);
+      } 
+
+      // TODO batch those calls
       Promise.all([
         hull.get(`${userId}/user_report`),
         hull.get(`${userId}/segments`),
-        cb.saveUser({ user: { id: userId }, person })
+        cb.saveUser({ id: userId }, person)
       ])
       .then(([user, segments]) => {
         if (cb.shouldProspect({ user, segments })) {
@@ -38,5 +47,15 @@ export default function handleWebhook({ hostSecret }) {
     } else {
       res.json({ message: "ignored" });
     }
+
+
+    try {
+      if (_.isFunction(onMetric)) {
+        onMetric('webhook', 1, { id: ship.id });
+      }      
+    } catch (err) {
+      console.warn('Error on webhook onMetric: ', err);
+    }
+
   };
 }

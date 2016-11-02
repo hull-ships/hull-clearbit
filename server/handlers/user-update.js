@@ -1,10 +1,11 @@
 import Clearbit from "../clearbit";
 
-export default function handleUserUpdate({ hostSecret, stream = false, forceFetch = false }) {
-  return (payload, { hull, ship }) => {
+export default function handleUserUpdate({ hostSecret, stream = false, forceFetch = false, onMetric }) {
+  return (payload, { hull, ship, req }) => {
     const { user = {}, segments = [], changes = {} } = payload.message;
+    const { hostname } = req;
     const cb = new Clearbit({
-      hull, ship, hostSecret, stream, forceFetch
+      hull, ship, hostSecret, stream, forceFetch, onMetric, hostname
     });
 
     if (!cb.shouldEnrich({ user, segments, changes })) {
