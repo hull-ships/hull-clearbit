@@ -4,7 +4,7 @@ import userUpdateHandler from "./user-update";
 
 const Limiter = new Bottleneck.Cluster(3, 250);
 
-const printLimits = _.throttle(function printLimits() {
+const printLimits = _.throttle(() => {
   Limiter.all((limiter) => {
     const nbRunning = limiter.nbRunning();
     const nbQueued = limiter.nbQueued();
