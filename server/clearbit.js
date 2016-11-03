@@ -91,16 +91,19 @@ export default class Clearbit {
     const { user, segments = [] } = message;
     const {
       enrich_segments = [],
-      prospect_segments = []
+      prospect_segments = [],
+      enable_reveal
     } = this.settings;
 
     // Merge enrich and prospect segments lists
     // To check if the user matches one of them
     const filterSegments = enrich_segments.length && enrich_segments.concat(prospect_segments);
+    const hasEmail = !_.isEmpty(user.email);
+    const canReveal = !!enable_reveal && user.last_known_ip;
+
 
     const checks = {
-      emptyEmail: !_.isEmpty(user.email),
-      // domain: !this.isEmailDomainExcluded(user.email),
+      emailOrReveal: hasEmail || canReveal,
       inSegment: this.isInSegments(segments, filterSegments)
     };
 
@@ -188,7 +191,7 @@ export default class Clearbit {
   }
 
   getMapping(key) {
-    const companyMapping = this.settings.enrich_with_company ? Mappings.Company : {};
+    const companyMapping = this.settings.enrich_with_company || this.settings.enable_reveal ? Mappings.Company : {};
     return {
       ...companyMapping,
       ...Mappings[key]
@@ -247,13 +250,46 @@ export default class Clearbit {
     return hostSecret && jwt.encode(claims, hostSecret);
   }
 
+  enrichUser(user = {}) {
+    if (!user) {
+      return Promise.reject(new Error("Empty user"));
+    }
+    
+    if (user.email) {
+      return this.fetchFromEnrich(user);
+    } else if (user.last_known_ip && this.settings.enable_reveal) {
+      return this.fetchFromReveal(user);
+    } else {
+      return Promise.reject(new Error(`Cannot enrich user ${user.id}`));
+    }
+  }
+
+  /**
+   * Lookup data from Clearbit's Reveal API and save it as
+   * traits on the Hull user
+   * @param  {User} user - Hull User
+   * @return {Promise -> Object({ user, person })}
+   */
+  fetchFromReveal(user = {}) {
+    const saveUser = this.saveUser.bind(this, user);
+    const { Reveal } = this.client;
+    const ip = user.last_known_ip;
+    return Reveal.find({ ip }).then((response = {}) => {
+      const { company } = response;
+      return this.saveUser(user, { company });
+    }).catch(({ message, statusCode }) => {
+      this.hull.logger.warn("Cannot Reveal IP", { ip, message, statusCode })
+    });
+  }
+
+
   /**
    * Fetch data from Clearbit's Enrichment API and save it as
    * traits on the Hull user
    * @param  {User} user - Hull User
    * @return {Promise -> Object({ user, person })}
    */
-  enrichUser(user = {}) {
+  fetchFromEnrich(user = {}) {
     const saveUser = this.saveUser.bind(this, user);
 
     const payload = {
@@ -351,7 +387,6 @@ export default class Clearbit {
     this.metric("prospect.discover");
     return this.discoverSimilarCompanies(domain, options.company)
       .then((companies = []) => {
-        console.warn(`>> Found ${companies.length} companies !`);
         return Promise.all(companies.map(company =>
           this.fetchProspectsFromCompany(company, options.prospect)
         ));

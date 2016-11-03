@@ -60,6 +60,14 @@
     },
 
     {
+      "name" : "enable_reveal",
+      "title" : "Enable Reveal", 
+      "description" : "Lookup anonymous visitors' Company info by IP Address",
+      "type" : "boolean",
+      "default" : false
+    },
+
+    {
       "type": "string", "format": "title", "name": "prospect_info",
       "title": "Similar Lead Discovery"
     },
@@ -144,6 +152,7 @@
         "manager"
       ]
     }
+
   ],
   "resources": [],
   "readme": "readme.md",

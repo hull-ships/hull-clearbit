@@ -62,7 +62,7 @@
     "bluebird": "^3.4.0",
     "body-parser": "^1.15.0",
     "bottleneck": "1.15.0",
-    "clearbit": "^1.2.1",
+    "clearbit": "1.2.3",
     "connect": "^3.4.1",
     "ejs": "^2.4.1",
     "event-stream": "^3.3.2",
