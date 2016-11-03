@@ -254,14 +254,16 @@ export default class Clearbit {
     if (!user) {
       return Promise.reject(new Error("Empty user"));
     }
-    
+
     if (user.email) {
       return this.fetchFromEnrich(user);
-    } else if (user.last_known_ip && this.settings.enable_reveal) {
-      return this.fetchFromReveal(user);
-    } else {
-      return Promise.reject(new Error(`Cannot enrich user ${user.id}`));
     }
+
+    if (user.last_known_ip && this.settings.enable_reveal) {
+      return this.fetchFromReveal(user);
+    }
+
+    return Promise.reject(new Error(`Cannot enrich user ${user.id}`));
   }
 
   /**
@@ -271,14 +273,13 @@ export default class Clearbit {
    * @return {Promise -> Object({ user, person })}
    */
   fetchFromReveal(user = {}) {
-    const saveUser = this.saveUser.bind(this, user);
     const { Reveal } = this.client;
     const ip = user.last_known_ip;
     return Reveal.find({ ip }).then((response = {}) => {
       const { company } = response;
       return this.saveUser(user, { company });
     }).catch(({ message, statusCode }) => {
-      this.hull.logger.warn("Cannot Reveal IP", { ip, message, statusCode })
+      this.hull.logger.warn("Cannot Reveal IP", { ip, message, statusCode });
     });
   }
 
