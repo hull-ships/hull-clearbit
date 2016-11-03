@@ -17,6 +17,8 @@ export default function handleWebhook({ hostSecret, onMetric }) {
         person = { ...body.person, company: body.company };
       }
 
+      hull.logger.debug("webhook - person", { person: JSON.stringify(person) });
+
       const cb = new Clearbit({ hull, ship, hostSecret, hostname, onMetric });
 
       // Return early if propector is not enabled
