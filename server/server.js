@@ -49,7 +49,7 @@ module.exports = function Server(options = {}) {
 
   app.post("/prospect",
     bodyParser.urlencoded(),
-    Middlewares.hullClient({ hostSecret }),
+    hullClient({ hostSecret }),
     handleProspect(options)
   );
 
