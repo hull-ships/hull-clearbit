@@ -1,4 +1,4 @@
-{
+export default {
   "Person": {
     "name.givenName": "first_name",
     "name.familyName": "last_name",
