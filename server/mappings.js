@@ -121,4 +121,4 @@ export default {
     "company.phone": "clearbit_company/phone",
     "company.tech": "clearbit_company/tech"
   }
-}
+};
