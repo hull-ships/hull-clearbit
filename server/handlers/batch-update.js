@@ -1,6 +1,6 @@
 import _ from "lodash";
 import Bottleneck from "bottleneck";
-import userUpdateHandler from "./user-update";
+import Clearbit from "../clearbit";
 
 const Limiter = new Bottleneck.Cluster(3, 250);
 
@@ -19,20 +19,29 @@ const printLimits = _.throttle(() => {
 
 setInterval(printLimits, 5000);
 
-export default function handleBatchUpdate({ hostSecret }) {
-  const handleUserUpdate = userUpdateHandler({
-    hostSecret, stream: false, forceFetch: true
-  });
-  return (messages = [], context = {}) => {
-    const { hull, ship, processed } = context;
+export default function handleBatchUpdate({ hostSecret, onMetric }) {
+  return (messages = [], { hull, ship, req }) => {
+    const { hostname } = req;
     const limiter = Limiter.key(ship.id);
-    hull.logger.info("processing batch", { processed });
-    const handleMessage = (m, done) => {
-      handleUserUpdate(m, context);
-      done(m);
+
+    const users = _.map(messages, ({ message = {} }) => message.user)
+                   .filter(u => u.email);
+
+    if (users.length === 0) {
+      return false;
+    }
+
+    const clearbit = new Clearbit({
+      hull, ship, hostSecret, stream: false, onMetric, hostname
+    });
+
+    const handleMessage = (user, done) => {
+      clearbit.enrichUser(user);
+      done(user);
     };
-    return messages.map(
-      m => limiter.submit(handleMessage, m, () => {
+
+    return users.map(
+      user => limiter.submit(handleMessage, user, () => {
         // DO NOT REMOVE THIS CALLBACK
         printLimits();
       })

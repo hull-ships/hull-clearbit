@@ -10,8 +10,8 @@ export default function handleProspect({ hostSecret }) {
       const prospecting = domains.map(domain => {
         return cb.fetchProspectsFromCompany({ domain }, { role, seniority, titles });
       });
-      Promise.all(prospecting).then(
-        (prospects) => res.json({ prospects }),
+      Promise.all(prospecting).then(prospects =>
+        res.json({ prospects })
       ).catch((error) => {
         console.warn("Error prospecting...", error);
         res.json({ error });

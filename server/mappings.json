@@ -1,5 +1,5 @@
-export default {
-  Person: {
+{
+  "Person": {
     "name.givenName": "first_name",
     "name.familyName": "last_name",
     "email": "email",
@@ -51,17 +51,17 @@ export default {
     "gravatar.handle": "clearbit/gravatar_handle",
     "gravatar.avatar": "clearbit/gravatar_avatar"
   },
-  Prospect: {
+  "Prospect": {
     "name.givenName": "first_name",
     "name.familyName": "last_name",
     "email": "email",
-    "id": "clearbit/id",
+    "id": "clearbit/prospect_id",
     "title": "clearbit/employment_title",
     "role": "clearbit/employment_role",
     "seniority": "clearbit/employment_seniority",
     "company.name": "clearbit/employment_name"
   },
-  Company: {
+  "Company": {
     "company.id": "clearbit_company/id",
     "company.name": "clearbit_company/name",
     "company.legalName": "clearbit_company/legal_name",
@@ -121,4 +121,4 @@ export default {
     "company.phone": "clearbit_company/phone",
     "company.tech": "clearbit_company/tech"
   }
-};
+}
