@@ -14,7 +14,7 @@ export function isInSegments(userSegments = [], segmentsListIds = []) {
 }
 
 export function getDomain(user) {
-  return user["traits_clearbit/employment_domain"] || user["traits_clearbit_company/domain"];
+  return user["traits_clearbit/employment_domain"] || user["traits_clearbit_company/domain"] || user['traits_domain'] || users.domain;
 }
 
 export function now() {
