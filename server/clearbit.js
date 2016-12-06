@@ -46,6 +46,7 @@ export default class Clearbit {
    */
 
   shouldEnrich(message) {
+    if (!this.client) return false;
     return shouldEnrich(message, this.settings);
   }
 
@@ -242,10 +243,7 @@ export default class Clearbit {
    * @param  {Object(user)} payload - Hull user object
    * @return {Promise -> Bool}
    */
-  shouldProspectUsersFromDomain(user) {
-    const domain = getDomain(user);
-    if (!domain) return Promise.resolve(false);
-
+  shouldProspectUsersFromDomain(domain) {
     const query = { term: { "traits_clearbit_company/domain.exact": domain } };
 
     const aggs = {
@@ -286,9 +284,12 @@ export default class Clearbit {
 
 
   prospectUsers(user) {
-    const domain = getDomain(user);
+    const { prospect_domain = "domain" } = this.settings;
+    const domain = user[prospect_domain] || getDomain(user);
+
     if (!domain) return false;
-    return this.shouldProspectUsersFromDomain(user).then(doPropect => {
+
+    return this.shouldProspectUsersFromDomain(domain).then(doPropect => {
       if (!doPropect) return false;
 
       const query = {

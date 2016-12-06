@@ -48,7 +48,12 @@ export function getUserTraitsFromPerson({ user = {}, person = {} }, mappingName)
     });
   }, {});
 
-  const traits = ObjectMapper.merge(person, {}, mapping);
+
+  // Use setIfNull for top level fields
+  const traits = _.reduce(ObjectMapper.merge(person, {}, mapping), (ts, value, key) => {
+    const val = key.match(/^clearbit/) ? value : { operation: "setIfNull", value };
+    return { ...ts, [key]: val };
+  }, {});
 
   return _.omitBy(traits, _.isEmpty);
 }
