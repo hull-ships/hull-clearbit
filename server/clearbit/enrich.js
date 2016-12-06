@@ -39,6 +39,7 @@ function canEnrich(message = {}, settings = {}) {
   const { user, segments = [] } = message;
   const {
     enrich_segments = [],
+    enrich_enabled,
     reveal_enabled
   } = settings;
 
@@ -49,6 +50,7 @@ function canEnrich(message = {}, settings = {}) {
 
   const checks = {
     email: hasEmail,
+    enabled: !!enrich_enabled,
     hasSegments: !_.isEmpty(enrich_segments),
     inSegment: isInSegments(segments, enrich_segments)
   };

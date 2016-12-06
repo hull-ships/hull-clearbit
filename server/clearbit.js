@@ -111,10 +111,10 @@ export default class Clearbit {
    * @return {Boolean}
    */
   shouldDiscover({ segments = [], user = {} }) {
-    const { discover_segments = [] } = this.settings || {};
+    const { discover_enabled, discover_segments = [] } = this.settings || {};
     const domain = getDomain(user);
 
-    if (!this.client || _.isEmpty(discover_segments)) {
+    if (!this.client || !discover_enabled || _.isEmpty(discover_segments)) {
       this.debug("Discover not enabled", { discover_segments });
       return false;
     }
@@ -200,7 +200,7 @@ export default class Clearbit {
    */
 
   shouldProspect({ segments = [], user }) {
-    const { prospect_segments } = this.settings;
+    const { prospect_segments, prospect_enabled } = this.settings;
 
     // We need a domain to prospect
     const domain = getDomain(user);
@@ -210,7 +210,7 @@ export default class Clearbit {
       return false;
     }
 
-    if (!this.client || _.isEmpty(prospect_segments)) {
+    if (!this.client || !prospect_enabled || _.isEmpty(prospect_segments)) {
       this.debug(`Skip Prospect ${domain} - disabled: `, { prospect_segments });
       return false;
     }
