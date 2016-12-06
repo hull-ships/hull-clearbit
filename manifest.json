@@ -63,7 +63,7 @@
     {
       "type": "string",
       "format": "information",
-      "name": "reveal_informations",
+      "name": "reveal_information",
       "description": "Reveal setup",
       "headerTemplate": "For Reveal to operate, you need to enable **Guest Users** from your [Dashboard Settings](../../settings)"
     },
