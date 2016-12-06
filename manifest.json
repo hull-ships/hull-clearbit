@@ -1,159 +1,174 @@
 {
-  "name": "Clearbit",
   "description": "Fetch additional customer data from Clearbit",
+  "name": "Clearbit",
   "picture": "picture.png",
-  "version": "0.0.3",
+  "private_settings": [
+    {
+      "format": "title",
+      "name": "credentials",
+      "title": "Credentials",
+      "type": "string"
+    },
+    {
+      "description": "Get it from https://dashboard.clearbit.com/keys",
+      "format": "text",
+      "name": "api_key",
+      "title": "Clearbit API Key",
+      "type": "string"
+    },
+    {
+      "description": "The Enrichment API lets you look up person and company data based on an email or domain",
+      "format": "title",
+      "name": "enrich_info",
+      "title": "Enrichment",
+      "type": "string"
+    },
+    {
+      "default": [],
+      "format": "segment",
+      "items": {
+        "type": "string"
+      },
+      "name": "enrich_segments",
+      "title": "Enrich users only if they match any of these segments",
+      "type": "array"
+    },
+    {
+      "format": "title",
+      "name": "reveal",
+      "title": "Reveal",
+      "type": "string"
+    },
+    {
+      "default": false,
+      "description": "The Reveal API takes an anonymous user's IP, and returns the company associated with that IP",
+      "name": "reveal_enabled",
+      "title": "Enable Reveal",
+      "type": "boolean"
+    },
+    {
+      "default": 1,
+      "format": "range",
+      "maximum": 10,
+      "minimum": 1,
+      "multipleOf": 1,
+      "name": "reveal_prospect_min_contacts",
+      "title": "Minimum distinct anonymous visitors from a company to trigger prospection",
+      "type": "number"
+    },
+    {
+      "description": "The Discovery API lets you search for companies that are similar to your existing customers.",
+      "format": "title",
+      "name": "discovery_info",
+      "title": "Discovery",
+      "type": "string"
+    },
+    {
+      "default": [],
+      "format": "segment",
+      "items": {
+        "type": "string"
+      },
+      "name": "discover_segments",
+      "title": "Search for similar companies for users who match any of these segments",
+      "type": "array"
+    },
+    {
+      "default": 5,
+      "format": "range",
+      "maximum": 10,
+      "minimum": 1,
+      "multipleOf": 1,
+      "name": "discover_limit_count",
+      "title": "Max number of companies to fetch",
+      "type": "number"
+    },
+    {
+      "description": "This section describes how prospects are fetched in the Discovery and Reveal steps",
+      "format": "title",
+      "name": "prospect_info",
+      "title": "Prospect",
+      "type": "string"
+    },
+    {
+      "default": [],
+      "format": "segment",
+      "items": {
+        "type": "string"
+      },
+      "name": "prospect_segments",
+      "title": "Search for prospects for companies matching any of these segments",
+      "type": "array"
+    },
+    {
+      "default": 5,
+      "format": "range",
+      "maximum": 20,
+      "minimum": 1,
+      "multipleOf": 1,
+      "name": "prospect_limit_count",
+      "title": "Max number of prospects to fetch per company",
+      "type": "number"
+    },
+    {
+      "description": "Get prospects with role",
+      "enum": [
+        "",
+        "ceo",
+        "communications",
+        "consulting",
+        "customer_service",
+        "education",
+        "engineering",
+        "finance",
+        "founder",
+        "health_professional",
+        "human_resources",
+        "information_technology",
+        "legal",
+        "marketing",
+        "operations",
+        "owner",
+        "president",
+        "product",
+        "public_relations",
+        "real_estate",
+        "recruiting",
+        "research",
+        "sales"
+      ],
+      "format": "select",
+      "name": "prospect_filter_role",
+      "title": "Prospect Role",
+      "type": "string"
+    },
+    {
+      "description": "Get prospects with seniority",
+      "enum": [
+        "",
+        "executive",
+        "director",
+        "manager"
+      ],
+      "format": "select",
+      "name": "prospect_filter_seniority",
+      "title": "Prospect Seniority",
+      "type": "string"
+    }
+  ],
+  "readme": "readme.md",
+  "resources": [],
+  "subscriptions": [
+    {
+      "url": "/notify"
+    }
+  ],
   "tags": [
     "incoming",
     "outgoing",
     "batch",
     "oneColumn"
   ],
-  "private_settings": [{
-    "type": "string",
-    "format": "title",
-    "name": "credentials",
-    "title": "Credentials"
-  }, {
-    "name": "api_key",
-    "title": "Clearbit API Key",
-    "description": "Get it from https://dashboard.clearbit.com/keys",
-    "type": "string",
-    "format": "text"
-  }, {
-    "type": "string",
-    "format": "title",
-    "name": "enrich_info",
-    "title": "Enrichment",
-    "description": "The Enrichment API lets you look up person and company data based on an email or domain"
-  }, {
-    "name": "enrich_segments",
-    "title": "Enrich users only if they match any of these segments",
-    "type": "array",
-    "format": "segment",
-    "items": {
-      "type": "string"
-    },
-    "default": []
-  }, {
-    "type": "string",
-    "format": "title",
-    "name": "reveal",
-    "title": "Reveal"
-  }, {
-    "name": "reveal_enabled",
-    "title": "Enable Reveal",
-    "description": "The Reveal API takes an anonymous user's IP, and returns the company associated with that IP",
-    "type": "boolean",
-    "default": false
-  }, {
-    "name": "reveal_prospect_min_contacts",
-    "title": "Minimum distinct anonymous visitors from a company to trigger prospection",
-    "type": "number",
-    "format": "range",
-    "default": 1,
-    "minimum": 1,
-    "maximum": 10,
-    "multipleOf": 1,
-    "options" : {
-      "dependsOn" : "reveal_enabled"
-    }
-  }, {
-    "type": "string",
-    "format": "title",
-    "name": "discovery_info",
-    "title": "Discovery",
-    "description": "The Discovery API lets you search for companies that are similar to your existing customers."
-  }, {
-    "name": "discover_segments",
-    "title": "Search for similar companies for users who match any of these segments",
-    "type": "array",
-    "format": "segment",
-    "items": {
-      "type": "string"
-    },
-    "default": []
-  }, {
-    "name": "discover_limit_count",
-    "title": "Max number of companies to fetch",
-    "type": "number",
-    "format": "range",
-    "default": 5,
-    "minimum": 1,
-    "maximum": 10,
-    "multipleOf": 1
-  }, {
-    "type": "string",
-    "format": "title",
-    "name": "prospect_info",
-    "title": "Prospect",
-    "description": "This section describes how prospects are fetched in the Discovery and Reveal steps"
-  }, {
-    "name": "prospect_segments",
-    "title": "Search for prospects for companies matching any of these segments",
-    "type": "array",
-    "format": "segment",
-    "items": {
-      "type": "string"
-    },
-    "default": []
-  }, {
-    "name": "prospect_limit_count",
-    "title": "Max number of prospects to fetch per company",
-    "type": "number",
-    "format": "range",
-    "default": 5,
-    "minimum": 1,
-    "maximum": 20,
-    "multipleOf": 1
-  }, {
-    "name": "prospect_filter_role",
-    "title": "Prospect Role",
-    "description": "Get prospects with role",
-    "type": "string",
-    "format" : "select",
-    "enum": [
-      "",
-      "ceo",
-      "communications",
-      "consulting",
-      "customer_service",
-      "education",
-      "engineering",
-      "finance",
-      "founder",
-      "health_professional",
-      "human_resources",
-      "information_technology",
-      "legal",
-      "marketing",
-      "operations",
-      "owner",
-      "president",
-      "product",
-      "public_relations",
-      "real_estate",
-      "recruiting",
-      "research",
-      "sales"
-    ]
-  }, {
-    "name": "prospect_filter_seniority",
-    "title": "Prospect Seniority",
-    "description": "Get prospects with seniority",
-    "type": "string",
-    "format" : "select",
-    "enum": [
-      "",
-      "executive",
-      "director",
-      "manager"
-    ]
-  }],
-  "resources": [],
-  "readme": "readme.md",
   "ui": false,
-  "subscriptions": [{
-    "url": "/notify"
-  }]
+  "version": "0.0.3"
 }
