@@ -257,8 +257,8 @@ export default class Clearbit {
         }, {});
 
         // Skip prospect if we have known users with that domain
-        if (total !== anonymous) {
-          this.debug("Skip prospect ` - we already have known users with that domain");
+        if (total > 0 && total !== anonymous) {
+          this.debug("Skip prospect - we already have known users with that domain");
           return false;
         }
 
@@ -273,7 +273,7 @@ export default class Clearbit {
           return true;
         }
 
-        return false;
+        return true;
       });
   }
 
@@ -285,7 +285,10 @@ export default class Clearbit {
     if (!domain) return false;
 
     return this.shouldProspectUsersFromDomain(domain).then(doPropect => {
-      if (!doPropect) return false;
+      if (!doPropect) {
+        this.debug("Skip prospect - we already have known users with that domain");
+        return false;
+      }
 
       const query = {
         domain,
@@ -307,6 +310,8 @@ export default class Clearbit {
         }
         return traits;
       }, {});
+
+      this.debug("do prospectUsers", { query });
 
       return this.client.prospect(query).then((prospects) => {
         prospects.map(this.saveProspect.bind(this, company_traits));
