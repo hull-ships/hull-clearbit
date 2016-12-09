@@ -228,11 +228,6 @@ export default class Clearbit {
       return false;
     }
 
-    if (!user["traits_clearbit/discovered_at"] && !user["traits_clearbit/revealed_at"]) {
-      this.debug(`Skip Prospect ${domain} - we only prospect discovered or revealed companies from here`);
-      return false;
-    }
-
     return isInSegments(segments, prospect_segments);
   }
 
