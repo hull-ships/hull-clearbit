@@ -55,5 +55,5 @@ export function getUserTraitsFromPerson({ user = {}, person = {} }, mappingName)
     return { ...ts, [key]: val };
   }, {});
 
-  return _.omitBy(traits, _.isEmpty);
+  return _.omitBy(traits, _.isNil);
 }
