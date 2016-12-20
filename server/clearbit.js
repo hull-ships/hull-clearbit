@@ -289,7 +289,6 @@ export default class Clearbit {
         this.debug("Skip prospect - we already have known users with that domain");
         return false;
       }
-
       const query = {
         domain,
         limit: this.settings.prospect_limit_count,
@@ -311,11 +310,14 @@ export default class Clearbit {
         return traits;
       }, {});
 
-      this.debug("do prospectUsers", { query });
+      return this.fetchProspects(query, company_traits);
+    });
+  }
 
-      return this.client.prospect(query).then((prospects) => {
-        prospects.map(this.saveProspect.bind(this, company_traits));
-      });
+  fetchProspects(query, company_traits = {}) {
+    return this.client.prospect({ ...query, email: true }).then((prospects) => {
+      prospects.map(this.saveProspect.bind(this, company_traits));
+      return prospects;
     });
   }
 

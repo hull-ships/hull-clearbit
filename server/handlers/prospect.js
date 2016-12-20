@@ -8,7 +8,7 @@ export default function handleProspect({ hostSecret }) {
     if (domains) {
       const cb = new Clearbit({ hull, ship, hostSecret });
       const prospecting = domains.map(domain => {
-        return cb.fetchProspectsFromCompany({ domain }, { role, seniority, titles });
+        return cb.fetchProspects({ domain, role, seniority, titles });
       });
       Promise.all(prospecting).then(prospects =>
         res.json({ prospects })
