@@ -18,7 +18,7 @@ describe("HullClearbit Client", () => {
 
   it("Should return alexa rank from combined payload", () => {
     const traits = getUserTraitsFromPerson({ user: {}, person: combined });
-    const rank = _.get(reveal, "company.metrics.alexaGlobalRank");
+    const rank = _.get(combined, "company.metrics.alexaGlobalRank");
     assert.equal(rank, 55993);
     assert.equal(traits["clearbit_company/metrics_alexa_global_rank"], rank);
   });
