@@ -3,6 +3,7 @@
   "description": "Fetch additional customer data from Clearbit",
   "picture": "picture.png",
   "version": "0.0.3",
+  "admin" : "admin.html",
   "tags": [
     "incoming",
     "outgoing",
