@@ -20,3 +20,7 @@ export function getDomain(user) {
 export function now() {
   return new Date().toISOString();
 }
+
+export function isValidIpAddress(ip) {
+  return /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/.test(ip);
+}

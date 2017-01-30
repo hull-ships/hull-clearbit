@@ -1,7 +1,7 @@
 import _ from "lodash";
 import moment from "moment";
 import jwt from "jwt-simple";
-import { isInSegments } from "./utils";
+import { isInSegments, isValidIpAddress } from "./utils";
 
 /**
  * Build context to pass a webhook_id
@@ -29,7 +29,6 @@ function lookupIsPending(user) {
   return fetched_at && moment(fetched_at).isAfter(one_hour_ago) && !cbId;
 }
 
-
 /**
  * Check if we can Enrich the User (based on user data and ship configuration)
  * @param  {Message({ user, segments })} message - A user:update message
@@ -46,8 +45,7 @@ function canEnrich(message = {}, settings = {}) {
   // Merge enrich and prospect segments lists
   // To check if the user matches one of them
   const hasEmail = !_.isEmpty(user.email);
-  const canReveal = !!reveal_enabled && user.last_known_ip && !user.email;
-
+  const canReveal = !!reveal_enabled && isValidIpAddress(user.last_known_ip) && !user.email;
   const checks = {
     email: hasEmail,
     enabled: !!enrich_enabled,
@@ -143,7 +141,7 @@ export function enrichUser(user, clearbit) {
     );
   }
 
-  if (user.last_known_ip && !user["traits_clearbit_company/id"] && clearbit.settings.reveal_enabled) {
+  if (isValidIpAddress(user.last_known_ip) && !user["traits_clearbit_company/id"] && clearbit.settings.reveal_enabled) {
     clearbit.metric("reveal");
     return fetchFromReveal(user, clearbit).then(
       person => { return { source: "reveal", person }; }
