@@ -3,7 +3,6 @@
   "description": "Fetch additional customer data from Clearbit",
   "picture": "picture.png",
   "version": "0.0.3",
-  "admin" : "admin.html",
   "tags": [
     "incoming",
     "outgoing",
@@ -194,10 +193,24 @@
         "director",
         "manager"
       ]
+    },
+    {
+      "name": "prospect_filter_titles",
+      "title": "Prospect Titles",
+      "type": "array",
+      "items": {
+        "title": "Title",
+        "type": "string"
+      },
+      "format": "select",
+      "options": {
+        "allowCreate": true
+      }
     }
   ],
   "resources": [],
   "readme": "readme.md",
+  "admin": "admin.html",
   "ui": false,
   "subscriptions": [
     {
