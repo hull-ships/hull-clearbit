@@ -245,7 +245,13 @@ export default class Clearbit {
       return Promise.resolve(false);
     }
 
-    const query = { term: { "traits_clearbit_company/domain.exact": domain } };
+    const query = { bool: {
+      should: [
+        { term: { "traits_clearbit_company/domain.exact": domain } },
+        { term: { "domain.exact": domain } }
+      ],
+      minimum_should_match: 1
+    } };
 
     const aggs = {
       without_email: { missing: { field: "email" } },

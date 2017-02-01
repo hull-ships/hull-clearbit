@@ -68,7 +68,11 @@ function fetchFromReveal(user = {}, clearbit) {
   return clearbit.client
     .reveal({ ip })
     .then(({ company }) => {
+      console.warn("Revealed ip : ", JSON.stringify({ ip, company }));
       return { company };
+    })
+    .catch(err => {
+      console.warn("fetchFromReveal failed for ip ", { ip, err });
     });
 }
 
