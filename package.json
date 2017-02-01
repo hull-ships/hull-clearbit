@@ -76,6 +76,7 @@
     "moment": "^2.13.0",
     "newrelic": "^1.28.3",
     "object-mapper": "^3.0.0",
+    "range_check": "^1.4.0",
     "rimraf": "^2.5.2",
     "webpack": "^1.13.1",
     "webpack-dev-middleware": "^1.6.1"

@@ -1,4 +1,6 @@
 import _ from "lodash";
+import rangeCheck from "range_check";
+import excludes from "../excludes";
 
 /**
  * Check if a user belongs to one of the segments listed
@@ -22,5 +24,5 @@ export function now() {
 }
 
 export function isValidIpAddress(ip) {
-  return /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/.test(ip);
+  return rangeCheck.isIP(ip) && !rangeCheck.inRange(ip, excludes.ip_ranges);
 }

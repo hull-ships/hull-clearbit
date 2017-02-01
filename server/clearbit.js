@@ -7,6 +7,8 @@ import { isInSegments, getDomain, now } from "./clearbit/utils";
 import { shouldEnrich, enrichUser } from "./clearbit/enrich";
 import { getUserTraitsFromPerson } from "./clearbit/mapping";
 
+import excludes from "./excludes";
+
 
 export default class Clearbit {
 
@@ -239,6 +241,10 @@ export default class Clearbit {
    * @return {Promise -> Bool}
    */
   shouldProspectUsersFromDomain(domain) {
+    if (_.includes(excludes.domains, domain)) {
+      return Promise.resolve(false);
+    }
+
     const query = { term: { "traits_clearbit_company/domain.exact": domain } };
 
     const aggs = {

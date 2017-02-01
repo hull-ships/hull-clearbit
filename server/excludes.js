@@ -1,4 +1,4 @@
-export default [
+export default { domains: [
   /* Default domains included */
   "aol.com", "att.net", "comcast.net", "facebook.com", "gmail.com", "gmx.com", "googlemail.com",
   "google.com", "hotmail.com", "hotmail.co.uk", "mac.com", "me.com", "mail.com", "msn.com",
@@ -38,4 +38,15 @@ export default [
 
   /* Domains used in Mexico */
   "hotmail.com", "gmail.com", "yahoo.com.mx", "live.com.mx", "yahoo.com", "hotmail.es", "live.com", "hotmail.com.mx", "prodigy.net.mx", "msn.com"
-];
+],
+  ip_ranges: [
+    // Google crawlers
+    "64.18.0.0/20", "64.233.160.0/19", "66.102.0.0/20", "66.249.80.0/20", "72.14.192.0/18", "74.125.0.0/16", "108.177.8.0/21", "172.217.0.0/19", "173.194.0.0/16", "207.126.144.0/20", "209.85.128.0/17", "216.58.192.0/19", "216.239.32.0/19",
+
+    // Local IPs
+    "10.0.0.0/8", "192.168.0.0/16", "172.16.0.0/12",
+
+    // TODO add aws ip ranges
+    // https://www.npmjs.com/package/aws-ip-ranges
+  ]
+};
