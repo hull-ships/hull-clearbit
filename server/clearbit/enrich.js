@@ -72,7 +72,7 @@ function fetchFromReveal(user = {}, clearbit) {
       return { company };
     })
     .catch(err => {
-      console.warn("fetchFromReveal failed for ip ", { ip, err });
+      console.warn("fetchFromReveal failed for ip ", JSON.stringify({ ip, err: err.message }));
     });
 }
 
