@@ -30,6 +30,7 @@ describe("HullClearbit Client", () => {
     assert(isValidIpAddress("1.2.3.4"));
 
     // Not an IP address
+    assert(!isValidIpAddress("0"), "0 is Not a valid IP");
     assert(!isValidIpAddress("a.b.c"), "Not a valid IP");
     assert(!isValidIpAddress("boom"), "Not a valid IP");
 

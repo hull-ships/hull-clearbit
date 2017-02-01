@@ -24,5 +24,5 @@ export function now() {
 }
 
 export function isValidIpAddress(ip) {
-  return rangeCheck.isIP(ip) && !rangeCheck.inRange(ip, excludes.ip_ranges);
+  return ip !== "0" && rangeCheck.isIP(ip) && !rangeCheck.inRange(ip, excludes.ip_ranges);
 }
