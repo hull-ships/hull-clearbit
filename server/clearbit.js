@@ -328,6 +328,7 @@ export default class Clearbit {
 
   fetchProspects(query, company_traits = {}) {
     return this.client.prospect({ ...query, email: true }).then((prospects) => {
+      this.debug(`Found ${prospects.length} new Prospects`);
       prospects.map(this.saveProspect.bind(this, company_traits));
       return prospects;
     });

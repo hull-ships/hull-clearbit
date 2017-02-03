@@ -1,7 +1,49 @@
 import { Client } from "clearbit";
+import request from "request";
+import qs from "qs";
+import Promise from "bluebird";
+import { STATUS_CODES } from "http";
+
+
+function ClearbitApi({ path, method = "get", params = {}, key }) {
+  const baseUrl = `https://prospector.clearbit.com/v1/${path}`;
+  const url = `${baseUrl}?${qs.stringify(params, { arrayFormat: "brackets" })}`;
+  return new Promise((resolve, reject) => {
+    request(url, {
+      method,
+      headers: {
+        "content-type": "application/json",
+        "accept": "application/json"
+      },
+      auth: { bearer: key }
+    }, (error, response, rawBody) => {
+      let body;
+
+      try {
+        body = JSON.parse(rawBody);
+      } catch (err) {
+        body = {};
+      }
+
+      if (error) {
+        reject(error);
+      } else if (response.statusCode === 202 || response.statusCode >= 400) {
+        const message = body.error ? body.error.message : STATUS_CODES[response.statusCode] || "Unknown";
+        reject(new Error(message));
+      } else {
+        try {
+          resolve(body);
+        } catch (err) {
+          reject(err);
+        }
+      }
+    });
+  });
+}
 
 export default class ClearbitClient {
   constructor(key, onMetric, onLog) {
+    this.key = key;
     this.client = new Client({ key });
     this.onMetric = onMetric;
     this.onLog = onLog;
@@ -45,6 +87,6 @@ export default class ClearbitClient {
   prospect(params) {
     this.metric("clearbit.prospect");
     this.log("clearbit.prospect", JSON.stringify(params));
-    return this.client.Prospector.search(params);
+    return ClearbitApi({ path: "/people/search", params, key: this.key });
   }
 }
