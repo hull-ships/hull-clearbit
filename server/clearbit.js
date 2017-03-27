@@ -111,6 +111,27 @@ export default class Clearbit {
     this.metric("saveUser");
     this.log("incoming.user.success", { traits, source, external_id, id, email });
 
+    const all_traits = { user: {}, account: {} };
+
+    _.map(traits, (m, v, k) => {
+      const [group] = k.split("/");
+      if (group === "clearbit") {
+        all_traits.user[k] = v;
+      } else {
+        all_traits.account[k] = v;
+      }
+    }, {});
+
+    const domain = all_traits.account["clearbit_company/domain"];
+
+    const client = this.hull.asUser(ident);
+
+    client.traits(all_traits.user);
+
+    if (domain) {
+      client.account({ domain }).traits(all_traits.account);
+    }
+
     return this.hull
       .as(ident)
       .traits(traits)
