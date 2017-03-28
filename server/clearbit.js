@@ -114,11 +114,11 @@ export default class Clearbit {
     const all_traits = { user: {}, account: {} };
 
     _.map(traits, (v, k) => {
-      const [group] = k.split("/");
-      if (group === "clearbit") {
-        all_traits.user[k] = v;
+      const [group, trait] = k.split("/");
+      if (group === "clearbit_company") {
+        all_traits.account[`clearbit/${trait}`] = v;
       } else {
-        all_traits.account[k] = v;
+        all_traits.user[k] = v;
       }
     }, {});
 
@@ -226,11 +226,12 @@ export default class Clearbit {
     // TODO -> Support Accounts
     return Promise.all(companies.map(company => {
       const person = { company };
+      // TODO: save account instead of user
       const traits = getUserTraitsFromPerson({ person });
       traits["clearbit/discovered_from_domain"] = { value: discovered_from_domain, operation: "setIfNull" };
       traits["clearbit/discovered_at"] = { value: now(), operation: "setIfNull" };
       traits["clearbit/source"] = { value: "discover", operation: "setIfNull" };
-      return this.hull.as({ guest_id: `clearbit-company:${company.id}` }).traits(traits).then(() => traits);
+      return this.hull.asUser({ anonymous_id: `clearbit-company:${company.id}` }).traits(traits).then(() => traits);
     }));
   }
 
