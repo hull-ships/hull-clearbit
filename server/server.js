@@ -12,10 +12,6 @@ import bodyParser from "body-parser";
 function extractToken(req, res, next) {
   req.hull = req.hull || {};
   const token = req.query.id;
-  if (!token) {
-    return res.json({ error: "unknown id" });
-  }
-
   req.hull.token = token;
   return next();
 }
