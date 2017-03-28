@@ -99,7 +99,7 @@ export default class Clearbit {
 
     const all_traits = { user: {}, account: {} };
 
-    _.map(traits, (m, v, k) => {
+    _.map(traits, (v, k) => {
       const [group] = k.split("/");
       if (group === "clearbit") {
         all_traits.user[k] = v;
@@ -118,10 +118,7 @@ export default class Clearbit {
       client.account({ domain }).traits(all_traits.account);
     }
 
-    return this.hull
-      .as(ident)
-      .traits(traits)
-      .then(() => { return { user, person }; });
+    return Promise.resolve({ user, person });
   }
 
 

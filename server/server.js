@@ -1,6 +1,6 @@
-import express from "express";
 import path from "path";
 import devMode from "./dev-mode";
+import { notifHandler, batchHandler } from "hull/lib/utils";
 
 import handleProspect from "./handlers/prospect";
 import handleUserUpdate from "./handlers/user-update";
@@ -9,39 +9,33 @@ import handleClearbitWebhook from "./handlers/clearbit-webhook";
 
 import bodyParser from "body-parser";
 
-module.exports = function Server(options = {}) {
-  const { devMode: dev, port, Hull, hostSecret, onMetric } = options;
-  const { BatchHandler, NotifHandler, Routes, Middleware: hullClient } = Hull;
-
-  const app = express();
-
-  if (dev) app.use(devMode());
-
-  app.use(express.static(path.resolve(__dirname, "..", "dist")));
-  app.use(express.static(path.resolve(__dirname, "..", "assets")));
-
-  app.get("/manifest.json", Routes.Manifest(__dirname));
-  app.get("/", Routes.Readme);
-  app.get("/readme", Routes.Readme);
-
-  function extractToken(req, res, next) {
-    req.hull = req.hull || {};
-    const token = req.body.id || req.query.id;
-    if (!token) {
-      return res.json({ error: "unknown id" });
-    }
-    req.hull.token = token;
-    return next();
+function extractToken(req, res, next) {
+  req.hull = req.hull || {};
+  const token = req.query.id;
+  if (!token) {
+    return res.json({ error: "unknown id" });
   }
 
+  req.hull.token = token;
+  return next();
+}
+
+module.exports = function Server(app, options = {}) {
+  const { Hull, hostSecret, port, onMetric, clientConfig = {} } = options;
+
+  const connector = new Hull.Connector({ hostSecret, port, clientConfig });
+
+  app.use(extractToken);
+
+  connector.setupApp(app);
+
+  if (options.devMode) app.use(devMode());
+
   app.post("/clearbit",
-    bodyParser.json(),
-    extractToken,
-    hullClient({ hostSecret, onMetric }),
     handleClearbitWebhook(options)
   );
 
-  app.post("/batch", BatchHandler({
+  app.post("/batch", batchHandler({
     groupTraits: false,
     hostSecret,
     handler: handleBatchUpdate(options)
@@ -49,15 +43,14 @@ module.exports = function Server(options = {}) {
 
   app.post("/prospect",
     bodyParser.urlencoded(),
-    hullClient({ hostSecret }),
     handleProspect(options)
   );
 
-  app.post("/notify", NotifHandler({
-    groupTraits: false,
-    hostSecret,
-    onSubscribe: function onSubscribe() {
-      console.warn("Hello new subscriber !");
+  app.post("/notify", notifHandler({
+    userHandlerOptions: {
+      groupTraits: false,
+      maxSize: 1,
+      maxTime: 1
     },
     handlers: {
       "user:update": handleUserUpdate(options)
@@ -74,7 +67,7 @@ module.exports = function Server(options = {}) {
         params: req.params,
         body: req.body
       };
-      console.log("Error ----------------", err.message, err.status, data);
+      console.log("Error ----------------", err.message, err.status, err.stack, data);
     }
 
     return res.status(err.status || 500).send({ message: err.message });
