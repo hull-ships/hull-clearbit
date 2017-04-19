@@ -6,7 +6,7 @@ import { STATUS_CODES } from "http";
 
 
 function ClearbitApi({ path, method = "get", params = {}, key }) {
-  const baseUrl = `https://prospector.clearbit.com/v1/${path}`;
+  const baseUrl = `https://prospector.clearbit.com/v1${path}`;
   const url = `${baseUrl}?${qs.stringify(params, { arrayFormat: "brackets" })}`;
   return new Promise((resolve, reject) => {
     request(url, {
