@@ -111,25 +111,29 @@ export default class Clearbit {
     this.metric("saveUser");
     this.log("incoming.user.success", { traits, source, external_id, id, email });
 
-    const all_traits = { user: {}, account: {} };
+    if (this.settings.handle_accounts) {
+      const all_traits = { user: {}, account: {} };
 
-    _.map(traits, (v, k) => {
-      const [group, trait] = k.split("/");
-      if (group === "clearbit_company") {
-        all_traits.account[`clearbit/${trait}`] = v;
-      } else {
-        all_traits.user[k] = v;
+      _.map(traits, (v, k) => {
+        const [group, trait] = k.split("/");
+        if (group === "clearbit_company") {
+          all_traits.account[`clearbit/${trait}`] = v;
+        } else {
+          all_traits.user[k] = v;
+        }
+      }, {});
+
+      const domain = all_traits.account["clearbit_company/domain"];
+
+      const client = this.hull.asUser(ident);
+
+      client.traits(all_traits.user);
+
+      if (domain) {
+        client.account({ domain }).traits(all_traits.account);
       }
-    }, {});
-
-    const domain = all_traits.account["clearbit_company/domain"];
-
-    const client = this.hull.asUser(ident);
-
-    client.traits(all_traits.user);
-
-    if (domain) {
-      client.account({ domain }).traits(all_traits.account);
+    } else {
+      this.hull.asUser(ident).traits(traits);
     }
 
     return Promise.resolve({ user, person });

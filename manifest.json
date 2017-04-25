@@ -206,6 +206,13 @@
       "options": {
         "allowCreate": true
       }
+    },
+    {
+      "name": "handle_accounts",
+      "title": "Handle Accounts",
+      "description": "Save account objects instead of user objects in the clearbit_company group",
+      "type": "boolean",
+      "default": false
     }
   ],
   "resources": [],
