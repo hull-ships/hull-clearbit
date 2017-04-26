@@ -1,4 +1,3 @@
-import path from "path";
 import devMode from "./dev-mode";
 import { notifHandler, batchHandler } from "hull/lib/utils";
 
@@ -17,7 +16,7 @@ function extractToken(req, res, next) {
 }
 
 module.exports = function Server(app, options = {}) {
-  const { Hull, hostSecret, port, onMetric, clientConfig = {} } = options;
+  const { Hull, hostSecret, port, clientConfig = {} } = options;
 
   const connector = new Hull.Connector({ hostSecret, port, clientConfig });
 
