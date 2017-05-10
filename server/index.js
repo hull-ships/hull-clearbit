@@ -8,6 +8,10 @@ if (process.env.NEW_RELIC_LICENSE_KEY) {
   require("newrelic"); // eslint-disable-line global-require
 }
 
+let onMetric = function onMetric(metric, value, ctx) {
+  console.log(`[${ctx.id}] clearbit.${metric}`, value);
+};
+
 const librato = require("librato-node");
 
 if (process.env.LIBRATO_TOKEN && process.env.LIBRATO_USER) {
@@ -44,9 +48,7 @@ const options = {
   hostSecret: process.env.SECRET || "1234",
   devMode: process.env.NODE_ENV === "development",
   port: process.env.PORT || 8082,
-  onMetric: function onMetric(metric, value, ctx) {
-    console.log(`[${ctx.id}] clearbit.${metric}`, value);
-  }
+  onMetric
 };
 
 const app = express();
