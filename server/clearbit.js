@@ -123,7 +123,7 @@ export default class Clearbit {
         }
       }, {});
 
-      const domain = all_traits.account["clearbit_company/domain"];
+      const domain = all_traits.account["clearbit/domain"];
 
       const client = this.hull.asUser(ident);
 
