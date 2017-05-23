@@ -125,6 +125,18 @@ export default class Clearbit {
 
       const domain = all_traits.account["clearbit/domain"];
 
+      // Set top level traits
+      const top_level_traits = {
+        "name": "name",
+        "domain": "domain",
+      };
+      _.forIn(top_level_traits, (clearbit_name, top_level_name) => {
+        const value = all_traits.account[`clearbit/${clearbit_name}`];
+        if (value) {
+          _.set(all_traits.account, top_level_name, { value, operation: "setIfNull" });
+        }
+      });
+
       const client = this.hull.asUser(ident);
 
       client.traits(all_traits.user);
