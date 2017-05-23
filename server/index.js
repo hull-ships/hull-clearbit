@@ -40,6 +40,9 @@ if (process.env.LOG_LEVEL) {
   Hull.logger.transports.console.level = process.env.LOG_LEVEL;
 }
 
+Hull.logger.transports.console.json = true;
+Hull.logger.transports.console.stringify = true;
+
 Server({
   Hull,
   hostSecret: process.env.SECRET || "1234",
