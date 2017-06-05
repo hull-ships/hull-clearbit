@@ -22,6 +22,7 @@ export default class Clearbit {
     };
     this.hull = hull;
     this.hostname = hostname;
+    this.logger = hull.logger;
 
     this.metric = (metric, value = 1) => {
       if (_.isFunction(onMetric)) {
@@ -33,15 +34,6 @@ export default class Clearbit {
       this.client = new Client(api_key, this.metric, this.log);
     }
   }
-
-  log = (msg, data = "") => {
-    this.hull.logger.info(msg, data);
-  }
-
-  debug = (msg, data = "") => {
-    this.hull.logger.debug(msg, data);
-  }
-
 
   /** *********************************************************
    * Clearbit Enrichment
@@ -116,34 +108,54 @@ export default class Clearbit {
   shouldDiscover({ segments = [], user = {} }) {
     const { discover_enabled, discover_segments = [] } = this.settings || {};
     const domain = getDomain(user);
+    const userIdent = _.pick(user, "email", "id", "external_id");
 
     if (!this.client || !discover_enabled || _.isEmpty(discover_segments)) {
-      this.debug("Discover not enabled", { discover_segments });
+      this.logger.info("discover.skip", {
+        reason: "discover not enabled",
+        discover_segments,
+        ...userIdent
+      });
       return false;
     }
 
     if (!domain) {
-      this.debug("We need a domain for discovery");
+      this.logger.info("discover.skip", {
+        reason: "We need a domain for discovery",
+        ...userIdent
+      });
       return false;
     }
 
     if (user["traits_clearbit/discovered_similar_companies_at"]) {
-      this.debug("Skip discovery: already discovered similar companies");
+      this.logger.info("discover.skip", {
+        reason: "already discovered similar companies",
+        ...userIdent
+      });
       return false;
     }
 
     if (!user.last_seen_at || !user.email) {
-      this.debug("Skip discovery: never saw the guy - only discover real users");
+      this.logger.info("discover.skip", {
+        reason: "never saw the guy - only discover real users",
+        ...userIdent
+      });
       return false;
     }
 
     if (user["traits_clearbit/discovered_from_domain"]) {
-      this.debug("Skip discovery: avoid discovery loop");
+      this.logger.info("discover.skip", {
+        reason: "avoid discovery loop",
+        ...userIdent
+      });
       return false;
     }
 
     if (!isInSegments(segments, discover_segments)) {
-      this.debug("User is not in discoverable segment");
+      this.logger.info("discover.skip", {
+        reason: "user is not in discoverable segment",
+        ...userIdent
+      });
       return false;
     }
 
@@ -165,7 +177,10 @@ export default class Clearbit {
     // Let's not call the Discovery API if we have already done it before...
     return this.companiesDiscoveredFromDomain(domain).then(({ pagination }) => {
       if (pagination && pagination.total > 0) {
-        this.debug(`Skip discover Domain '${domain} already used for discovery !'`);
+        this.logger.info("discover.skip", {
+          reason: "domain already used for discovery",
+          domain
+        });
         return false;
       }
 
@@ -204,29 +219,46 @@ export default class Clearbit {
 
   shouldProspect({ segments = [], user }) {
     const { prospect_segments, prospect_enabled } = this.settings;
+    const userIdent = _.pick(user, "email", "id", "external_id");
 
     // We need a domain to prospect
     const domain = getDomain(user);
 
     if (!domain) {
-      this.debug("Skip Prospect - unknown domain");
+      this.logger.info("prospect.skip", {
+        reason: "unknown domain",
+        ...userIdent
+      });
       return false;
     }
 
     if (!this.client || !prospect_enabled || _.isEmpty(prospect_segments)) {
-      this.debug(`Skip Prospect ${domain} - disabled: `, { prospect_segments });
+      this.logger.info("prospect.skip", {
+        reason: "disabled",
+        domain,
+        prospect_segments,
+        ...userIdent
+      });
       return false;
     }
 
     // Only prospect anonymous users
     if (user.email) {
-      this.debug(`Skip Prospect ${domain} - known user`, { email: user.email });
+      this.logger.info("prospect.skip", {
+        reason: "known user",
+        domain,
+        ...userIdent
+      });
       return false;
     }
 
     // Don't prospect twice
     if (user["traits_clearbit/prospected_at"]) {
-      this.debug(`Skip Prospect ${domain} - already prospected`);
+      this.logger.info("prospect.skip", {
+        reason: "already prospected",
+        domain,
+        ...userIdent
+      });
       return false;
     }
 
@@ -270,7 +302,10 @@ export default class Clearbit {
 
         // Skip prospect if we have known users with that domain
         if (total > 0 && total !== anonymous) {
-          this.debug("Skip prospect - we already have known users with that domain");
+          this.logger("prospect.skip", {
+            reason: "we already have known users with that domain",
+            domain
+          });
           return false;
         }
 
@@ -298,7 +333,10 @@ export default class Clearbit {
 
     return this.shouldProspectUsersFromDomain(domain).then(doPropect => {
       if (!doPropect) {
-        this.debug("Skip prospect - we already have known users with that domain");
+        this.logger("prospect.skip", {
+          reason: "we already have known users with that domain",
+          domain
+        });
         return false;
       }
       const query = {
@@ -328,7 +366,7 @@ export default class Clearbit {
 
   fetchProspects(query, company_traits = {}) {
     return this.client.prospect({ ...query, email: true }).then((prospects) => {
-      this.debug(`Found ${prospects.length} new Prospects`);
+      this.logger.info(`Found ${prospects.length} new prospects`);
       prospects.map(this.saveProspect.bind(this, company_traits));
       return prospects;
     });
@@ -344,7 +382,9 @@ export default class Clearbit {
     traits["clearbit/prospected_at"] = { operation: "setIfNull", value: now() };
     traits["clearbit/source"] = { operation: "setIfNull", value: "prospect" };
 
-    this.debug("saveProspect", { email: person.email });
+    this.logger.info("prospect.success", {
+      email: person.email
+    });
     this.metric("saveProspect");
 
     return this.hull
