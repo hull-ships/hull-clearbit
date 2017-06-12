@@ -112,7 +112,7 @@ export default class Clearbit {
 
     if (!this.client || !discover_enabled || _.isEmpty(discover_segments)) {
       this.logger.info("discover.skip", {
-        reason: "discover not enabled",
+        reason: "discovering disabled",
         discover_segments,
         ...userIdent
       });
@@ -121,7 +121,7 @@ export default class Clearbit {
 
     if (!domain) {
       this.logger.info("discover.skip", {
-        reason: "We need a domain for discovery",
+        reason: "no domain available",
         ...userIdent
       });
       return false;
@@ -145,7 +145,7 @@ export default class Clearbit {
 
     if (user["traits_clearbit/discovered_from_domain"]) {
       this.logger.info("discover.skip", {
-        reason: "avoid discovery loop",
+        reason: "already discovered",
         ...userIdent
       });
       return false;
@@ -226,7 +226,7 @@ export default class Clearbit {
 
     if (!domain) {
       this.logger.info("prospect.skip", {
-        reason: "unknown domain",
+        reason: "no domain available",
         ...userIdent
       });
       return false;
@@ -234,7 +234,7 @@ export default class Clearbit {
 
     if (!this.client || !prospect_enabled || _.isEmpty(prospect_segments)) {
       this.logger.info("prospect.skip", {
-        reason: "disabled",
+        reason: "prospecting disabled",
         domain,
         prospect_segments,
         ...userIdent
@@ -245,7 +245,7 @@ export default class Clearbit {
     // Only prospect anonymous users
     if (user.email) {
       this.logger.info("prospect.skip", {
-        reason: "known user",
+        reason: "known user - only prospect anonymous users",
         domain,
         ...userIdent
       });
