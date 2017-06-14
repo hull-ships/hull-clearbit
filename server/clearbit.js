@@ -14,6 +14,11 @@ export default class Clearbit {
 
   constructor({ hull, ship, stream = false, hostSecret, onMetric, hostname }) {
     this.ship = ship;
+
+    if (!ship.private_settings) {
+      console.error("MissingPrivateSettingsError", ship);
+    }
+
     const { api_key } = ship.private_settings || {};
     this.settings = {
       ...ship.private_settings,
