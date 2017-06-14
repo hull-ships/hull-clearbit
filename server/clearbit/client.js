@@ -62,10 +62,9 @@ export default class ClearbitClient {
   }
 
   enrich(params) {
-    this.metric("enrich");
-    this.log("enrich", params);
-    const { Enrichment } = this.client;
-    return Enrichment.find(params).catch(
+    this.metric("clearbit.enrich");
+    this.log("outgoing.user.start", { params, source: "enrich" });
+    return this.client.Enrichment.find(params).catch(
       Enrichment.QueuedError,
       Enrichment.NotFoundError,
       () => { return {}; }
@@ -74,19 +73,19 @@ export default class ClearbitClient {
 
   reveal(params) {
     this.metric("clearbit.reveal");
-    this.log("clearbit.reveal", params);
+    this.log("outgoing.user.start", { params, source: "reveal" });
     return this.client.Reveal.find(params);
   }
 
   discover(params) {
     this.metric("clearbit.discover");
-    this.log("clearbit.discover", params);
+    this.log("outgoing.user.start", { params, source: "discover" });
     return this.client.Discovery.search(params);
   }
 
   prospect(params) {
     this.metric("clearbit.prospect");
-    this.log("clearbit.prospect", params);
+    this.log("outgoing.user.start", { params, source: "prospect" });
     return ClearbitApi({ path: "/people/search", params, key: this.key });
   }
 }

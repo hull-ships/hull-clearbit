@@ -127,7 +127,7 @@ export function shouldEnrich(message = {}, settings = {}) {
 
   const cbId = user["traits_clearbit/id"];
   const fetched_at = user["traits_clearbit/fetched_at"];
-
+  
   // Enrich if we have no clearbit data. Skip if we already tried once.
   if (fetched_at) return "Fetched_at already set"
   if (cbId) return "Clearbit ID already set"
@@ -143,16 +143,14 @@ export function enrichUser(user, clearbit) {
 
   if (user.email) {
     clearbit.metric("enrich");
-    return fetchFromEnrich(user, clearbit).then(
-      person => { return { source: "enrich", person }; }
-    );
+    return fetchFromEnrich(user, clearbit)
+    .then(person => ({ source: "enrich", person }));
   }
 
   if (isValidIpAddress(user.last_known_ip) && !user["traits_clearbit_company/id"] && clearbit.settings.reveal_enabled) {
     clearbit.metric("reveal");
-    return fetchFromReveal(user, clearbit).then(
-      person => { return { source: "reveal", person }; }
-    );
+    return fetchFromReveal(user, clearbit)
+    .then(person => ({ source: "reveal", person }));
   }
 
   return Promise.resolve(false);
