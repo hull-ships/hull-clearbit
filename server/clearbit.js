@@ -130,32 +130,32 @@ export default class Clearbit {
     const domain = getDomain(user);
 
     if (!this.client || !discover_enabled || _.isEmpty(discover_segments)) {
-      this.debug("Discover not enabled", { discover_segments });
+      this.log("outgoing.user.skip", { message: "Discover not enabled", discover_segments, user: user.id, action: "discover" });
       return false;
     }
 
     if (!domain) {
-      this.debug("We need a domain for discovery");
+      this.log("outgoing.user.skip", { message: "No 'domain' in User. We need a domain", action: "discover", domain, user: user.id });
       return false;
     }
 
     if (user["traits_clearbit/discovered_similar_companies_at"]) {
-      this.debug("Skip discovery: already discovered similar companies");
+      this.log("outgoing.user.skip", { message: "Already discovered similar companies", action: "discover", user: user.id });
       return false;
     }
 
     if (!user.last_seen_at || !user.email) {
-      this.debug("Skip discovery: never saw the guy - only discover real users");
+      this.log("outgoing.user.skip", { message: "User has no email or no last_seen_at", action: "discover", user: user.id });
       return false;
     }
 
     if (user["traits_clearbit/discovered_from_domain"]) {
-      this.debug("Skip discovery: avoid discovery loop");
+      this.log("outgoing.user.skip", { message: "User is himself a discovery. Prevent Loops", action: "discover", user: user.id });
       return false;
     }
 
     if (!isInSegments(segments, discover_segments)) {
-      this.debug("User is not in discoverable segment");
+      this.log("outgoing.user.skip", { message: "User is not in a discoverable segment", action: "discover", discoverable_segments, user: user.id });
       return false;
     }
 
@@ -169,6 +169,7 @@ export default class Clearbit {
    * @return {Promise}
    */
   discoverSimilarCompanies(user) {
+    // TODO -> Support Accounts
     const domain = getDomain(user);
     if (!domain) return Promise.resolve([]);
     const limit = this.settings.discover_limit_count;
@@ -195,11 +196,13 @@ export default class Clearbit {
   }
 
   companiesDiscoveredFromDomain(domain) {
+    // TODO -> Support Accounts
     const query = { term: { "traits_clearbit/discovered_from_domain.exact": domain } };
     return this.hull.post("search/user_reports", { query });
   }
 
   saveDiscoveredCompanies(companies = [], discovered_from_domain) {
+    // TODO -> Support Accounts
     return Promise.all(companies.map(company => {
       const person = { company };
       const traits = getUserTraitsFromPerson({ person });
@@ -221,24 +224,24 @@ export default class Clearbit {
     const domain = getDomain(user);
 
     if (!domain) {
-      this.log("outgoing.user.skip", { message: "no domain", action: "prospector" });
+      this.log("outgoing.user.skip", { message: "No domain", action: "prospector" });
       return false;
     }
 
     if (!this.client || !prospect_enabled || _.isEmpty(prospect_segments)) {
-      this.log("outgoing.user.skip", { message: "not in any prospectable segment", action: "prospector", domain, prospect_segments });
+      this.log("outgoing.user.skip", { message: "Not in any prospectable segment", action: "prospector", domain, prospect_segments });
       return false;
     }
 
     // Only prospect anonymous users
     if (user.email) {
-      this.log("outgoing.user.skip", { message: "known user. We only prospect unknown users", email: user.email });
+      this.log("outgoing.user.skip", { message: "Known user. We only prospect unknown users", action: "prospector", email: user.email });
       return false;
     }
 
     // Don't prospect twice
     if (user["traits_clearbit/prospected_at"]) {
-      this.log("outgoing.user.skip", { message: "already prospected", domain });
+      this.log("outgoing.user.skip", { message: "Already prospected", action: "prospector", domain });
       return false;
     }
 
@@ -309,7 +312,7 @@ export default class Clearbit {
 
     return this.shouldProspectUsersFromDomain(domain).then(doPropect => {
       if (!doPropect) {
-        this.log("clearbit.prospector.skip", { action: "prospect", message: "we already have known users with that domain" });
+        this.log("outgoing.user.skip", { action: "prospector", message: "We already have known users with that domain" });
         return false;
       }
       const query = {
@@ -339,7 +342,7 @@ export default class Clearbit {
 
   fetchProspects(query, company_traits = {}) {
     return this.client.prospect({ ...query, email: true }).then((prospects) => {
-      this.log("clearbit.prospector.start", { action: "fetch", message: `Found ${prospects.length} new Prospects`, company_traits, prospects });
+      this.log("clearbit.prospector.success", { action: "prospector", message: `Found ${prospects.length} new Prospects`, company_traits, prospects });
       prospects.map(this.saveProspect.bind(this, company_traits));
       return prospects;
     });
@@ -355,7 +358,7 @@ export default class Clearbit {
     traits["clearbit/prospected_at"] = { operation: "setIfNull", value: now() };
     traits["clearbit/source"] = { operation: "setIfNull", value: "prospect" };
 
-    this.log("clearbit.prospector.success", { email: person.email, person, source: "prospector" });
+    this.log("incoming.user.success", { email: person.email, person, source: "prospector" });
     this.metric("saveProspect");
 
     return this.hull
