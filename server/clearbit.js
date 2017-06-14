@@ -14,7 +14,7 @@ export default class Clearbit {
 
   constructor({ hull, ship, stream = false, hostSecret, onMetric, hostname }) {
     this.ship = ship;
-    const { api_key } = ship.private_settings;
+    const { api_key } = ship.private_settings || {};
     this.settings = {
       ...ship.private_settings,
       hostSecret,
