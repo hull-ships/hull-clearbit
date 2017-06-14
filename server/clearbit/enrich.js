@@ -128,8 +128,11 @@ export function shouldEnrich(message = {}, settings = {}) {
   const cbId = user["traits_clearbit/id"];
   const fetched_at = user["traits_clearbit/fetched_at"];
 
-  // Enrich if we have no clearbit data
-  return !cbId || !fetched_at;
+  // Enrich if we have no clearbit data. Skip if we already tried once.
+  if (fetched_at) return "Fetched_at already set"
+  if (cbId) return "Clearbit ID already set"
+
+  return true;
 }
 
 

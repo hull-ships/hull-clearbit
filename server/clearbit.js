@@ -54,7 +54,9 @@ export default class Clearbit {
 
   shouldEnrich(message) {
     if (!this.client) return false;
-    return shouldEnrich(message, this.settings);
+    const should = shouldEnrich(message, this.settings);
+    if (should === true) return true;
+    return false;
   }
 
   enrichUser(user) {
