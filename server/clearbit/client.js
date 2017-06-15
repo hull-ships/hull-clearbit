@@ -65,8 +65,8 @@ export default class ClearbitClient {
     this.metric("clearbit.enrich");
     this.log("outgoing.user.start", { params, source: "enrich" });
     return this.client.Enrichment.find(params).catch(
-      Enrichment.QueuedError,
-      Enrichment.NotFoundError,
+      this.client.Enrichment.QueuedError,
+      this.client.Enrichment.NotFoundError,
       () => { return {}; }
     );
   }

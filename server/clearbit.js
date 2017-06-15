@@ -54,16 +54,16 @@ export default class Clearbit {
 
   shouldEnrich(message) {
     if (!this.client) return false;
-    const should = shouldEnrich(message, this.settings);
-    if (should === true) return true;
-    this.log("incoming.user.skip", { action: "enrich", message: should })
+    const { should, msg } = shouldEnrich(message, this.settings);
+    if (should) return true;
+    this.log("incoming.user.skip", { action: "enrich", message: msg });
     return false;
   }
 
   enrichUser(user) {
     return enrichUser(user, this).then(
       ({ person, source }) => {
-        this.saveUser(user, person, { source })
+        this.saveUser(user, person, { source });
       }
     );
   }
@@ -106,7 +106,6 @@ export default class Clearbit {
     }
 
     this.metric("saveUser");
-    
     this.log("incoming.user.success", { traits, source });
 
     return this.hull
@@ -155,7 +154,7 @@ export default class Clearbit {
     }
 
     if (!isInSegments(segments, discover_segments)) {
-      this.log("outgoing.user.skip", { message: "User is not in a discoverable segment", action: "discover", discoverable_segments, user: user.id });
+      this.log("outgoing.user.skip", { message: "User is not in a discoverable segment", action: "discover", discover_segments, user: user.id });
       return false;
     }
 
