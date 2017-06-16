@@ -30,7 +30,7 @@ export default function handleWebhook({ hostSecret, onMetric }) {
 
     try {
       if (_.isFunction(onMetric)) {
-        onMetric("webhook", 1, { id: ship.id });
+        onMetric("webhook", 1, { id: ship ? ship.id : null });
       }
     } catch (err) {
       console.warn("Error on webhook onMetric: ", err);

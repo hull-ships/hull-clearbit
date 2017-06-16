@@ -97,6 +97,8 @@ export default class Clearbit {
 
     this.metric("saveUser");
 
+    const promises = [];
+
     if (this.settings.handle_accounts) {
       const all_traits = { user: {}, account: {} };
 
@@ -125,16 +127,16 @@ export default class Clearbit {
 
       const client = this.hull.asUser(ident);
 
-      client.traits(all_traits.user);
+      promises.push(client.traits(all_traits.user));
 
       if (domain) {
-        client.account({ domain }).traits(all_traits.account);
+        promises.push(client.account({ domain }).traits(all_traits.account));
       }
     } else {
-      this.hull.asUser(ident).traits(traits);
+      promises.push(this.hull.asUser(ident).traits(traits));
     }
 
-    return Promise.resolve({ user, person });
+    return Promise.all(promises).then(() => { return { user, person }; });
   }
 
 
