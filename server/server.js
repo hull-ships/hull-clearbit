@@ -1,5 +1,5 @@
 import devMode from "./dev-mode";
-import { notifHandler, batchHandler } from "hull/lib/utils";
+import { notifHandler } from "hull/lib/utils";
 
 import handleProspect from "./handlers/prospect";
 import handleUserUpdate from "./handlers/user-update";
@@ -16,13 +16,9 @@ function extractToken(req, res, next) {
 }
 
 module.exports = function Server(app, options = {}) {
-  const { Hull, hostSecret, port, clientConfig = {} } = options;
-
-  const connector = new Hull.Connector({ hostSecret, port, clientConfig });
+  const { hostSecret } = options;
 
   app.use(extractToken);
-
-  connector.setupApp(app);
 
   if (options.devMode) app.use(devMode());
 
@@ -30,10 +26,16 @@ module.exports = function Server(app, options = {}) {
     handleClearbitWebhook(options)
   );
 
-  app.post("/batch", batchHandler({
-    groupTraits: false,
+  app.post("/batch", notifHandler({
     hostSecret,
-    handler: handleBatchUpdate(options)
+    userHandlerOptions: {
+      groupTraits: false,
+      maxSize: 100,
+      maxTime: 120
+    },
+    handlers: {
+      "user:update": handleBatchUpdate(options)
+    }
   }));
 
   app.post("/prospect",
@@ -67,10 +69,6 @@ module.exports = function Server(app, options = {}) {
 
     return res.status(err.status || 500).send({ message: err.message });
   });
-
-  console.log(`Listening on port ${port}`);
-
-  app.listen(port);
 
   return app;
 };

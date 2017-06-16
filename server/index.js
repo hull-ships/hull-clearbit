@@ -51,6 +51,8 @@ const options = {
   onMetric
 };
 
+const connector = new Hull.Connector(options);
 const app = express();
-
+connector.setupApp(app);
 server(app, options);
+connector.startApp(app);
