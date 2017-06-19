@@ -170,8 +170,9 @@ export default class Clearbit {
     // Let's not call the Discovery API if we have already done it before...
     return this.companiesDiscoveredFromDomain(domain).then(({ pagination }) => {
       if (pagination && pagination.total > 0) {
-        this.logger.info("discover.skip", {
-          reason: "domain already used for discovery",
+        this.logger.info("outgoing.user.skip", {
+          action: "discover",
+          reason: "Domain already used for discovery",
           domain
         });
         return false;
@@ -283,7 +284,7 @@ export default class Clearbit {
         if (total > 0 && total !== anonymous) {
           this.logger.info("outgoing.user.skip", {
             action: "prospector",
-            reason: "we already have known users with that domain",
+            reason: "We already have known users with that domain",
             domain
           });
           return false;

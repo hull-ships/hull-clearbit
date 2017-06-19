@@ -26,26 +26,30 @@ npm install
 gulp
 ```
 
+---
+
 ### Logs :
 
 This are the log messages that are specific to the Clearbit connector :
 
-- `discover.skip` : Logged when Clearbit Enrichment is skipped. The `reason` gives context on why it was skipped.
-  params: `reason`, `email`, `id`, `external_id`, `domain`, `discover_segments`
-  possible `reasons` :
-  - `"discovering disabled"` : `Enable Discovery` is not checked in settings or the segment list to discover is empty.
-  - `"no domain available"` : The user does not have a `clearbit/employment_domain` nor a `clearbit_company/domain`
-  - `"already discoverd similar companies"`
-  - `"never saw the guy - only discover real users"` : The user has never been seen or does not have an email defined.
-  - `"already discovered"` : this user has been discovered by the Clearbit connector. Do not discover twice to avoid discovery loop.
-  - `"user is not in discoverable segment"`
-  - `"domain already used for discovery"` : do not use Clearbit discovery twice for the same domain.
+- `outgoing.user.skip` with `"action": "discover"`: Logged when Clearbit Enrichment is skipped. The `message` gives context on why it was skipped.
+  possible params: `message`, `email`, `id`, `external_id`, `domain`, `discover_segments`
+  possible `message` :
+  - `"Discover not enabled"` : `Enable Discovery` is not checked in settings or the segment list to discover is empty.
+  - `"No 'domain' in User. We need a domain"` : The user does not have a `clearbit/employment_domain` nor a `clearbit_company/domain`
+  - `"Already discovered similar companies"`
+  - `"User has no email or no last_seen_at"` : The user has never been seen or does not have an email defined.
+  - `"User is himself a discovery. Prevent Loops"` : this user has been discovered by the Clearbit connector. Do not discover twice to avoid discovery loop.
+  - `"User is not in a discoverable segment"`
+  - `"Domain already used for discovery"` : do not use Clearbit discovery twice for the same domain.
 
-- `prospect.skip` : Logged when Clearbit Prospection is skipped. The `reason` parameter gives context on why is was skipped.
-  params: `reason`, `email`, `id`, `external_id`, `domain`, `prospect_segments`
-  possible `reasons` :
-  - `"no domain available"` : The user does not have a `clearbit/employment_domain` nor a `clearbit_company/domain`
-  - `"prospecting disabled"` : `Enable Prospector` is not checked in settings or the segment list to prospect is empty.
-  - `"known user - only prospect anonymous users"` : The user has an email defined.
-  - `"already prospected"` : this user has already been prospected by the Clearbit connector. Do not prospect twice to avoid prospect loop.
-  - `"we already have known users with that domain"`
+- `outgoing.user.skip` with `"action": "prospector"` : Logged when Clearbit Prospection is skipped. The `message` parameter gives context on why is was skipped.
+  params: `message`, `email`, `id`, `external_id`, `domain`, `prospect_segments`
+  possible `message` :
+  - `"No domain"` : The user does not have a `clearbit/employment_domain` nor a `clearbit_company/domain`
+  - `"Not in any prospectable segment"` : `Enable Prospector` is not checked in settings or the segment list to prospect is empty.
+  - `"Known user. We only prospect unknown users"` : The user has an email defined.
+  - `"Already prospected"` : this user has already been prospected by the Clearbit connector. Do not prospect twice to avoid prospect loop.
+  - `"We already have known users with that domain"`
+
+- `clearbit.prospector.success`
