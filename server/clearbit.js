@@ -52,11 +52,13 @@ export default class Clearbit {
    * Clearbit Enrichment
    */
 
-  shouldEnrich(message) {
+  shouldEnrich(msg) {
     if (!this.client) return false;
-    const { should, msg } = shouldEnrich(message, this.settings);
+    const { user = {} } = msg;
+    const { id, external_id, email } = user;
+    const { should, message } = shouldEnrich(msg, this.settings);
     if (should) return true;
-    this.log("incoming.user.skip", { action: "enrich", message: msg });
+    this.log("outgoing.user.skip", { action: "enrich", message, email, id, external_id });
     return false;
   }
 
@@ -75,12 +77,13 @@ export default class Clearbit {
    * @return {Promise -> Object({ user, person })}
    */
   saveUser(user = {}, person = {}, options = {}) {
-    let ident = user.id;
+    const { id, external_id } = user;
+    let ident = id;
     const email = user.email || person.email;
     const { source } = options;
 
-    if (!ident && user.external_id) {
-      ident = { external_id: user.external_id };
+    if (!ident && external_id) {
+      ident = { external_id };
     }
 
     if (!ident && email) {
@@ -106,7 +109,7 @@ export default class Clearbit {
     }
 
     this.metric("saveUser");
-    this.log("incoming.user.success", { traits, source });
+    this.log("incoming.user.success", { traits, source, external_id, id, email });
 
     return this.hull
       .as(ident)
@@ -128,33 +131,34 @@ export default class Clearbit {
     const { discover_enabled, discover_segments = [] } = this.settings || {};
     const domain = getDomain(user);
 
+    const { external_id, id, email } = user;
     if (!this.client || !discover_enabled || _.isEmpty(discover_segments)) {
-      this.log("outgoing.user.skip", { message: "Discover not enabled", discover_segments, user: user.id, action: "discover" });
+      this.log("outgoing.user.skip", { message: "Discover not enabled", discover_segments, id, external_id, email, action: "discover" });
       return false;
     }
 
     if (!domain) {
-      this.log("outgoing.user.skip", { message: "No 'domain' in User. We need a domain", action: "discover", domain, user: user.id });
+      this.log("outgoing.user.skip", { message: "No 'domain' in User. We need a domain", action: "discover", domain, id, external_id, email });
       return false;
     }
 
     if (user["traits_clearbit/discovered_similar_companies_at"]) {
-      this.log("outgoing.user.skip", { message: "Already discovered similar companies", action: "discover", user: user.id });
+      this.log("outgoing.user.skip", { message: "Already discovered similar companies", action: "discover", id, external_id, email });
       return false;
     }
 
     if (!user.last_seen_at || !user.email) {
-      this.log("outgoing.user.skip", { message: "User has no email or no last_seen_at", action: "discover", user: user.id });
+      this.log("outgoing.user.skip", { message: "User has no email or no last_seen_at", action: "discover", id, external_id, email });
       return false;
     }
 
     if (user["traits_clearbit/discovered_from_domain"]) {
-      this.log("outgoing.user.skip", { message: "User is himself a discovery. Prevent Loops", action: "discover", user: user.id });
+      this.log("outgoing.user.skip", { message: "User is himself a discovery. Prevent Loops", action: "discover", id, external_id, email });
       return false;
     }
 
     if (!isInSegments(segments, discover_segments)) {
-      this.log("outgoing.user.skip", { message: "User is not in a discoverable segment", action: "discover", discover_segments, user: user.id });
+      this.log("outgoing.user.skip", { message: "User is not in a discoverable segment", action: "discover", discover_segments, id, external_id, email });
       return false;
     }
 
