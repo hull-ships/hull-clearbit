@@ -1,6 +1,5 @@
-import express from "express";
-import path from "path";
 import devMode from "./dev-mode";
+import { notifHandler } from "hull/lib/utils";
 
 import handleProspect from "./handlers/prospect";
 import handleUserUpdate from "./handlers/user-update";
@@ -9,55 +8,46 @@ import handleClearbitWebhook from "./handlers/clearbit-webhook";
 
 import bodyParser from "body-parser";
 
-module.exports = function Server(options = {}) {
-  const { devMode: dev, port, Hull, hostSecret, onMetric } = options;
-  const { BatchHandler, NotifHandler, Routes, Middleware: hullClient } = Hull;
+function extractToken(req, res, next) {
+  req.hull = req.hull || {};
+  const token = req.query.id;
+  req.hull.token = token;
+  return next();
+}
 
-  const app = express();
+module.exports = function Server(app, options = {}) {
+  const { hostSecret } = options;
 
-  if (dev) app.use(devMode());
+  app.use(extractToken);
 
-  app.use(express.static(path.resolve(__dirname, "..", "dist")));
-  app.use(express.static(path.resolve(__dirname, "..", "assets")));
-
-  app.get("/manifest.json", Routes.Manifest(__dirname));
-  app.get("/", Routes.Readme);
-  app.get("/readme", Routes.Readme);
-
-  function extractToken(req, res, next) {
-    req.hull = req.hull || {};
-    const token = req.body.id || req.query.id;
-    if (!token) {
-      return res.json({ error: "unknown id" });
-    }
-    req.hull.token = token;
-    return next();
-  }
+  if (options.devMode) app.use(devMode());
 
   app.post("/clearbit",
-    bodyParser.json(),
-    extractToken,
-    hullClient({ hostSecret, onMetric }),
     handleClearbitWebhook(options)
   );
 
-  app.post("/batch", BatchHandler({
-    groupTraits: false,
+  app.post("/batch", notifHandler({
     hostSecret,
-    handler: handleBatchUpdate(options)
+    userHandlerOptions: {
+      groupTraits: false,
+      maxSize: 100,
+      maxTime: 120
+    },
+    handlers: {
+      "user:update": handleBatchUpdate(options)
+    }
   }));
 
   app.post("/prospect",
     bodyParser.urlencoded(),
-    hullClient({ hostSecret }),
     handleProspect(options)
   );
 
-  app.post("/notify", NotifHandler({
-    groupTraits: false,
-    hostSecret,
-    onSubscribe: function onSubscribe() {
-      console.warn("Hello new subscriber !");
+  app.post("/notify", notifHandler({
+    userHandlerOptions: {
+      groupTraits: false,
+      maxSize: 1,
+      maxTime: 1
     },
     handlers: {
       "user:update": handleUserUpdate(options)
@@ -74,15 +64,11 @@ module.exports = function Server(options = {}) {
         params: req.params,
         body: req.body
       };
-      console.log("Error ----------------", err.message, err.status, data);
+      console.log("Error ----------------", err.message, err.status, err.stack, data);
     }
 
     return res.status(err.status || 500).send({ message: err.message });
   });
-
-  console.log(`Listening on port ${port}`);
-
-  app.listen(port);
 
   return app;
 };

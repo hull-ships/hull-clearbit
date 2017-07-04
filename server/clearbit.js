@@ -111,10 +111,46 @@ export default class Clearbit {
     this.metric("saveUser");
     this.log("incoming.user.success", { traits, source, external_id, id, email });
 
-    return this.hull
-      .as(ident)
-      .traits(traits)
-      .then(() => { return { user, person }; });
+    const promises = [];
+
+    if (this.settings.handle_accounts) {
+      const all_traits = { user: {}, account: {} };
+
+      _.map(traits, (v, k) => {
+        const [group, trait] = k.split("/");
+        if (group === "clearbit_company") {
+          all_traits.account[`clearbit/${trait}`] = v;
+        } else {
+          all_traits.user[k] = v;
+        }
+      }, {});
+
+      const domain = all_traits.account["clearbit/domain"];
+
+      // Set top level traits
+      const top_level_traits = {
+        "name": "name",
+        "domain": "domain",
+      };
+      _.forIn(top_level_traits, (clearbit_name, top_level_name) => {
+        const value = all_traits.account[`clearbit/${clearbit_name}`];
+        if (value) {
+          _.set(all_traits.account, top_level_name, { value, operation: "setIfNull" });
+        }
+      });
+
+      const client = this.hull.asUser(ident);
+
+      promises.push(client.traits(all_traits.user));
+
+      if (domain) {
+        promises.push(client.account({ domain }).traits(all_traits.account));
+      }
+    } else {
+      promises.push(this.hull.asUser(ident).traits(traits));
+    }
+
+    return Promise.all(promises).then(() => { return { user, person }; });
   }
 
 
@@ -208,11 +244,12 @@ export default class Clearbit {
     // TODO -> Support Accounts
     return Promise.all(companies.map(company => {
       const person = { company };
+      // TODO: save account instead of user
       const traits = getUserTraitsFromPerson({ person });
       traits["clearbit/discovered_from_domain"] = { value: discovered_from_domain, operation: "setIfNull" };
       traits["clearbit/discovered_at"] = { value: now(), operation: "setIfNull" };
       traits["clearbit/source"] = { value: "discover", operation: "setIfNull" };
-      return this.hull.as({ guest_id: `clearbit-company:${company.id}` }).traits(traits).then(() => traits);
+      return this.hull.asUser({ anonymous_id: `clearbit-company:${company.id}` }).traits(traits).then(() => traits);
     }));
   }
 
