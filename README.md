@@ -25,3 +25,10 @@ npm install -g gulp
 npm install
 gulp
 ```
+
+### Logs :
+
+  Logs that are specific for Clearbit Connector :
+    - `outgoing.user.start` - when started to saving user to Clearbit
+    - `incoming.user.start` - when receiving webhook from Clearbit
+    - `clearbit.prospector.success` - when fetching Clearbit prospects
