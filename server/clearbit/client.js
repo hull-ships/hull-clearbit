@@ -42,11 +42,11 @@ function ClearbitApi({ path, method = "get", params = {}, key }) {
 }
 
 export default class ClearbitClient {
-  constructor(key, onMetric, onLog) {
+  constructor(key, onMetric, hull) {
     this.key = key;
     this.client = new Client({ key });
     this.onMetric = onMetric;
-    this.onLog = onLog;
+    this.hull = hull;
   }
 
   metric(metric, value = 1) {
@@ -55,15 +55,9 @@ export default class ClearbitClient {
     }
   }
 
-  log(msg, data) {
-    if (this.onLog) {
-      this.onLog(msg, data);
-    }
-  }
-
   enrich(params) {
     this.metric("clearbit.enrich");
-    this.log("outgoing.user.start", { params, source: "enrich" });
+    this.hull.logger.debug("outgoing.user.start", { params, source: "enrich" });
     return this.client.Enrichment.find(params).catch(
       this.client.Enrichment.QueuedError,
       this.client.Enrichment.NotFoundError,
@@ -73,19 +67,19 @@ export default class ClearbitClient {
 
   reveal(params) {
     this.metric("clearbit.reveal");
-    this.log("outgoing.user.start", { params, source: "reveal" });
+    this.hull.logger.debug("outgoing.user.start", { params, source: "reveal" });
     return this.client.Reveal.find(params);
   }
 
   discover(params) {
     this.metric("clearbit.discover");
-    this.log("outgoing.user.start", { params, source: "discover" });
+    this.hull.logger.debug("outgoing.user.start", { params, source: "discover" });
     return this.client.Discovery.search(params);
   }
 
   prospect(params) {
     this.metric("clearbit.prospect");
-    this.log("outgoing.user.start", { params, source: "prospect" });
+    this.hull.logger.debug("outgoing.user.start", { params, source: "prospect" });
     return ClearbitApi({ path: "/people/search", params, key: this.key });
   }
 }
