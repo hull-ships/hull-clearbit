@@ -29,5 +29,6 @@ gulp
 ### Logs :
 
   Logs that are specific for Clearbit Connector :
-    - `incoming.user.start` - when started to saving user to clearbit
-    - `clearbit.prospector.success` - when fetching clearbit prospects
+    - `outgoing.user.start` - when started to saving user to Clearbit
+    - `incoming.user.start` - when receiving webhook from Clearbit
+    - `clearbit.prospector.success` - when fetching Clearbit prospects
