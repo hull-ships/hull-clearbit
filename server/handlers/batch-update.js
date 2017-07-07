@@ -20,19 +20,17 @@ const printLimits = _.throttle(() => {
 setInterval(printLimits, 5000);
 
 export default function handleBatchUpdate({ hostSecret, onMetric }) {
-  return (messages = [], { hull, ship, req }) => {
-    const { hostname } = req;
+  return ({ client, ship, hostname }, messages = []) => {
     const limiter = Limiter.key(ship.id);
 
-    const users = _.map(messages, ({ message = {} }) => message.user)
-                   .filter(u => u.email);
+    const users = messages.map(m => m.user).filter(u => u.email);
 
     if (users.length === 0) {
       return false;
     }
 
     const clearbit = new Clearbit({
-      hull, ship, hostSecret, stream: false, onMetric, hostname
+      hull: client, ship, hostSecret, stream: false, onMetric, hostname
     });
 
     const handleMessage = (user, done) => {
