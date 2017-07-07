@@ -44,11 +44,13 @@ if (process.env.LOG_LEVEL) {
 }
 
 const options = {
-  Hull,
   hostSecret: process.env.SECRET || "1234",
   devMode: process.env.NODE_ENV === "development",
   port: process.env.PORT || 8082,
-  onMetric
+  onMetric,
+  clientConfig: {
+    firehoseUrl: process.env.OVERRIDE_FIREHOSE_URL
+  }
 };
 
 const connector = new Hull.Connector(options);

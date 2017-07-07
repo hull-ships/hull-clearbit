@@ -18,7 +18,7 @@ export default function handleWebhook({ hostSecret, onMetric }) {
       }
 
       if (person) {
-        hull.logger.debug("webhook - person", { person: JSON.stringify(person) });
+        hull.logger.info("incoming.user.start", { person, source: "webhook" });
         const cb = new Clearbit({ hull, ship, hostSecret, hostname, onMetric });
         cb.saveUser({ id: userId }, person, "enrich");
       }

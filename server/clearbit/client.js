@@ -6,7 +6,7 @@ import { STATUS_CODES } from "http";
 
 
 function ClearbitApi({ path, method = "get", params = {}, key }) {
-  const baseUrl = `https://prospector.clearbit.com/v1/${path}`;
+  const baseUrl = `https://prospector.clearbit.com/v1${path}`;
   const url = `${baseUrl}?${qs.stringify(params, { arrayFormat: "brackets" })}`;
   return new Promise((resolve, reject) => {
     request(url, {
@@ -42,11 +42,11 @@ function ClearbitApi({ path, method = "get", params = {}, key }) {
 }
 
 export default class ClearbitClient {
-  constructor(key, onMetric, onLog) {
+  constructor(key, onMetric, hull) {
     this.key = key;
     this.client = new Client({ key });
     this.onMetric = onMetric;
-    this.onLog = onLog;
+    this.hull = hull;
   }
 
   metric(metric, value = 1) {
@@ -55,38 +55,31 @@ export default class ClearbitClient {
     }
   }
 
-  log(msg, data) {
-    if (this.onLog) {
-      this.onLog(msg, data);
-    }
-  }
-
   enrich(params) {
-    this.metric("enrich");
-    this.log("enrich", JSON.stringify(params));
-    const { Enrichment } = this.client;
-    return Enrichment.find(params).catch(
-      Enrichment.QueuedError,
-      Enrichment.NotFoundError,
+    this.metric("clearbit.enrich");
+    this.hull.logger.debug("outgoing.user.start", { params, source: "enrich" });
+    return this.client.Enrichment.find(params).catch(
+      this.client.Enrichment.QueuedError,
+      this.client.Enrichment.NotFoundError,
       () => { return {}; }
     );
   }
 
   reveal(params) {
     this.metric("clearbit.reveal");
-    this.log("clearbit.reveal", JSON.stringify(params));
+    this.hull.logger.debug("outgoing.user.start", { params, source: "reveal" });
     return this.client.Reveal.find(params);
   }
 
   discover(params) {
     this.metric("clearbit.discover");
-    this.log("clearbit.discover", JSON.stringify(params));
+    this.hull.logger.debug("outgoing.user.start", { params, source: "discover" });
     return this.client.Discovery.search(params);
   }
 
   prospect(params) {
     this.metric("clearbit.prospect");
-    this.log("clearbit.prospect", JSON.stringify(params));
+    this.hull.logger.debug("outgoing.user.start", { params, source: "prospect" });
     return ClearbitApi({ path: "/people/search", params, key: this.key });
   }
 }
