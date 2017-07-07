@@ -39,8 +39,8 @@ export default class Clearbit {
     }
   }
 
-  logSkip = (user, action, reason, additionalData = {}) => {
-    this.hull.asUser(_.pick(user, ["id", "external_id", "email"])).logger.info("outgoing.user.skip", { reason, action, additionalData });
+  logSkip = (asUser, action, reason, additionalData = {}) => {
+    asUser.logger.info("outgoing.user.skip", { reason, action, additionalData });
   };
 
 
@@ -53,7 +53,7 @@ export default class Clearbit {
     const { user = {} } = msg;
     const { should, message } = shouldEnrich(msg, this.settings);
     if (should) return true;
-    this.logSkip(user, "enrich", message);
+    this.logSkip(this.hull.asUser(user), "enrich", message);
     return false;
   }
 
@@ -163,33 +163,35 @@ export default class Clearbit {
     const { discover_enabled, discover_segments = [] } = this.settings || {};
     const domain = getDomain(user);
 
+    const asUser = this.hull.asUser(user);
+
     if (!this.client || !discover_enabled || _.isEmpty(discover_segments)) {
-      this.logSkip(user, "discover", "Discover not enabled", { discover_segments });
+      this.logSkip(asUser, "discover", "Discover not enabled", { discover_segments });
       return false;
     }
 
     if (!domain) {
-      this.logSkip(user, "discover", "No 'domain' in User. We need a domain", { domain });
+      this.logSkip(asUser, "discover", "No 'domain' in User. We need a domain", { domain });
       return false;
     }
 
     if (user["traits_clearbit/discovered_similar_companies_at"]) {
-      this.logSkip(user, "discover", "Already discovered similar companies");
+      this.logSkip(asUser, "discover", "Already discovered similar companies");
       return false;
     }
 
     if (!user.last_seen_at || !user.email) {
-      this.logSkip(user, "discover", "User has no email or no last_seen_at");
+      this.logSkip(asUser, "discover", "User has no email or no last_seen_at");
       return false;
     }
 
     if (user["traits_clearbit/discovered_from_domain"]) {
-      this.logSkip(user, "discover", "User is himself a discovery. Prevent Loops");
+      this.logSkip(asUser, "discover", "User is himself a discovery. Prevent Loops");
       return false;
     }
 
     if (!isInSegments(segments, discover_segments)) {
-      this.logSkip(user, "discover", "User is not in a discoverable segment", { discover_segments });
+      this.logSkip(asUser, "discover", "User is not in a discoverable segment", { discover_segments });
       return false;
     }
 
@@ -257,26 +259,27 @@ export default class Clearbit {
 
     // We need a domain to prospect
     const domain = getDomain(user);
+    const asUser = this.hull.asUser(user);
 
     if (!domain) {
-      this.logSkip(user, "prospector", "No domain");
+      this.logSkip(asUser, "prospector", "No domain");
       return false;
     }
 
     if (!this.client || !prospect_enabled || _.isEmpty(prospect_segments)) {
-      this.logSkip(user, "prospector", "Not in any prospectable segment", { domain, prospect_segments });
+      this.logSkip(asUser, "prospector", "Not in any prospectable segment", { domain, prospect_segments });
       return false;
     }
 
     // Only prospect anonymous users
     if (user.email) {
-      this.logSkip(user, "prospector", "Known user. We only prospect unknown users");
+      this.logSkip(asUser, "prospector", "Known user. We only prospect unknown users");
       return false;
     }
 
     // Don't prospect twice
     if (user["traits_clearbit/prospected_at"]) {
-      this.logSkip(user, "prospector", "Already prospected", { domain });
+      this.logSkip(asUser, "prospector", "Already prospected", { domain });
       return false;
     }
 
@@ -347,7 +350,7 @@ export default class Clearbit {
 
     return this.shouldProspectUsersFromDomain(domain).then(doPropect => {
       if (!doPropect) {
-        this.logSkip(user, "prospector", "We already have known users with that domain");
+        this.logSkip(this.hull.asUser(user), "prospector", "We already have known users with that domain");
         return false;
       }
       const query = {
