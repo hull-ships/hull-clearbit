@@ -3,11 +3,6 @@ import express from "express";
 
 import server from "./server";
 
-if (process.env.NEW_RELIC_LICENSE_KEY) {
-  console.warn("Starting newrelic agent with key: ", process.env.NEW_RELIC_LICENSE_KEY);
-  require("newrelic"); // eslint-disable-line global-require
-}
-
 let onMetric = function onMetric(metric, value, ctx) {
   console.log(`[${ctx.id}] clearbit.${metric}`, value);
 };

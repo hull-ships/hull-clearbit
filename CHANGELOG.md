@@ -1,3 +1,6 @@
+# 0.1.2
+- require newrelic at the script start
+
 # 0.1.1
 - change the webhook endpoint for enrich to distinguish it from old webhook url
 - log query and body for old webhook url
