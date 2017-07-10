@@ -221,7 +221,7 @@ export default class Clearbit {
       return this.client.discover({ query, limit }).then(({ results = [] }) => {
         const discovered_similar_companies_at = user["traits_clearbit/discovered_similar_companies_at"];
         if (user.id && !discovered_similar_companies_at) {
-          this.hull.as(user.id).traits({
+          this.hull.asUser(user.id).traits({
             discovered_similar_companies_at: now()
           }, { source: "clearbit", sync: true });
         }
@@ -400,7 +400,7 @@ export default class Clearbit {
     this.metric("saveProspect");
 
     return this.hull
-      .as({ email: person.email })
+      .asUser({ email: person.email })
       .traits({ ...company_traits, ...traits })
       .then(() => { return { person }; });
   }
