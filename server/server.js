@@ -1,5 +1,6 @@
 import devMode from "./dev-mode";
 import { notifHandler } from "hull/lib/utils";
+import Hull from "hull";
 
 import handleProspect from "./handlers/prospect";
 import handleUserUpdate from "./handlers/user-update";
@@ -22,7 +23,15 @@ module.exports = function Server(app, options = {}) {
 
   if (options.devMode) app.use(devMode());
 
-  app.post("/clearbit",
+  app.post("/clearbit", (req, res, next) => {
+    Hull.logger.debug("clearbit.webhook.payload", {
+      query: req.query,
+      body: req.body
+    });
+    next();
+  }, handleClearbitWebhook(options));
+
+  app.post("/clearbit-enrich",
     handleClearbitWebhook(options)
   );
 
