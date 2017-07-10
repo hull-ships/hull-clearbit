@@ -100,7 +100,7 @@ function fetchFromEnrich(user = {}, clearbit) {
   }
 
   if (clearbit.hostname) {
-    payload.webhook_url = `https://${clearbit.hostname}/clearbit?ship=${clearbit.ship.id}&id=${getWebhookId(user.id, clearbit)}`;
+    payload.webhook_url = `https://${clearbit.hostname}/clearbit-enrich?ship=${clearbit.ship.id}&id=${getWebhookId(user.id, clearbit)}`;
   }
 
   return clearbit.client
