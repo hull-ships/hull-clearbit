@@ -68,13 +68,19 @@ export default class ClearbitClient {
   reveal(params) {
     this.metric("clearbit.reveal");
     this.hull.logger.debug("outgoing.user.start", { params, source: "reveal" });
-    return this.client.Reveal.find(params);
+    return this.client.Reveal.find(params)
+      .catch((err) => {
+        return this.hull.logger.error("connector.client.error", err);
+      });
   }
 
   discover(params) {
     this.metric("clearbit.discover");
     this.hull.logger.debug("outgoing.user.start", { params, source: "discover" });
-    return this.client.Discovery.search(params);
+    return this.client.Discovery.search(params)
+      .catch((err) => {
+        return this.hull.logger.error("connector.client.error", err);
+      });
   }
 
   prospect(params) {
