@@ -1,3 +1,6 @@
+# 0.1.2 
+- upgrade hull-node to 0.11.8 to avoid logging the whole user object in the context of the logs
+
 # 0.1.1
 - change the webhook endpoint for enrich to distinguish it from old webhook url
 - log query and body for old webhook url
