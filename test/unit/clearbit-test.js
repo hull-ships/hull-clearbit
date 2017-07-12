@@ -1,12 +1,10 @@
 /* eslint-env node, mocha */
-
-require("babel-register")({ presets: ["es2015", "stage-0"] });
 const assert = require("assert");
 const _ = require("lodash");
 
-const Clearbit = require("../server/clearbit").default;
-const { getUserTraitsFromPerson } = require("../server/clearbit/mapping");
-const { isValidIpAddress } = require("../server/clearbit/utils");
+const Clearbit = require("../../server/clearbit").default;
+const { getUserTraitsFromPerson } = require("../../server/clearbit/mapping");
+const { isValidIpAddress } = require("../../server/clearbit/utils");
 
 const reveal = require("./fixtures/reveal.json");
 const combined = require("./fixtures/combined.json");
