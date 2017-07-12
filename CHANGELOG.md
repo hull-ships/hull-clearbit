@@ -1,3 +1,7 @@
+# 0.1.4
+- handle Clearbit API errors on the enrich method
+- restructurized tests
+
 # 0.1.3
 - upgrade hull-node to 0.11.11
 
