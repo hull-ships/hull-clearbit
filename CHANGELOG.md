@@ -1,4 +1,8 @@
-# 0.1.2
+# 0.1.3
+- upgrade hull-node to 0.11.11
+
+# 0.1.2 
+- upgrade hull-node to 0.11.9 to avoid logging the whole user object in the context of the logs
 - require newrelic at the script start
 
 # 0.1.1
