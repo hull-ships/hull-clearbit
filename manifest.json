@@ -2,7 +2,7 @@
   "name": "Clearbit",
   "description": "Fetch additional customer data from Clearbit",
   "picture": "picture.png",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "tags": [
     "incoming",
     "outgoing",

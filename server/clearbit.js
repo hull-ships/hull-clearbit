@@ -49,8 +49,11 @@ export default class Clearbit {
    */
 
   shouldEnrich(msg) {
-    if (!this.client) return false;
     const { user = {} } = msg;
+    if (!this.client) {
+      this.logSkip(this.hull.asUser(user), "enrich", "no api_key set");
+      return false;
+    }
     const { should, message } = shouldEnrich(msg, this.settings);
     if (should) return true;
     this.logSkip(this.hull.asUser(user), "enrich", message);
@@ -62,7 +65,11 @@ export default class Clearbit {
       ({ person, source }) => {
         this.saveUser(user, person, { source });
       }
-    );
+    )
+    .catch((error) => {
+      this.hull.asUser(_.pick(user, ["id", "external_id", "email"]))
+        .logger.info("outgoing.user.error", { errors: error });
+    });
   }
 
   /**
