@@ -132,7 +132,7 @@ export function shouldEnrich(message = {}, settings = {}) {
   // Stop here if we cannot fetch him
   if (!canEnrich(message, settings)) {
     return { should: false, message: "Cannot enrich" };
-  };
+  }
 
   // Skip if we are waiting for the webhook
   if (lookupIsPending(user)) {
