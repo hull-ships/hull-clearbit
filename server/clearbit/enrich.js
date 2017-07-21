@@ -71,11 +71,6 @@ function fetchFromReveal(user = {}, clearbit) {
     .then(({ company }) => {
       logger.info("clearbit.reveal.success", { ip, company: _.pick(company, "name", "domain") });
       return { company };
-    })
-    .catch(err => {
-      const error = err && err.message;
-      logger.info("clearbit.reveal.error", { ip, error });
-      return false;
     });
 }
 
@@ -110,7 +105,6 @@ function fetchFromEnrich(user = {}, clearbit) {
 
   return clearbit.client
     .enrich(payload)
-    .catch(err => logger.info("clearbit.enrich.error", { error: err.message }))
     .then(({ person = {}, company = {} }) => {
       logger.info("clearbit.enrich.success", {
         person: _.pick(person, "id", "name", "email"),
