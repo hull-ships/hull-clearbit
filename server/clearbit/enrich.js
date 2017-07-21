@@ -65,14 +65,17 @@ function canEnrich(message = {}, settings = {}) {
  */
 function fetchFromReveal(user = {}, clearbit) {
   const ip = user.last_known_ip;
+  const logger = clearbit.hull.asUser(user).logger;
   return clearbit.client
     .reveal({ ip })
     .then(({ company }) => {
-      console.warn("Revealed ip : ", JSON.stringify({ ip, company }));
+      logger.info("clearbit.reveal.success", { ip, company: _.pick(company, "name", "domain") });
       return { company };
     })
     .catch(err => {
-      console.warn("fetchFromReveal failed for ip ", JSON.stringify({ ip, err: err.message }));
+      const error = err && err.message;
+      logger.info("clearbit.reveal.error", { ip, error });
+      return false;
     });
 }
 
@@ -103,9 +106,16 @@ function fetchFromEnrich(user = {}, clearbit) {
     payload.webhook_url = `https://${clearbit.hostname}/clearbit-enrich?ship=${clearbit.ship.id}&id=${getWebhookId(user.id, clearbit)}`;
   }
 
+  const logger = clearbit.hull.asUser(user).logger;
+
   return clearbit.client
     .enrich(payload)
+    .catch(err => logger.info("clearbit.enrich.error", { error: err.message }))
     .then(({ person = {}, company = {} }) => {
+      logger.info("clearbit.enrich.success", {
+        person: _.pick(person, "id", "name", "email"),
+        company: _.pick(company, "id", "name", "domain")
+      });
       return { ...person, company };
     });
 }
@@ -120,17 +130,25 @@ export function shouldEnrich(message = {}, settings = {}) {
   const { user = {} } = message;
 
   // Stop here if we cannot fetch him
-  if (!canEnrich(message, settings)) return false;
+  if (!canEnrich(message, settings)) {
+    return { should: false, message: "Cannot enrich" };
+  };
 
   // Skip if we are waiting for the webhook
-  if (lookupIsPending(user)) return false;
+  if (lookupIsPending(user)) {
+    return { should: false, message: "Waiting for webhook" };
+  }
 
-  const cbId = user["traits_clearbit/id"];
-  const fetched_at = user["traits_clearbit/fetched_at"];
+  if (user["traits_clearbit/id"]) {
+    return { should: false, message: "Clearbit ID already set" };
+  }
 
   // Enrich if we have no clearbit data. Skip if we already tried once.
-  if (fetched_at) return { should: false, message: "Fetched_at already set" };
-  if (cbId) return { should: false, message: "Clearbit ID already set" };
+  if (user.email && user["traits_clearbit/enriched_at"]) {
+    return { should: false, message: "enriched_at already set" };
+  } else if (user["traits_clearbit/revealed_at"]) {
+    return { should: false, message: "revealed_at already set" };
+  }
 
   return { should: true };
 }
@@ -150,7 +168,7 @@ export function enrichUser(user, clearbit) {
   if (isValidIpAddress(user.last_known_ip) && !user["traits_clearbit_company/id"] && clearbit.settings.reveal_enabled) {
     clearbit.metric("reveal");
     return fetchFromReveal(user, clearbit)
-    .then(person => ({ source: "reveal", person }));
+    .then(person => (person && { source: "reveal", person }));
   }
 
   return Promise.resolve(false);

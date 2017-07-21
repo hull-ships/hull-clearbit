@@ -62,8 +62,10 @@ export default class Clearbit {
 
   enrichUser(user) {
     return enrichUser(user, this).then(
-      ({ person, source }) => {
-        this.saveUser(user, person, { source });
+      (response) => {
+        if (!response || !response.source) return false;
+        const { person, source } = response;
+        return this.saveUser(user, person, { source });
       }
     )
     .catch((error) => {
