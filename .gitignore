@@ -7,3 +7,5 @@ npm-debug.log
 .idea
 .env*
 build
+.vscode
+package-lock.json
