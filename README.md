@@ -32,6 +32,9 @@ gulp
     info :
       - `incoming.user.start` - when receiving webhook from Clearbit
       - `clearbit.prospector.success` - when fetching Clearbit prospects
+      - `clearbit.enrich.success` - when enriching an email address
+      - `clearbit.reveal.success` - when revealing an IP address
+
 
       - `outgoing.user.skip` with `"action": "discover"`: Logged when Clearbit Enrichment is skipped. The `message` gives context on why it was skipped.
         possible params: `message`, `email`, `id`, `external_id`, `domain`, `discover_segments`
