@@ -12,11 +12,11 @@ Your Clearbit Connector is now ready to be configured depending on your needs, s
 
 ## Features
 
-Clearbit [**Enrichment**](#Enrichment) enables your team to transform the email address of an user in Hull into a complete user and company profile with up to 85 data points.
+Clearbit [**Enrichment**](#Enrichment) enables your team to transform the email address of a user in Hull into a complete user and company profile with up to 85 data points.
 
-With Clearbit [**Reveal**](#Reveal) you can turn your anonymous website traffic into company profiles to power targeted campaigns and close more named accounts .
+With Clearbit [**Reveal**](#Reveal) you can turn your anonymous website traffic into company profiles to power targeted campaigns and close more named accounts.
 
-Use the [**Prospector**](#Prospector) to grow your pipeline and find the right buyer within a named account; all you need is a domain name. Our connector enables your team to automatically send revealed companies back to Clearbit and obtain targeted user profiles, no manual work required.
+Use the [**Prospector**](#Prospector) to grow your pipeline and find the right buyer within a named account; all you need is a domain name. The connector enables your team to automatically send revealed companies back to Clearbit and obtain targeted user profiles, no manual work required.
 
 [**Discover**](#Discover) new accounts that are similar to the profiles in any segment defined in Hull. Leverage our advanced segmentation engine to search through over 20M companies.
 
@@ -35,7 +35,7 @@ The Enrichment feature of the connector allows you to complete a users profile w
 You can enable or disable this feature by toggling the checkbox in the **Enrichment** section of the Settings tab:
 ![Enrichment 1](./docs/enrichment01.png)
 
-Enrichment is enabled by default but will only result in API calls to Clearbit’s API if you specify at least one segment in the provided field. You can search segments by simply typing a part of the name into the field or by opening the dropdown via the triangular button.
+Enrichment is enabled by default but will only result in API calls to Clearbit’s API if you specify at least one segment in the provided field.
 ![Enrichment 2](./docs/enrichment02.png)
 
 **Which users do get enriched?**
@@ -46,7 +46,7 @@ The connector only enriches users who have an *email address* *and have never be
 Note: The connector will perform the enrich operation exactly only once, even if this API call does not yield additional data points.
 
 **When do users get enriched?**
-The connector attempts the enrichment as soon as the user enters one of the whitelisted segments. Please note that the segment needs to exist before the user gets created, otherwise this automatic enrichment will not be performed. 
+The connector attempts the enrichment as soon as the user enters one of the whitelisted segments. Please note that the segment needs to exist before the user gets created, otherwise this automatic enrichment will not be performed.
 You can always enforce the enrichment by selecting one or multiple users on the users page and send them to your Clearbit connector via the “Actions” button. If you perform this route, the whitelisted segments will be ignored and all users that have an email address and no trait `clearbit/enriched_at` will be processed.
 
 Please note that users get only enriched ***exactly once***. Even if this enrichment does not yield any data, the Connector will not run another enrichment.
@@ -70,7 +70,7 @@ You can enable anonymous users or check the feature status within your **Organiz
 ![Reveal 2](./docs/reveal02.png)
 
 **How does the Trigger for Prospection work?**
-The trigger let’s you define when the Clearbit Connector automatically executes the Prospector workflow to find contacts for a revealed account.
+The trigger lets you define when the Clearbit Connector automatically executes the Prospector workflow to find contacts for a revealed account.
 You can trigger prospection as soon as the account is revealed by setting the slider to one, or you can require a certain amount of different users visiting your website from the same IP address by adjusting the slider. Selecting a higher value will help to preserve credits but you might not get directly prospects for an account.
 Please note, this will only have an effect if the [Prospector](#Prospector) feature is enabled.
 
