@@ -56,7 +56,7 @@ In most cases this process will take no longer than a couple of minutes. In some
 
 ## Reveal
 
-The Reveal feature of the connector allows you to turn your anonymous website traffic into company profiles to power targeted campaigns and close more named accounts .
+The Reveal feature of the connector allows you to turn your anonymous website traffic into company profiles to power targeted campaigns and close more named accounts.
 
 You can enable or disable the feature by toggling the checkbox in the **Reveal** section of the Settings tab:
 ![Reveal 1](./docs/reveal01.png)
@@ -93,7 +93,7 @@ The Prospector workflow gets triggered exactly once per user, if ***all*** of th
 
 - The user/account does not have the attribute `clearbit/prospected_at` set.
 - There are no named users in your Hull organization with the same domain.
-- The number of anonymous users has reached the threshold defined via the trigger in the [Reveal](#Reveal) configuration.
+- The number of anonymous users with the same company domain has reached the threshold defined via the trigger in the [Reveal](#Reveal) configuration.
 
 **How do I know if the Prospector workflow has been executed?**
 The Clearbit Connector sets the attribute `prospected_at` within the Clearbit attribute group that contains the timestamp when prospector has been executed.
