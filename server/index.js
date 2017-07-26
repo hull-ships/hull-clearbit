@@ -1,4 +1,5 @@
 import Hull from "hull";
+import { Cache } from "hull/lib/infra";
 import express from "express";
 
 import server from "./server";
@@ -38,6 +39,12 @@ if (process.env.LOG_LEVEL) {
   Hull.logger.transports.console.level = process.env.LOG_LEVEL;
 }
 
+const cache = new Cache({
+  store: "memory",
+  max: process.env.SHIP_CACHE_MAX || 100,
+  ttl: process.env.SHIP_CACHE_TTL || 60
+});
+
 const options = {
   hostSecret: process.env.SECRET || "1234",
   devMode: process.env.NODE_ENV === "development",
@@ -45,7 +52,8 @@ const options = {
   onMetric,
   clientConfig: {
     firehoseUrl: process.env.OVERRIDE_FIREHOSE_URL
-  }
+  },
+  cache
 };
 
 const connector = new Hull.Connector(options);
