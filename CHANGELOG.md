@@ -1,3 +1,6 @@
+# 0.1.6
+- set default cache ttl
+
 # 0.1.5
 - don't skip enrich if already revealed
 - add better logging for reveal
