@@ -1,6 +1,6 @@
 {
   "name": "Clearbit",
-  "description": "Fetch additional customer data from Clearbit",
+  "description": "Reveal anonymous users from your website and enrich them with the data you need",
   "picture": "picture.png",
   "version": "0.1.6",
   "tags": [
@@ -13,13 +13,13 @@
     {
       "type": "string",
       "format": "title",
-      "name": "credentials",
-      "title": "Credentials"
+      "name": "authentication",
+      "title": "Authentication"
     },
     {
       "name": "api_key",
       "title": "Clearbit API Key",
-      "description": "Get it from https://dashboard.clearbit.com/keys",
+      "description": "Use the secret API key from https://dashboard.clearbit.com/api",
       "type": "string",
       "format": "text"
     },
@@ -28,18 +28,17 @@
       "format": "title",
       "name": "enrich_info",
       "title": "Enrichment",
-      "description": "The Enrichment API lets you look up person and company data based on an email or domain"
+      "description": "Transform the email address or domain in a person or company profile with more than 85 data points."
     },
     {
       "name": "enrich_enabled",
       "title": "Enable Enrichment",
-      "description": "Enrich users with their user and company information",
       "type": "boolean",
       "default": true
     },
     {
       "name": "enrich_segments",
-      "title": "Enrich users only if they match any of these segments",
+      "title": "Enrich users belonging to one of these segments",
       "type": "array",
       "format": "segment",
       "items": {
@@ -48,34 +47,47 @@
       "default": []
     },
     {
+      "name": "enrich_segments_hero",
+      "type": "string",
+      "headerTemplate": "The above list of segments is a whitelist. You need to *explicitely specify one or more segments* for which enrichment shall be performed.<br>If you do not specify any segment, no user will be sent to Clearbit's API. An empty list has the same effect as disabling the feature via the checkbox.",
+      "format": "information",
+      "title": "Whitelisted Segments"
+    },
+    {
       "type": "string",
       "format": "title",
       "name": "reveal",
       "title": "Reveal"
     },
     {
+      "type": "string",
+      "format": "information",
+      "name": "reveal_information",
+      "title": "- Precondition -",
+      "headerTemplate": "Reveal will only work with anonymous users. You need to enable **Anonymous Users** from your [Dashboard Settings](../../settings/user_settings) to store anonymous website traffic in Hull."
+    },
+    {
       "name": "reveal_enabled",
       "title": "Enable Reveal",
-      "description": "Reveal anonymous visitors' company information",
       "type": "boolean",
       "default": false
     },
     {
-      "type": "string",
-      "format": "information",
-      "name": "reveal_information",
-      "description": "Reveal setup",
-      "headerTemplate": "For Reveal to operate, you need to enable **Guest Users** from your [Dashboard Settings](../../settings)"
-    },
-    {
       "name": "reveal_prospect_min_contacts",
-      "title": "Minimum distinct anonymous visitors from a company to trigger prospection",
+      "title": "Trigger Prospection - Minimum distinct visitors",
       "type": "number",
       "format": "range",
       "default": 1,
       "minimum": 1,
       "maximum": 10,
       "multipleOf": 1
+    },
+    {
+      "type": "string",
+      "format": "information",
+      "name": "reveal_trigger_prospector_info",
+      "title": "How does the trigger work?",
+      "headerTemplate": "The trigger let's you define when our connector automatically runs the Prospector workflow by defining the number of distinct users from the same IP address. As soon as this threshold is met, the connector will run the Prospect workflow if enabled."
     },
     {
       "type": "string",
@@ -87,19 +99,25 @@
     {
       "name": "discover_enabled",
       "title": "Enable Discovery",
-      "description": "Search for companies similar to the ones you are interested in",
       "type": "boolean",
       "default": false
     },
     {
       "name": "discover_segments",
-      "title": "Search for companies similar to users who match any of these segments",
+      "title": "Search for companies similar to the ones in these segments",
       "type": "array",
       "format": "segment",
       "items": {
         "type": "string"
       },
       "default": []
+    },
+    {
+      "type": "string",
+      "format": "information",
+      "name": "discover_segments_info",
+      "title": "Segmentation Tip",
+      "headerTemplate": "The connector uses the segments as whitelist to tigger the Clearbit flow for finding companies with a similar profile. We recommend to use only segments that describe your targeted company profiles."
     },
     {
       "name": "discover_limit_count",
@@ -120,27 +138,27 @@
     {
       "name": "prospect_enabled",
       "title": "Enable Prospector",
-      "description": "Search for people in companies you Revealed or Discovered",
       "type": "boolean",
       "default": false
     },
     {
       "name": "handle_accounts",
-      "title": "Handle Accounts",
-      "description": "Save account objects instead of user objects in the clearbit_company group",
+      "title": "Use Accounts Feature (Beta)",
       "type": "boolean",
-      "default": false
+      "default": false,
+      "format": "hidden"
     },
     {
       "name": "prospect_domain",
-      "title": "Search using company domain",
+      "title": "Attribute that defines the company domain",
       "type": "string",
       "format": "trait",
-      "default": "domain"
+      "default": "domain",
+      "description": "The connector will use the value of this attribute as domain when fetching people from Clearbit."
     },
     {
       "name": "prospect_segments",
-      "title": "Automatically fetch prospects for companies who match any of these segments",
+      "title": "Fetch prospects for companies in these segments",
       "type": "array",
       "format": "segment",
       "items": {
@@ -149,8 +167,15 @@
       "default": []
     },
     {
+      "type": "string",
+      "format": "information",
+      "name": "prospect_segments_info",
+      "title": "Segmentation Tip",
+      "headerTemplate": "The connector uses the segments as whitelist to tigger the Clearbit flow for finding leads within accounts that match your targeted profiles. We recommend to use only segments that describe your targeted company profiles."
+    },
+    {
       "name": "prospect_limit_count",
-      "title": "Maximum number of prospects to fetch per company",
+      "title": "Maximum number of leads to fetch per company",
       "type": "number",
       "format": "range",
       "default": 5,
@@ -159,8 +184,15 @@
       "multipleOf": 1
     },
     {
+      "type": "string",
+      "format": "information",
+      "name": "prospect_filter_info",
+      "title": "> DESCRIBE YOUR IDEAL LEAD <",
+      "headerTemplate": "Search by role, seniority or title to identify your ideal prospects."
+    },
+    {
       "name": "prospect_filter_role",
-      "title": "Prospect Role",
+      "title": "Filter for a certain Role",
       "type": "string",
       "format": "select",
       "enum": [
@@ -187,11 +219,12 @@
         "recruiting",
         "research",
         "sales"
-      ]
+      ],
+      "description": "Specify a certain role or leave blank to search without restriction."
     },
     {
       "name": "prospect_filter_seniority",
-      "title": "Prospect Seniority",
+      "title": "Filter for specific Seniority",
       "type": "string",
       "format": "select",
       "enum": [
@@ -199,11 +232,12 @@
         "executive",
         "director",
         "manager"
-      ]
+      ],
+      "description": "Define a specific seniority or leave blank if you don't want to restrict your search."
     },
     {
       "name": "prospect_filter_titles",
-      "title": "Prospect Titles",
+      "title": "Search for Titles containing",
       "type": "array",
       "items": {
         "title": "Title",
@@ -212,7 +246,8 @@
       "format": "select",
       "options": {
         "allowCreate": true
-      }
+      },
+      "description": "Restrict your search by specifying criteria for the prospect's title. If left blank, search is carried out without restriction."
     }
   ],
   "resources": [],
