@@ -363,7 +363,9 @@ export default class Clearbit {
         return false;
       }
 
-      const titles = this.settings.prospect_filter_titles;
+      const titles = _.isArray(this.settings.prospect_filter_titles)
+        ? this.settings.prospect_filter_titles
+        : [];
       const limit = this.settings.prospect_limit_count;
       const prospects = [];
 
@@ -402,7 +404,6 @@ export default class Clearbit {
   }
 
   fetchProspects(query, company_traits = {}) {
-    console.log("fetchProspects", query, company_traits);
     return this.client.prospect({ ...query, email: true }).then((prospects) => {
       this.hull.logger.info("clearbit.prospector.success", { action: "prospector", message: `Found ${prospects.length} new Prospects`, company_traits, prospects });
       prospects.map(this.saveProspect.bind(this, company_traits));
