@@ -12,11 +12,11 @@ export default function handleProspect({ hostSecret }) {
       const cb = new Clearbit({ hull, ship, hostSecret });
       const prospecting = domains.map(domain => {
         let prospects = [];
-        const newLimit = limit - prospects.length;
-        if (newLimit <= 0) {
-          return Promise.resolve(prospects);
-        }
         return Promise.mapSeries(titles, (title) => {
+          const newLimit = limit - prospects.length;
+          if (newLimit <= 0) {
+            return Promise.resolve(prospects);
+          }
           return cb.fetchProspects({ domain, role, seniority, title, limit: newLimit })
             .then((foundProspects) => {
               prospects = prospects.concat(foundProspects);
