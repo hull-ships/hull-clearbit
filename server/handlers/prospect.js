@@ -16,12 +16,12 @@ export default function handleProspect({ hostSecret }) {
         if (newLimit <= 0) {
           return Promise.resolve(prospects);
         }
-        return Promise.map(titles, (title) => {
+        return Promise.mapSeries(titles, (title) => {
           return cb.fetchProspects({ domain, role, seniority, title, limit: newLimit })
             .then((foundProspects) => {
               prospects = prospects.concat(foundProspects);
             });
-        }, { concurrency: 1 })
+        })
         .then(() => {
           return prospects;
         });

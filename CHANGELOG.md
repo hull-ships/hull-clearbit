@@ -1,3 +1,8 @@
+# 0.2.0
+- prospector UI allows to define multiple roles, seniority levels and titles now
+- prospector fetch strategy was changed - now we iterate over titles and fetch prospects for each title until we hit the fetch limit, without title 
+- `prospect_filter_role` and `prospect_filter_seniority` changed from string to an array
+
 # 0.1.6
 - set default cache ttl
 

@@ -367,10 +367,11 @@ export default class Clearbit {
         ? this.settings.prospect_filter_titles
         : [];
       const limit = this.settings.prospect_limit_count;
-      const prospects = [];
+      let prospects = [];
 
-      return Promise.map(titles, (title) => {
+      return Promise.mapSeries(titles, (title) => {
         const newLimit = limit - prospects.length;
+        console.log({ newLimit, prospects });
         if (newLimit <= 0) {
           return Promise.resolve();
         }
@@ -397,8 +398,10 @@ export default class Clearbit {
         }, {});
 
         return this.fetchProspects(query, company_traits)
-          .then(foundProspects => prospects.concat(foundProspects));
-      }, { concurrency: 1 })
+          .then(foundProspects => {
+            prospects = prospects.concat(foundProspects);
+          });
+      })
       .then(() => prospects);
     });
   }
