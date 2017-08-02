@@ -362,32 +362,47 @@ export default class Clearbit {
         this.logSkip(this.hull.asUser(user), "prospector", "We already have known users with that domain");
         return false;
       }
-      const query = {
-        domain,
-        limit: this.settings.prospect_limit_count,
-        email: true
-      };
 
-      ["seniority", "titles", "role"].forEach(k => {
-        const filter = this.settings[`prospect_filter_${k}`];
-        if (!_.isEmpty(filter)) {
-          query[k] = filter;
+      const titles = this.settings.prospect_filter_titles;
+      const limit = this.settings.prospect_limit_count;
+      const prospects = [];
+
+      return Promise.map(titles, (title) => {
+        const newLimit = limit - prospects.length;
+        if (newLimit <= 0) {
+          return Promise.resolve();
         }
-      });
+        const query = {
+          domain,
+          limit: newLimit,
+          email: true,
+          title
+        };
 
-      const company_traits = _.reduce(user, (traits, val, k) => {
-        const [group, key] = k.split("/");
-        if (group === "traits_clearbit_company") {
-          traits[`clearbit_company/${key}`] = val;
-        }
-        return traits;
-      }, {});
+        ["seniority", "role"].forEach(k => {
+          const filter = this.settings[`prospect_filter_${k}`];
+          if (!_.isEmpty(filter)) {
+            query[k] = filter;
+          }
+        });
 
-      return this.fetchProspects(query, company_traits);
+        const company_traits = _.reduce(user, (traits, val, k) => {
+          const [group, key] = k.split("/");
+          if (group === "traits_clearbit_company") {
+            traits[`clearbit_company/${key}`] = val;
+          }
+          return traits;
+        }, {});
+
+        return this.fetchProspects(query, company_traits)
+          .then(foundProspects => prospects.concat(foundProspects));
+      }, { concurrency: 1 })
+      .then(() => prospects);
     });
   }
 
   fetchProspects(query, company_traits = {}) {
+    console.log("fetchProspects", query, company_traits);
     return this.client.prospect({ ...query, email: true }).then((prospects) => {
       this.hull.logger.info("clearbit.prospector.success", { action: "prospector", message: `Found ${prospects.length} new Prospects`, company_traits, prospects });
       prospects.map(this.saveProspect.bind(this, company_traits));

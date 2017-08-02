@@ -193,7 +193,10 @@
     {
       "name": "prospect_filter_role",
       "title": "Filter for a certain Role",
-      "type": "string",
+      "type": "array",
+      "options": {
+        "multiple": true
+      },
       "format": "select",
       "enum": [
         "",
@@ -225,7 +228,10 @@
     {
       "name": "prospect_filter_seniority",
       "title": "Filter for specific Seniority",
-      "type": "string",
+      "type": "array",
+      "options": {
+        "multiple": true
+      },
       "format": "select",
       "enum": [
         "",

@@ -39,6 +39,11 @@ $(() => {
   $("form#prospect-form").on("submit", (evt) => {
     evt.preventDefault();
     const $btn = $("button#prospect");
+    const titles = $("#titles")
+      .val()
+      .map(d => d.trim())
+      .filter(d => d.length > 0)
+
     const domains = $("#domains")
       .val()
       .split("\n")
@@ -46,11 +51,11 @@ $(() => {
       .filter(d => d.length > 0)
       .sort();
 
-    if (domains.length > 0) {
-      const data = { domains };
+    if (domains.length > 0 && titles.length > 0) {
+      const data = { domains, titles };
       $btn.text("Prospecting...").attr("disabled", true);
-      ["role", "seniority", "title"].forEach(k => {
-        const val = $(`#${k}`).val().trim();
+      ["role", "seniority", "limit"].forEach(k => {
+        const val = $(`#${k}`).val(); //.trim();
         if (val && val.length > 0) {
           data[k] = val;
         }
