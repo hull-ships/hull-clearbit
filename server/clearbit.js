@@ -350,7 +350,6 @@ export default class Clearbit {
       });
   }
 
-
   prospectUsers(user) {
     const { prospect_domain = "domain" } = this.settings;
     const domain = user[prospect_domain] || getDomain(user);
@@ -362,55 +361,52 @@ export default class Clearbit {
         this.logSkip(this.hull.asUser(user), "prospector", "We already have known users with that domain");
         return false;
       }
+      const query = {
+        domain,
+        limit: this.settings.prospect_limit_count,
+        email: true
+      };
 
-      const titles = _.isArray(this.settings.prospect_filter_titles)
-        ? this.settings.prospect_filter_titles
-        : [];
-      const limit = this.settings.prospect_limit_count;
-      let prospects = [];
-
-      return Promise.mapSeries(titles, (title) => {
-        const newLimit = limit - prospects.length;
-        console.log({ newLimit, prospects });
-        if (newLimit <= 0) {
-          return Promise.resolve();
+      ["seniority", "titles", "role"].forEach(k => {
+        const filter = this.settings[`prospect_filter_${k}`];
+        if (!_.isEmpty(filter)) {
+          query[k] = filter;
         }
-        const query = {
-          domain,
-          limit: newLimit,
-          email: true,
-          title
-        };
+      });
 
-        ["seniority", "role"].forEach(k => {
-          const filter = this.settings[`prospect_filter_${k}`];
-          if (!_.isEmpty(filter)) {
-            query[k] = filter;
-          }
-        });
+      const company_traits = _.reduce(user, (traits, val, k) => {
+        const [group, key] = k.split("/");
+        if (group === "traits_clearbit_company") {
+          traits[`clearbit_company/${key}`] = val;
+        }
+        return traits;
+      }, {});
 
-        const company_traits = _.reduce(user, (traits, val, k) => {
-          const [group, key] = k.split("/");
-          if (group === "traits_clearbit_company") {
-            traits[`clearbit_company/${key}`] = val;
-          }
-          return traits;
-        }, {});
-
-        return this.fetchProspects(query, company_traits)
-          .then(foundProspects => {
-            prospects = prospects.concat(foundProspects);
-          });
-      })
-      .then(() => prospects);
+      return this.fetchProspects(query, company_traits);
     });
   }
 
-  fetchProspects(query, company_traits = {}) {
-    return this.client.prospect({ ...query, email: true }).then((prospects) => {
-      this.hull.logger.info("clearbit.prospector.success", { action: "prospector", message: `Found ${prospects.length} new Prospects`, company_traits, prospects });
-      prospects.map(this.saveProspect.bind(this, company_traits));
-      return prospects;
+  fetchProspects(query = {}, company_traits = {}) {
+    const { titles = [], domain, role, seniority, limit = 5 } = query;
+
+    // Allow prospecting even if no titles passed
+    if (titles.length === 0) titles.push(null);
+
+    const prospects = {};
+    return Promise.mapSeries(titles, (title) => {
+      const newLimit = limit - _.size(prospects);
+      if (newLimit <= 0) return Promise.resolve(prospects);
+      const params = { domain, role, seniority, title, limit: newLimit, email: true };
+      return this.client
+        .prospect(params)
+        .then((results = []) => {
+          results.forEach((p) => { prospects[p.email] = p; });
+        });
+    }).then(() => {
+      const ret = _.values(prospects);
+      this.hull.logger.info("clearbit.prospector.success", { action: "prospector", message: `Found ${ret.length} new Prospects`, company_traits, ret });
+      ret.map(this.saveProspect.bind(this, company_traits));
+      return ret;
     });
   }
 

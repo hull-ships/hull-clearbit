@@ -27,10 +27,10 @@
     "build:server": "./node_modules/.bin/babel server -d build",
     "start": "node -r newrelic ./build",
     "start:dev": "LOG_LEVEL=debug NODE_ENV=development ./node_modules/.bin/nodemon -d 2 -V -w server -x ./node_modules/.bin/babel-node -- server",
-    "test": "npm run test:lint && npm run test:units && npm run test:integration",
+    "test": "npm run test:lint && npm run test:unit && npm run test:integration",
     "test:lint": "./node_modules/.bin/eslint server",
     "test:modules": "npm outdated --depth=0",
-    "test:units": "NODE_ENV=test mocha --require babel-register -R spec ./test/unit/*.js",
+    "test:unit": "NODE_ENV=test mocha --require babel-register -R spec ./test/unit/*.js",
     "test:integration": "NODE_ENV=test mocha --require babel-register -R spec ./test/integration/*.js",
     "clean": "./node_modules/.bin/rimraf dist; ./node_modules/.bin/rimraf build",
     "update": "./node_modules/.bin/updtr",
@@ -68,11 +68,11 @@
     "bottleneck": "1.15.0",
     "clearbit": "1.2.3",
     "connect": "^3.4.1",
-    "ejs": "^2.4.1",
+    "ejs": "^2.5.7",
     "event-stream": "^3.3.2",
     "express": "^4.13.4",
     "find-up": "^2.1.0",
-    "hull": "0.11.11",
+    "hull": "^0.11.12",
     "jquery": "^3.1.0",
     "jwt-simple": "^0.5.0",
     "librato-node": "^4.1.0",
@@ -82,7 +82,8 @@
     "object-mapper": "^3.0.0",
     "range_check": "^1.4.0",
     "rimraf": "^2.5.2",
+    "select2": "^4.0.3",
     "webpack": "^1.13.1",
-    "webpack-dev-middleware": "^1.6.1"
+    "webpack-dev-middleware": "^1.12.0"
   }
 }

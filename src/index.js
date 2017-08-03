@@ -1,4 +1,5 @@
 const $ = require("jquery");
+const select2 = require("select2"); // eslint-disable-line no-unused-vars
 const _ = require("lodash");
 
 function renderResults(prospects) {
@@ -36,22 +37,32 @@ function renderResults(prospects) {
 }
 
 $(() => {
+  $("#role").select2({
+    closeOnSelect: true
+  });
+  $("#seniority").select2({
+    closeOnSelect: true
+  });
+  $("#titles").select2({
+    tags: true,
+    closeOnSelect: true
+  });
+
   $("form#prospect-form").on("submit", (evt) => {
     evt.preventDefault();
     const $btn = $("button#prospect");
     const titles = $("#titles")
       .val()
       .map(d => d.trim())
-      .filter(d => d.length > 0)
+      .filter(d => d.length > 0);
 
     const domains = $("#domains")
       .val()
       .split("\n")
       .map(d => d.trim())
-      .filter(d => d.length > 0)
-      .sort();
+      .filter(d => d.length > 0);
 
-    if (domains.length > 0 && titles.length > 0) {
+    if (domains.length > 0) {
       const data = { domains, titles };
       $btn.text("Prospecting...").attr("disabled", true);
       ["role", "seniority", "limit"].forEach(k => {
