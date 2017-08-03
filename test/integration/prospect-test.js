@@ -1,12 +1,13 @@
 const Minihull = require("minihull");
 const expect = require("chai").expect;
-const moment = require("moment");
 const nock = require("nock");
 
 const bootstrap = require("./support/bootstrap");
 
 describe("Clearbit API errors", function test() {
-  let server, minihull;
+  let server;
+  let minihull;
+
   beforeEach((done) => {
     minihull = new Minihull();
     server = bootstrap(8000);
@@ -35,7 +36,13 @@ describe("Clearbit API errors", function test() {
 
   it("should handle automatic prospection", (done) => {
     const clearbit = nock("https://prospector.clearbit.com")
-      .get("/v1/people/search?domain=foo.bar&limit=2&email=true&title=foo")
+      .get("/v1/people/search")
+      .query({
+        domain: "foo.bar",
+        limit: 2,
+        email: true,
+        title: "foo"
+      })
       .reply(200, [{
         email: "foo@foo.bar"
       }]);
@@ -56,6 +63,7 @@ describe("Clearbit API errors", function test() {
       expect(req.body.batch[0].body.email.value).to.equal("foo@foo.bar");
       expect(req.body.batch[0].body["clearbit/prospected_at"].value).to.not.be.null;
       expect(req.body.batch[0].body["clearbit/source"].value).to.equal("prospect");
+      clearbit.done();
       done();
     });
 
@@ -82,19 +90,37 @@ describe("Clearbit API errors", function test() {
 
 
     nock("https://prospector.clearbit.com")
-      .get("/v1/people/search?domain=foo.bar&limit=2&email=true&title=foo")
+      .get("/v1/people/search")
+      .query({
+        domain: "foo.bar",
+        limit: 2,
+        email: true,
+        title: "foo"
+      })
       .reply(200, [{
         email: "foo@foo.bar"
       }]);
 
     nock("https://prospector.clearbit.com")
-      .get("/v1/people/search?domain=foo.bar&limit=1&email=true&title=bar")
+      .get("/v1/people/search")
+      .query({
+        domain: "foo.bar",
+        limit: 1,
+        email: true,
+        title: "bar"
+      })
       .reply(200, [{
         email: "foo@bar.bar"
       }]);
 
     const thirdTitleCall = nock("https://prospector.clearbit.com")
-      .get("/v1/people/search?domain=foo.bar&limit=2&email=true&title=zyx")
+      .get("/v1/people/search")
+      .query({
+        domain: "foo.bar",
+        limit: 2,
+        email: true,
+        title: "zyx"
+      })
       .reply(200, [{
         email: "foo@zyx.bar"
       }]);

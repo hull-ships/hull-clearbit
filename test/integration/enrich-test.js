@@ -1,12 +1,12 @@
 const Minihull = require("minihull");
 const expect = require("chai").expect;
-const moment = require("moment");
 const nock = require("nock");
 
 const bootstrap = require("./support/bootstrap");
 
 describe("Clearbit API errors", function test() {
-  let server, minihull;
+  let server;
+  let minihull;
   beforeEach((done) => {
     minihull = new Minihull();
     server = bootstrap(8000);
@@ -31,7 +31,7 @@ describe("Clearbit API errors", function test() {
   });
 
   it("should handle Invalid Email error", (done) => {
-    let originalWrite = process.stdout.write;
+    const originalWrite = process.stdout.write;
     process.stdout.write = (log) => {
       process.stdout.write = originalWrite;
       const logLine = JSON.parse(log);
@@ -42,7 +42,7 @@ describe("Clearbit API errors", function test() {
       done();
     };
 
-    const clearbit = nock('https://person.clearbit.com')
+    nock("https://person.clearbit.com")
       .get(/\/v2\/combined\/find/)
       .reply(422, {
         error: {
