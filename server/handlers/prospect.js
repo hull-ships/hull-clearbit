@@ -5,31 +5,21 @@ import Clearbit from "../clearbit";
 
 export default function handleProspect({ hostSecret }) {
   return (req, res) => {
-    const { domains, role, seniority, titles, limit } = req.body;
+    const { domains, role, seniority, titles = [], limit } = req.body;
     const { client: hull, ship } = req.hull;
-
+    let newLimit = limit;
     if (domains) {
       const cb = new Clearbit({ hull, ship, hostSecret });
-      const prospecting = domains.map(domain => {
-        let prospects = [];
-        const newLimit = limit - prospects.length;
-        if (newLimit <= 0) {
-          return Promise.resolve(prospects);
-        }
-        return Promise.mapSeries(titles, (title) => {
-          return cb.fetchProspects({ domain, role, seniority, title, limit: newLimit })
-            .then((foundProspects) => {
-              prospects = prospects.concat(foundProspects);
-            });
-        })
-        .then(() => {
-          return prospects;
+      const prospecting = Promise.mapSeries(domains, (domain) => {
+        const params = { domain, role, seniority, titles, limit: newLimit };
+        return cb.fetchProspects(params).then((ret) => {
+          newLimit -= ret.length;
+          return ret;
         });
       });
 
-      Promise.all(prospecting).then(prospects => {
-        prospects = _.flatten(prospects);
-        res.json({ prospects });
+      Promise.all(prospecting).then((results) => {
+        res.json({ prospects: _.flatten(results) });
       }).catch((error) => {
         console.warn("Error prospecting...", error);
         res.json({ error });
