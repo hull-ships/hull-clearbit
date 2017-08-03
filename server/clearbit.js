@@ -389,6 +389,9 @@ export default class Clearbit {
   fetchProspects(query = {}, company_traits = {}) {
     const { titles = [], domain, role, seniority, limit = 5 } = query;
 
+    // Allow prospecting even if no titles passed
+    if (titles.length === 0) titles.push(null);
+
     const prospects = {};
     return Promise.mapSeries(titles, (title) => {
       const newLimit = limit - _.size(prospects);

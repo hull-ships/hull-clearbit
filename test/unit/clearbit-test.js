@@ -62,24 +62,30 @@ describe("HullClearbit Client", () => {
   });
 
   describe("for fetchProspect function", () => {
-    const hull = {
-      asUser: sinon.spy(() => hull),
-      traits: sinon.spy(() => Promise.resolve()),
-      logger: {
-        info: () => {}
-      }
+    const makeHull = () => {
+      const mock = {};
+      mock.logger = { info: () => {} };
+      mock.traits = sinon.spy(() => Promise.resolve());
+      mock.asUser = sinon.spy(() => mock);
+      return mock;
     };
     const onMetric = sinon.spy(() => {});
 
     it("should return empty results if titles are empty", () => {
-      const cb = new Clearbit({ ship: { private_settings: {} }, hull });
+      const cb = new Clearbit({ ship: { private_settings: {} }, hull: makeHull() });
+      const prospect = sinon.spy(({ role, seniority, domain }) => {
+        return Promise.resolve([{ email: `${role}+${seniority}@${domain}` }]);
+      });
+      cb.client = {};
+      cb.client.prospect = prospect;
 
       cb.fetchProspects({ titles: [], domain: "hull.io", role: "ceo", seniority: "manager", limit: 5 }).then(result => {
-        expect(result).to.have.lengthOf(0);
+        assert.deepEqual(result, [{ email: "ceo+manager@hull.io" }]);
       });
     });
 
     it("should run prospects method 3 times", () => {
+      const hull = makeHull();
       let counter = 0;
       const prospect = sinon.spy(() => {
         counter += 1;
@@ -120,7 +126,6 @@ describe("HullClearbit Client", () => {
         assert.equal(prospect.thirdCall.args[0].limit, 5);
         assert.equal(prospect.thirdCall.args[0].email, true);
 
-
         assert(onMetric.calledThrice);
         assert.equal(onMetric.firstCall.args[0], "saveProspect");
         assert.equal(onMetric.firstCall.args[1], 1);
@@ -143,7 +148,6 @@ describe("HullClearbit Client", () => {
         assert.equal(hull.asUser.getCall(3).args[0].email, "2@email.com");
         assert.equal(hull.asUser.getCall(4).args[0].email, "3@email.com");
         assert.equal(hull.asUser.getCall(5).args[0].email, "3@email.com");
-
 
         assert(hull.traits.calledThrice);
 
