@@ -1,3 +1,6 @@
+# 0.2.2
+- handle errors on prospection and discovery API
+
 # 0.2.1
 - upgrade hull-node@0.12.2
 

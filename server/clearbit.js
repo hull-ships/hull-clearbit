@@ -237,6 +237,10 @@ export default class Clearbit {
 
         return this.saveDiscoveredCompanies(results, domain);
       });
+    })
+    .catch((error) => {
+      this.hull.asUser(_.pick(user, ["id", "external_id", "email"]))
+        .logger.info("outgoing.user.error", { errors: _.get(error, "message", error) });
     });
   }
 
@@ -383,6 +387,10 @@ export default class Clearbit {
       }, {});
 
       return this.fetchProspects(query, company_traits);
+    })
+    .catch((error) => {
+      this.hull.asUser(_.pick(user, ["id", "external_id", "email"]))
+        .logger.info("outgoing.user.error", { errors: _.get(error, "message", error) });
     });
   }
 

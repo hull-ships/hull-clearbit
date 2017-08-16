@@ -24,7 +24,6 @@ function ClearbitApi({ path, method = "get", params = {}, key }) {
       } catch (err) {
         body = {};
       }
-
       if (error) {
         reject(error);
       } else if (response.statusCode === 202 || response.statusCode >= 400) {
