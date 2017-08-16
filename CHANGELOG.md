@@ -1,3 +1,6 @@
+# 0.2.1
+- upgrade hull-node@0.12.2
+
 # 0.2.0
 - prospector UI allows to define multiple roles, seniority levels and titles now
 - prospector fetch strategy was changed - now we iterate over titles and fetch prospects for each title until we hit the fetch limit, without title 
