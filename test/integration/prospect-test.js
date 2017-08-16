@@ -154,4 +154,53 @@ describe("Clearbit API errors", function test() {
       segments: [{ id: "1" }]
     }).then(() => {});
   });
+
+  it("should handle Rate limit error", (done) => {
+    const originalWrite = process.stdout.write;
+    process.stdout.write = (log) => {
+      const logLine = JSON.parse(log);
+      if (logLine.message !== "outgoing.user.error") {
+        return;
+      }
+      process.stdout.write = originalWrite;
+      expect(logLine.level).to.equal("info");
+      expect(logLine.message).to.equal("outgoing.user.error");
+      expect(logLine.context.user_id).to.equal("abc");
+      expect(logLine.context.subject_type).to.equal("user");
+      done();
+    };
+
+    const clearbit = nock("https://prospector.clearbit.com")
+      .get("/v1/people/search")
+      .query({
+        domain: "foo.bar",
+        limit: 2,
+        email: true,
+        title: "foo"
+      })
+      .reply(409, {
+        error: {
+          message: "Your account is over it's quota"
+        }
+      });
+
+    minihull.stubApp("/api/v1/search/user_reports").respond({
+      pagination: { total: 0 },
+      aggregations: {
+        without_email: {
+          doc_count: 0
+        },
+        by_source: {
+          buckets: []
+        }
+      }
+    });
+    minihull.notifyConnector("123456789012345678901234", "http://localhost:8000/notify", "user_report:update", {
+      user: {
+        id: "abc",
+        domain: "foo.bar"
+      },
+      segments: [{ id: "1" }]
+    }).then(() => {});
+  });
 });
