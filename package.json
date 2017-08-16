@@ -1,7 +1,7 @@
 {
   "name": "hull-clearbit",
   "description": "Enrich Customer data with Clearbit",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "homepage": "https://github.com/hull-ships/hull-clearbit",
   "license": "MIT",
   "main": "bin/start",
@@ -72,7 +72,7 @@
     "event-stream": "^3.3.2",
     "express": "^4.13.4",
     "find-up": "^2.1.0",
-    "hull": "^0.11.12",
+    "hull": "0.12.2",
     "jquery": "^3.1.0",
     "jwt-simple": "^0.5.0",
     "librato-node": "^4.1.0",
