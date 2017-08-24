@@ -7,13 +7,12 @@ export default function handleProspect({ hostSecret }) {
   return (req, res) => {
     const { domains, role, seniority, titles = [], limit } = req.body;
     const { client: hull, ship } = req.hull;
-    // let newLimit = limit;
+
     if (domains) {
       const cb = new Clearbit({ hull, ship, hostSecret });
       const prospecting = Promise.mapSeries(domains, (domain) => {
         const params = { domain, role, seniority, titles, limit };
         return cb.fetchProspects(params).then((ret) => {
-          // newLimit -= ret.length;
           return ret;
         });
       });
