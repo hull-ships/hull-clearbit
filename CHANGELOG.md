@@ -1,3 +1,5 @@
+# 0.2.3
+- fix issues with prospector UI
 # 0.2.2
 - handle errors on prospection and discovery API
 
