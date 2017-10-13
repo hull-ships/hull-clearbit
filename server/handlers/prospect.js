@@ -29,7 +29,7 @@ export default function handleProspect({ hostSecret }) {
         }
       }).catch((error) => {
         console.warn("Error prospecting...", error);
-        res.status(500).json({ error });
+        res.status(500).json({ error: error.message });
       });
     } else {
       res.status(404).json({ message: "Empty list of domains..." });

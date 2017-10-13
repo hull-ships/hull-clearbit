@@ -69,8 +69,12 @@ export default class Clearbit {
       }
     )
     .catch((error) => {
-      this.hull.asUser(_.pick(user, ["id", "external_id", "email"]))
-        .logger.info("outgoing.user.error", { errors: error });
+      // we filter error messages
+      const filteredErrors = ["unknown_ip"];
+      if (!_.includes(filteredErrors, error.type)) {
+        this.hull.asUser(_.pick(user, ["id", "external_id", "email"]))
+          .logger.info("outgoing.user.error", { errors: error });
+      }
     });
   }
 
