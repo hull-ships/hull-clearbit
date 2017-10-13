@@ -93,11 +93,15 @@ $(() => {
           $("#results").html(renderResults(_.flatten(prospects)));
         },
         (err, textstatus) => {
-          $btn.val(`Oops: ${err.toString()}`).prop("disabled", false);
+          $btn.text("Prospect").prop("disabled", false);
           if (textstatus === "timeout") {
             $("#results").html("<div class=\"alert alert-info\" role=\"alert\"><strong>It takes a while...</strong> Your request is taking more than 10 seconds and will continue in the background. Please check the Users list in Hull for the results in 5 or more minutes.</div>");
           } else {
-            $("#results").html(`<div class="alert alert-error" role="alert"><strong>Oh snap!</strong> Something went wrong: ${err.toString()}.</div>`);
+            if (err.responseJSON) {
+              $("#results").html(`<div class="alert alert-error" role="alert"><strong>Oh snap!</strong> Something went wrong: ${err.responseJSON.error}.</div>`);
+            } else {
+              $("#results").html(`<div class="alert alert-error" role="alert"><strong>Oh snap!</strong> Something went wrong: ${err.responseText}.</div>`);
+            }
           }
         }
       );

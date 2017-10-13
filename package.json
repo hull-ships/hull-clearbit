@@ -68,6 +68,7 @@
     "bottleneck": "1.15.0",
     "clearbit": "1.2.3",
     "connect": "^3.4.1",
+    "dotenv": "^4.0.0",
     "ejs": "^2.5.7",
     "event-stream": "^3.3.2",
     "express": "^4.13.4",

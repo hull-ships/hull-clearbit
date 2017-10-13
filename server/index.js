@@ -1,8 +1,11 @@
 import Hull from "hull";
 import { Cache } from "hull/lib/infra";
 import express from "express";
+import dotenv from "dotenv";
 
 import server from "./server";
+
+dotenv.config();
 
 let onMetric = function onMetric(metric, value, ctx) {
   console.log(`[${ctx.id}] clearbit.${metric}`, value);
