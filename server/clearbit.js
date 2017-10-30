@@ -58,26 +58,22 @@ export default class Clearbit {
   }
 
   shouldEnrich(msg) {
-    const { user = {} } = msg;
-    if (!this.client) {
-      this.logSkip(this.hull.asUser(user), "enrich", "no api_key set");
-      return false;
-    }
-    const { should, message } = shouldEnrich(msg, this.settings);
-    if (should) return true;
-    this.logSkip(this.hull.asUser(user), "enrich", message);
-    return false;
+    return this.shouldLogic(msg, shouldEnrich, "enrich");
   }
 
   shouldReveal(msg) {
+    return this.shouldLogic(msg, shouldReveal, "reveal");
+  }
+
+  shouldLogic(msg, action, actionString) {
     const { user = {} } = msg;
     if (!this.client) {
-      this.logSkip(this.hull.asUser(user), "reveal", "no api_key set");
+      this.logSkip(this.hull.asUser(user), actionString, "no api_key set");
       return false;
     }
-    const { should, message } = shouldReveal(msg, this.settings);
+    const { should, message } = action(msg, this.settings);
     if (should) return true;
-    this.logSkip(this.hull.asUser(user), "reveal", message);
+    this.logSkip(this.hull.asUser(user), actionString, message);
     return false;
   }
 
