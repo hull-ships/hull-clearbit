@@ -9,6 +9,10 @@ export default function handleUserUpdate({ hostSecret, stream = false, onMetric 
     messages.forEach(message => {
       const { user } = message;
 
+      if (clearbit.shouldReveal(message)) {
+        return clearbit.revealUser(user);
+      }
+
       if (clearbit.shouldEnrich(message)) {
         return clearbit.enrichUser(user);
       }

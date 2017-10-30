@@ -1,7 +1,7 @@
 {
   "name": "hull-clearbit",
   "description": "Enrich Customer data with Clearbit",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "homepage": "https://github.com/hull-ships/hull-clearbit",
   "license": "MIT",
   "main": "bin/start",
@@ -22,6 +22,7 @@
     "url": "https://github.com/hull-ships/hull-clearbit/issues"
   },
   "scripts": {
+    "ngrok": "ngrok http 8082 --region eu --subdomain clearbit",
     "build": "npm run clean && npm run build:server && npm run build:client",
     "build:client": "NODE_ENV=production ./node_modules/.bin/webpack --config ./webpack.config.js --progress --profile --colors",
     "build:server": "./node_modules/.bin/babel server -d build",

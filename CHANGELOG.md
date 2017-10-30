@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.5
+
+- changes default behaviour of Reveal to only send users in a set of segments. Transition phase: Empty reveal_segments sends everyone.
+- Deprecated: "reveal enabled" checkbox - empty revealed segment will achieve the same thing (in future version)
+- Refactors reveal and enrich code to define responsibilities
+
 ## 0.2.4
 
 - fix issues with non-human readable error messages in prospector UI

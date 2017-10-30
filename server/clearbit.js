@@ -4,7 +4,8 @@ import Promise from "bluebird";
 import Client from "./clearbit/client";
 
 import { isInSegments, getDomain, now } from "./clearbit/utils";
-import { shouldEnrich, enrichUser } from "./clearbit/enrich";
+import { canEnrich, shouldEnrich, enrichUser } from "./clearbit/enrich";
+import { canReveal, shouldReveal, revealUser } from "./clearbit/reveal";
 import { getUserTraitsFromPerson } from "./clearbit/mapping";
 
 import excludes from "./excludes";
@@ -48,6 +49,14 @@ export default class Clearbit {
    * Clearbit Enrichment
    */
 
+  canReveal(user) {
+    return canReveal(user);
+  }
+
+  canEnrich(user) {
+    return canEnrich(user);
+  }
+
   shouldEnrich(msg) {
     const { user = {} } = msg;
     if (!this.client) {
@@ -60,6 +69,18 @@ export default class Clearbit {
     return false;
   }
 
+  shouldReveal(msg) {
+    const { user = {} } = msg;
+    if (!this.client) {
+      this.logSkip(this.hull.asUser(user), "reveal", "no api_key set");
+      return false;
+    }
+    const { should, message } = shouldReveal(msg, this.settings);
+    if (should) return true;
+    this.logSkip(this.hull.asUser(user), "reveal", message);
+    return false;
+  }
+
   enrichUser(user) {
     return enrichUser(user, this).then(
       (response) => {
@@ -69,11 +90,25 @@ export default class Clearbit {
       }
     )
     .catch((error) => {
-      // we filter error messages
+      this.hull.asUser(_.pick(user, ["id", "external_id", "email"]))
+        .logger.info("outgoing.user.error", { errors: error, method: "enrichUser" });
+    });
+  }
+
+  revealUser(user) {
+    return revealUser(user, this).then(
+      (response) => {
+        if (!response || !response.source) return false;
+        const { person, source } = response;
+        return this.saveUser(user, person, { source });
+      }
+    )
+    .catch((error) => {
       const filteredErrors = ["unknown_ip"];
+      // we filter error messages
       if (!_.includes(filteredErrors, error.type)) {
         this.hull.asUser(_.pick(user, ["id", "external_id", "email"]))
-          .logger.info("outgoing.user.error", { errors: error });
+          .logger.info("outgoing.user.error", { errors: error, method: "revealUser" });
       }
     });
   }
