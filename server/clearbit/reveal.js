@@ -39,19 +39,14 @@ export function shouldReveal(message = {}, settings = {}) {
     reveal_enabled
   } = settings;
 
-  // Skip if we cannot reveal
-  if (!canReveal(user)) {
-    return { should: false, message: "Cannot reveal" };
-  }
-
   // Skip if reveal is disabled
   if (!reveal_enabled) {
-    console.log("---Deprecated feature enabled----", "`reveal_enabled: true`");
+    // console.log("---Deprecated feature enabled----", "`reveal_enabled: true`");
     return { should: false, message: "Reveal isn't enabled" };
   }
 
   // Skip if no segments match
-  if (_.isEmpty(reveal_segments) || isInSegments(segments, reveal_segments)) {
+  if (!_.isEmpty(reveal_segments) && !isInSegments(segments, reveal_segments)) {
     return { should: false, message: "Reveal segments are defined but user isn't in any of them" };
   }
 

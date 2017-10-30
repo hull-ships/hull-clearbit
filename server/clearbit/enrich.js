@@ -91,18 +91,13 @@ export function shouldEnrich(message = {}, settings = {}) {
     enrich_enabled
   } = settings;
 
-  // Skip if we cannot enrich
-  if (!canEnrich(user)) {
-    return { should: false, message: "Cannot enrich" };
-  }
-
   // Skip if enrich is disabled
   if (!enrich_enabled) {
     return { should: false, message: "Enrich isn't enabled" };
   }
 
   // Skip if no segments match
-  if (!_.isEmpty(enrich_segments) && isInSegments(segments, enrich_segments)) {
+  if (!_.isEmpty(enrich_segments) && !isInSegments(segments, enrich_segments)) {
     return { should: false, message: "Enrich Segments are defined but User isn't in any of them" };
   }
 
