@@ -35,9 +35,9 @@ export default function handleBatchUpdate({ hostSecret, onMetric }) {
 
     const handleMessage = (user, done) => {
       if (clearbit.canReveal(user)) {
-        return clearbit.revealUser(user);
+        clearbit.revealUser(user);
       } else if (clearbit.canEnrich(user)) {
-        return clearbit.enrichUser(user);
+        clearbit.enrichUser(user);
       }
       done(user);
     };
