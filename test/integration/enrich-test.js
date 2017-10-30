@@ -1,7 +1,6 @@
 const Minihull = require("minihull");
-const expect = require("chai").expect;
 const nock = require("nock");
-
+const captureOutput = require("./support/capture-output");
 const bootstrap = require("./support/bootstrap");
 
 describe("Clearbit API errors", function test() {
@@ -31,16 +30,16 @@ describe("Clearbit API errors", function test() {
   });
 
   it("should handle Invalid Email error", (done) => {
-    const originalWrite = process.stdout.write;
-    process.stdout.write = (log) => {
-      process.stdout.write = originalWrite;
-      const logLine = JSON.parse(log);
-      expect(logLine.level).to.equal("info");
-      expect(logLine.message).to.equal("outgoing.user.error");
-      expect(logLine.context.user_email).to.equal("foo@bar.com");
-      expect(logLine.context.subject_type).to.equal("user");
-      done();
-    };
+    captureOutput({
+      done,
+      skipMessages: ["outgoing.user.start"],
+      expectation: {
+        "level": "info",
+        "message": "outgoing.user.error",
+        "context.user_email": "foo@bar.com",
+        "context.subject_type": "user"
+      }
+    });
 
     nock("https://person.clearbit.com")
       .get(/\/v2\/combined\/find/)
