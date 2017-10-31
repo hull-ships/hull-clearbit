@@ -1,5 +1,5 @@
 import Clearbit from "../clearbit";
-import userUpdateLogic from "../user-update-logic";
+import userUpdateLogic from "./user-update-logic";
 
 export default function handleUserUpdate({ hostSecret, stream = false, onMetric }) {
   return ({ client, ship, hostname }, messages) => {
