@@ -50,11 +50,11 @@ export default class Clearbit {
    */
 
   canReveal(user) {
-    return canReveal(user);
+    return canReveal(user, this.settings);
   }
 
   canEnrich(user) {
-    return canEnrich(user);
+    return canEnrich(user, this.settings);
   }
 
   shouldEnrich(msg) {

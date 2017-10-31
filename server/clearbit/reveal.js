@@ -23,8 +23,9 @@ function fetchFromReveal(user = {}, clearbit) {
  * @param  {User({ last_known_ip, email })} user - A user profile
  * @return {Boolean}
  */
-export function canReveal(user = {}) {
-  return (isValidIpAddress(user.last_known_ip) && !user.email);
+export function canReveal(user = {}, settings = {}) {
+  const { reveal_enabled } = settings;
+  return reveal_enabled && isValidIpAddress(user.last_known_ip) && !user.email;
 }
 
 /**

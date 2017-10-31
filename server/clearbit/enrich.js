@@ -72,11 +72,11 @@ function fetchFromEnrich(user = {}, clearbit) {
  * @param  {User({ email })} user - A user profile
  * @return {Boolean}
  */
-export function canEnrich(user = {}) {
+export function canEnrich(user = {}, settings = {}) {
   // Merge enrich and prospect segments lists
   // To check if the user matches one of them
-
-  return !_.isEmpty(user.email);
+  const { enrich_enabled } = settings;
+  return enrich_enabled && !_.isEmpty(user.email);
 }
 
 /**
@@ -117,6 +117,7 @@ export function shouldEnrich(message = {}, settings = {}) {
   }
 
   // Skip if user was Revealed.
+  // TODO: Define if we want to skip enrich for Users who have been revealed
   if (user["traits_clearbit/revealed_at"]) {
     return { should: false, message: "revealed_at present" };
   }
