@@ -111,15 +111,9 @@ export function shouldEnrich(message = {}, settings = {}) {
     return { should: false, message: "Clearbit ID present" };
   }
 
-  // Skip if we have never tried enriching
+  // Skip if we have already tried enriching
   if (user["traits_clearbit/enriched_at"]) {
     return { should: false, message: "enriched_at present" };
-  }
-
-  // Skip if user was Revealed.
-  // TODO: Define if we want to skip enrich for Users who have been revealed
-  if (user["traits_clearbit/revealed_at"]) {
-    return { should: false, message: "revealed_at present" };
   }
 
   return { should: true };

@@ -166,6 +166,18 @@ describe("HullClearbit Client", () => {
       });
       assert.equal(shouldEnrich, true);
     });
+
+    it("should enrich people who have been revealed but not enriched", () => {
+      const clearbit = makeClearbit({
+        enrich_segments: ["1"],
+        enrich_enabled: true
+      });
+      const shouldEnrich = clearbit.shouldEnrich({
+        user: { "traits_clearbit/revealed_at": moment().format() },
+        segments: [{ id: "1" }]
+      });
+      assert.equal(shouldEnrich, true);
+    });
   });
 
 
@@ -256,6 +268,20 @@ describe("HullClearbit Client", () => {
       });
       const shouldReveal = clearbit.shouldReveal({
         user: { "traits_clearbit_company/id": "1234" },
+        segments: [{ id: "1" }]
+      });
+      assert.equal(shouldReveal, false);
+    });
+
+    it("shouldn't reveal people who have a clearbit company in the accounts and accounts enabled", () => {
+      const clearbit = makeClearbit({
+        reveal_segments: ["2"],
+        handle_accounts: true,
+        reveal_enabled: true
+      });
+      const shouldReveal = clearbit.shouldReveal({
+        user: { "last_known_ip": "1.2.3.4" },
+        account: { "clearbit_company/id": "1234" },
         segments: [{ id: "1" }]
       });
       assert.equal(shouldReveal, false);

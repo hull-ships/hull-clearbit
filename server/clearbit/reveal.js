@@ -34,8 +34,9 @@ export function canReveal(user = {}, settings = {}) {
  * @return {Boolean}
  */
 export function shouldReveal(message = {}, settings = {}) {
-  const { user = {}, segments = [] } = message;
+  const { user = {}, account = {}, segments = [] } = message;
   const {
+    handle_accounts = false,
     reveal_segments = [],
     reveal_enabled
   } = settings;
@@ -53,6 +54,11 @@ export function shouldReveal(message = {}, settings = {}) {
 
   // Skip if clearbit company already set
   if (!!user["traits_clearbit_company/id"]) {
+    return { should: false, message: "Clearbit Company ID present" };
+  }
+
+  // Skip if clearbit company already set on account
+  if (handle_accounts && !!account["clearbit_company/id"]) {
     return { should: false, message: "Clearbit Company ID present" };
   }
 

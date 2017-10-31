@@ -148,7 +148,7 @@ describe("User Update Logic", () => {
     assert(cb.prospectSpy.notCalled);
   });
 
-  it("should not enrich Revealed Users", () => {
+  it("should enrich Revealed Users without enrichment data", () => {
     const cb = makeClearbit({
       enrich_segments: ["1"],
       enrich_enabled: true,
@@ -159,6 +159,30 @@ describe("User Update Logic", () => {
       user: {
         "last_known_ip": "1.2.3.4",
         "email": "foo@bar.com",
+        "traits_clearbit/revealed_at": moment().format(),
+        "traits_clearbit_company/id": "1234"
+      },
+      segments: [{ id: "1" }]
+    };
+    userUpdateLogic({ message, clearbit: cb.clearbit, client: cb.client });
+    assert(cb.revealSpy.notCalled);
+    assert(cb.enrichSpy.called);
+    assert(cb.similarSpy.notCalled);
+    assert(cb.prospectSpy.notCalled);
+  });
+
+  it("should not enrich or Reveale Users with Enrichment data", () => {
+    const cb = makeClearbit({
+      enrich_segments: ["1"],
+      enrich_enabled: true,
+      reveal_segments: ["1"],
+      reveal_enabled: true
+    });
+    const message = {
+      user: {
+        "last_known_ip": "1.2.3.4",
+        "email": "foo@bar.com",
+        "traits_clearbit/enriched_at": moment().format(),
         "traits_clearbit/revealed_at": moment().format(),
         "traits_clearbit_company/id": "1234"
       },
