@@ -436,7 +436,7 @@ export default class Clearbit {
     this.metric("saveProspect");
 
     return this.hull
-      .asUser({ email: person.email })
+      .asUser({ email: person.email, anonymous_id: `clearbit-prospect:${traits["clearbit/prospect_id"]}` })
       .traits({ ...company_traits, ...traits })
       .then(() => { return { person }; });
   }
