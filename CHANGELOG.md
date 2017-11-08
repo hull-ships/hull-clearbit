@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.5
+
+- assign anonymousId for Prospected users to `clearbit-prospect:${prospect.id}`
+
 ## 0.2.4
 
 - fix issues with non-human readable error messages in prospector UI
