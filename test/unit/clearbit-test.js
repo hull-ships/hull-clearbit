@@ -415,14 +415,11 @@ describe("HullClearbit Client", () => {
         assert.equal(onMetric.thirdCall.args[2].id, "123");
 
 
-        assert.equal(hull.asUser.callCount, 6);
+        assert.equal(hull.asUser.callCount, 3);
 
         assert.equal(hull.asUser.getCall(0).args[0].email, "1@email.com");
-        assert.equal(hull.asUser.getCall(1).args[0].email, "1@email.com");
-        assert.equal(hull.asUser.getCall(2).args[0].email, "2@email.com");
-        assert.equal(hull.asUser.getCall(3).args[0].email, "2@email.com");
-        assert.equal(hull.asUser.getCall(4).args[0].email, "3@email.com");
-        assert.equal(hull.asUser.getCall(5).args[0].email, "3@email.com");
+        assert.equal(hull.asUser.getCall(1).args[0].email, "2@email.com");
+        assert.equal(hull.asUser.getCall(2).args[0].email, "3@email.com");
 
         assert(hull.traits.calledThrice);
 

@@ -354,6 +354,13 @@ export default class Clearbit {
       minimum_should_match: 1
     } };
 
+    if (this.settings.handle_accounts) {
+      query.bool.should.push(
+        { term: { "account.domain.exact": domain } },
+        { term: { "account.clearbit.domain.exact": domain } }
+      );
+    }
+
     const aggs = {
       without_email: { missing: { field: "email" } },
       by_source: { terms: { field: "traits_clearbit/source.exact" } }
@@ -447,7 +454,13 @@ export default class Clearbit {
         });
     }).then(() => {
       const ret = _.values(prospects);
-      this.hull.logger.info("clearbit.prospector.success", { action: "prospector", message: `Found ${ret.length} new Prospects`, company_traits, ret });
+      this.hull.logger.info("clearbit.prospector.success", {
+        action: "prospector",
+        message: `Found ${ret.length} new Prospects`,
+        ...query,
+        company_traits,
+        ret
+      });
       ret.map(this.saveProspect.bind(this, company_traits));
       return ret;
     });
@@ -463,13 +476,21 @@ export default class Clearbit {
     traits["clearbit/prospected_at"] = { operation: "setIfNull", value: now() };
     traits["clearbit/source"] = { operation: "setIfNull", value: "prospect" };
 
-    this.hull.asUser(_.pick(person, ["id", "external_id", "email"])).logger.info("incoming.user.success", { person, source: "prospector" });
+    const hullUser = this.hull.asUser({ email: person.email, anonymous_id: `clearbit-prospect:${person.id}` });
+    const domain = company_traits["clearbit_company/domain"];
+
+    hullUser.logger.info("incoming.user.success", { person, source: "prospector" });
     this.metric("saveProspect");
 
-    return this.hull
-      .asUser({ email: person.email, anonymous_id: `clearbit-prospect:${person.id}` })
-      .traits({ ...company_traits, ...traits })
-      .then(() => { return { person }; });
-  }
+    if (this.settings.handle_accounts && domain) {
+      const company = _.reduce(company_traits, (m, v, k) => {
+        m[k.replace("clearbit_company/", "clearbit/")] = v;
+        return m;
+      }, {});
+      hullUser.account({ domain }).traits(company);
+      return hullUser.traits({ ...traits }).then(() => ({ person }));
+    }
 
+    return hullUser.traits({ ...company_traits, ...traits }).then(() => ({ person }));
+  }
 }
