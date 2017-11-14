@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.6
+
+- changes default behaviour of Reveal to only send users in a set of segments. Transition phase: Empty reveal_segments sends everyone.
+- Deprecated: "reveal enabled" checkbox - empty revealed segment will achieve the same thing (in future version)
+- Refactors reveal and enrich code to define responsibilities
+- Refactors tests to abstract console parsing logic
+
 ## 0.2.5
 
 - assign anonymousId for Prospected users to `clearbit-prospect:${prospect.id}`

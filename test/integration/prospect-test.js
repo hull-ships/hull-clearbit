@@ -1,6 +1,7 @@
 const Minihull = require("minihull");
 const expect = require("chai").expect;
 const nock = require("nock");
+const captureOutput = require("./support/capture-output");
 
 const bootstrap = require("./support/bootstrap");
 
@@ -156,19 +157,16 @@ describe("Clearbit API errors", function test() {
   });
 
   it("should handle Rate limit error", (done) => {
-    const originalWrite = process.stdout.write;
-    process.stdout.write = (log) => {
-      const logLine = JSON.parse(log);
-      if (logLine.message !== "outgoing.user.error") {
-        return;
+    captureOutput({
+      done,
+      skipMessages: ["outgoing.user.skip", "outgoing.user.start"],
+      expectation: {
+        "level": "info",
+        "message": "outgoing.user.error",
+        "context.user_id": "abc",
+        "context.subject_type": "user"
       }
-      process.stdout.write = originalWrite;
-      expect(logLine.level).to.equal("info");
-      expect(logLine.message).to.equal("outgoing.user.error");
-      expect(logLine.context.user_id).to.equal("abc");
-      expect(logLine.context.subject_type).to.equal("user");
-      done();
-    };
+    });
 
     const clearbit = nock("https://prospector.clearbit.com")
       .get("/v1/people/search")

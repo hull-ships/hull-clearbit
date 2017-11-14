@@ -1,7 +1,7 @@
 import _ from "lodash";
 import moment from "moment";
 import jwt from "jwt-simple";
-import { isInSegments, isValidIpAddress } from "./utils";
+import { isInSegments } from "./utils";
 
 /**
  * Build context to pass a webhook_id
@@ -15,7 +15,6 @@ function getWebhookId(userId, clearbit) {
   return hostSecret && jwt.encode(claims, hostSecret);
 }
 
-
 /**
  * Check if an enrich call has been made in the last hour
  * and we are still waiting for the webhook to ping us
@@ -28,52 +27,6 @@ function lookupIsPending(user) {
   const one_hour_ago = moment().subtract(1, "hours");
   return fetched_at && moment(fetched_at).isAfter(one_hour_ago) && !cbId;
 }
-
-/**
- * Check if we can Enrich the User (based on user data and ship configuration)
- * @param  {Message({ user, segments })} message - A user:update message
- * @return {Boolean}
- */
-function canEnrich(message = {}, settings = {}) {
-  const { user, segments = [] } = message;
-  const {
-    enrich_segments = [],
-    enrich_enabled,
-    reveal_enabled
-  } = settings;
-
-  // Merge enrich and prospect segments lists
-  // To check if the user matches one of them
-  const hasEmail = !_.isEmpty(user.email);
-  const canReveal = !!reveal_enabled && isValidIpAddress(user.last_known_ip) && !user.email;
-  const checks = {
-    email: hasEmail,
-    enabled: !!enrich_enabled,
-    hasSegments: !_.isEmpty(enrich_segments),
-    inSegment: isInSegments(segments, enrich_segments)
-  };
-
-  return canReveal || _.every(checks);
-}
-
-
-/**
- * Lookup data from Clearbit's Reveal API and save it as
- * traits on the Hull user
- * @param  {User} user - Hull User
- * @return {Promise -> ClearbitPerson}
- */
-function fetchFromReveal(user = {}, clearbit) {
-  const ip = user.last_known_ip;
-  const logger = clearbit.hull.asUser(user).logger;
-  return clearbit.client
-    .reveal({ ip })
-    .then(({ company }) => {
-      logger.info("clearbit.reveal.success", { ip, company: _.pick(company, "name", "domain") });
-      return { company };
-    });
-}
-
 
 /**
  * Fetch data from Clearbit's Enrichment API and save it as
@@ -114,6 +67,17 @@ function fetchFromEnrich(user = {}, clearbit) {
     });
 }
 
+/**
+ * Check if we can Enrich the User (based on user data and ship configuration)
+ * @param  {User({ email })} user - A user profile
+ * @return {Boolean}
+ */
+export function canEnrich(user = {}, settings = {}) {
+  // Merge enrich and prospect segments lists
+  // To check if the user matches one of them
+  const { enrich_enabled } = settings;
+  return enrich_enabled && !_.isEmpty(user.email);
+}
 
 /**
  * Check if we should Enrich the User (based on user data and ship configuration)
@@ -121,11 +85,20 @@ function fetchFromEnrich(user = {}, clearbit) {
  * @return {Boolean}
  */
 export function shouldEnrich(message = {}, settings = {}) {
-  const { user = {} } = message;
+  const { user = {}, segments = [] } = message;
+  const {
+    enrich_segments = [],
+    enrich_enabled
+  } = settings;
 
-  // Stop here if we cannot fetch him
-  if (!canEnrich(message, settings)) {
-    return { should: false, message: "Cannot enrich" };
+  // Skip if enrich is disabled
+  if (!enrich_enabled) {
+    return { should: false, message: "Enrich isn't enabled" };
+  }
+
+  // Skip if no segments match
+  if (!_.isEmpty(enrich_segments) && !isInSegments(segments, enrich_segments)) {
+    return { should: false, message: "Enrich Segments are defined but User isn't in any of them" };
   }
 
   // Skip if we are waiting for the webhook
@@ -133,20 +106,18 @@ export function shouldEnrich(message = {}, settings = {}) {
     return { should: false, message: "Waiting for webhook" };
   }
 
+  // Skip if we have a Clearbit ID already
   if (user["traits_clearbit/id"]) {
-    return { should: false, message: "Clearbit ID already set" };
+    return { should: false, message: "Clearbit ID present" };
   }
 
-  // Enrich if we have no clearbit data. Skip if we already tried once.
-  if (user.email && user["traits_clearbit/enriched_at"]) {
-    return { should: false, message: "enriched_at already set" };
-  } else if (user["traits_clearbit/revealed_at"]) {
-    return { should: false, message: "revealed_at already set" };
+  // Skip if we have already tried enriching
+  if (user["traits_clearbit/enriched_at"]) {
+    return { should: false, message: "enriched_at present" };
   }
 
   return { should: true };
 }
-
 
 export function enrichUser(user, clearbit) {
   if (!user) {
@@ -157,12 +128,6 @@ export function enrichUser(user, clearbit) {
     clearbit.metric("enrich");
     return fetchFromEnrich(user, clearbit)
     .then(person => ({ source: "enrich", person }));
-  }
-
-  if (isValidIpAddress(user.last_known_ip) && !user["traits_clearbit_company/id"] && clearbit.settings.reveal_enabled) {
-    clearbit.metric("reveal");
-    return fetchFromReveal(user, clearbit)
-    .then(person => (person && { source: "reveal", person }));
   }
 
   return Promise.resolve(false);

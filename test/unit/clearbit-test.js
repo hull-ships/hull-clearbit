@@ -61,7 +61,282 @@ describe("HullClearbit Client", () => {
     }).then(done, done);
   });
 
-  describe("for fetchProspect function", () => {
+  describe("canEnrich function", () => {
+    const makeHull = () => {
+      const mock = {};
+      mock.logger = { info: () => {} };
+      mock.traits = sinon.spy(() => Promise.resolve());
+      mock.asUser = sinon.spy(() => mock);
+      return mock;
+    };
+
+    const makeClearbit = (private_settings = {}) => {
+      const cb = new Clearbit({ ship: { private_settings }, hull: makeHull() });
+      cb.client = {};
+      return cb;
+    };
+
+    it("can't enrich people who have no email", () => {
+      const clearbit = makeClearbit({
+        enrich_segments: ["1"],
+        enrich_enabled: true
+      });
+      const canEnrich = clearbit.canEnrich({ last_known_ip: "1.2.3.4" });
+      assert.equal(canEnrich, false);
+    });
+
+    it("can't enrich if enrich disabled", () => {
+      const clearbit = makeClearbit({
+        enrich_segments: ["1"],
+        enrich_enabled: false
+      });
+      const canEnrich = clearbit.canEnrich({ email: "foo@bar.com", last_known_ip: "1.2.3.4" });
+      assert.equal(canEnrich, false);
+    });
+
+    it("can enrich people who have a valid email", () => {
+      const clearbit = makeClearbit({
+        enrich_segments: ["1"],
+        enrich_enabled: true
+      });
+      const canEnrich = clearbit.canEnrich({ email: "foo@bar.com", last_known_ip: "1.2.3.4" });
+      assert.equal(canEnrich, true);
+    });
+  });
+
+  describe("shouldEnrich function", () => {
+    const makeHull = () => {
+      const mock = {};
+      mock.logger = { info: () => {} };
+      mock.traits = sinon.spy(() => Promise.resolve());
+      mock.asUser = sinon.spy(() => mock);
+      return mock;
+    };
+
+    const makeClearbit = (private_settings = {}) => {
+      const cb = new Clearbit({ ship: { private_settings }, hull: makeHull() });
+      cb.client = {};
+      return cb;
+    };
+
+    it("shouldn't enrich people who have been enriched already", () => {
+      const clearbit = makeClearbit({
+        enrich_segments: ["1"],
+        enrich_enabled: true
+      });
+      const shouldEnrich = clearbit.shouldEnrich({
+        user: { "traits_clearbit/enriched_at": moment().format() },
+        segments: [{ id: "1" }]
+      });
+      assert.equal(shouldEnrich, false);
+    });
+
+    it("shouldn't enrich people who have a clearbit company (because some have no role)", () => {
+      const clearbit = makeClearbit({
+        enrich_segments: ["2"],
+        enrich_enabled: true
+      });
+      const shouldEnrich = clearbit.shouldEnrich({
+        user: { "traits_clearbit_company/id": "1234" },
+        segments: [{ id: "1" }]
+      });
+      assert.equal(shouldEnrich, false);
+    });
+
+    it("shouldn't enrich people who don't belong to a whitelisted segment", () => {
+      const clearbit = makeClearbit({
+        enrich_segments: ["2"],
+        enrich_enabled: true
+      });
+      const shouldEnrich = clearbit.shouldEnrich({
+        user: { },
+        segments: [{ id: "1" }]
+      });
+      assert.equal(shouldEnrich, false);
+    });
+
+    it("should enrich people who belong to an whitelisted segment", () => {
+      const clearbit = makeClearbit({
+        enrich_segments: ["1"],
+        enrich_enabled: true
+      });
+      const shouldEnrich = clearbit.shouldEnrich({
+        user: { },
+        segments: [{ id: "1" }]
+      });
+      assert.equal(shouldEnrich, true);
+    });
+
+    it("should enrich people who have been revealed but not enriched", () => {
+      const clearbit = makeClearbit({
+        enrich_segments: ["1"],
+        enrich_enabled: true
+      });
+      const shouldEnrich = clearbit.shouldEnrich({
+        user: { "traits_clearbit/revealed_at": moment().format() },
+        segments: [{ id: "1" }]
+      });
+      assert.equal(shouldEnrich, true);
+    });
+  });
+
+
+  describe("canReveal function", () => {
+    const makeHull = () => {
+      const mock = {};
+      mock.logger = { info: () => {} };
+      mock.traits = sinon.spy(() => Promise.resolve());
+      mock.asUser = sinon.spy(() => mock);
+      return mock;
+    };
+
+    const makeClearbit = (private_settings = {}) => {
+      const cb = new Clearbit({ ship: { private_settings }, hull: makeHull() });
+      cb.client = {};
+      return cb;
+    };
+
+    it("can't reveal people who have an email", () => {
+      const clearbit = makeClearbit({
+        reveal_segments: ["1"],
+        reveal_enabled: true
+      });
+      const canReveal = clearbit.canReveal({ email: "foo@bar.com", last_known_ip: "1.2.3.4" });
+      assert.equal(canReveal, false);
+    });
+
+    it("can't reveal people who don't have an IP", () => {
+      const clearbit = makeClearbit({
+        reveal_segments: ["1"],
+        reveal_enabled: true
+      });
+      const canReveal = clearbit.canReveal({ });
+      assert.equal(canReveal, false);
+    });
+
+    it("can't reveal people if reveal disabled", () => {
+      const clearbit = makeClearbit({
+        reveal_segments: ["1"],
+        reveal_enabled: false
+      });
+      const canReveal = clearbit.canReveal({ last_known_ip: "1.2.3.4" });
+      assert.equal(canReveal, false);
+    });
+
+    it("can reveal people who have an IP and no email", () => {
+      const clearbit = makeClearbit({
+        reveal_segments: ["1"],
+        reveal_enabled: true
+      });
+      const canReveal = clearbit.canReveal({ last_known_ip: "1.2.3.4" });
+      assert.equal(canReveal, true);
+    });
+  });
+
+  describe("shouldReveal function", () => {
+    const makeHull = () => {
+      const mock = {};
+      mock.logger = { info: () => {} };
+      mock.traits = sinon.spy(() => Promise.resolve());
+      mock.asUser = sinon.spy(() => mock);
+      return mock;
+    };
+
+    const makeClearbit = (private_settings = {}) => {
+      const cb = new Clearbit({ ship: { private_settings }, hull: makeHull() });
+      cb.client = {};
+      return cb;
+    };
+
+    it("shouldn't reveal people who have been revealed already", () => {
+      const clearbit = makeClearbit({
+        reveal_segments: ["1"],
+        reveal_enabled: true
+      });
+      const shouldReveal = clearbit.shouldReveal({
+        user: { "traits_clearbit/revealed_at": moment().format() },
+        segments: [{ id: "1" }]
+      });
+      assert.equal(shouldReveal, false);
+    });
+
+
+    it("shouldn't reveal people who have a clearbit company", () => {
+      const clearbit = makeClearbit({
+        reveal_segments: ["2"],
+        reveal_enabled: true
+      });
+      const shouldReveal = clearbit.shouldReveal({
+        user: { "traits_clearbit_company/id": "1234" },
+        segments: [{ id: "1" }]
+      });
+      assert.equal(shouldReveal, false);
+    });
+
+    it("shouldn't reveal people who have a clearbit company in the accounts and accounts enabled", () => {
+      const clearbit = makeClearbit({
+        reveal_segments: ["2"],
+        handle_accounts: true,
+        reveal_enabled: true
+      });
+      const shouldReveal = clearbit.shouldReveal({
+        user: { "last_known_ip": "1.2.3.4" },
+        account: { "clearbit_company/id": "1234" },
+        segments: [{ id: "1" }]
+      });
+      assert.equal(shouldReveal, false);
+    });
+
+    it("shouldn't reveal people who have been enriched", () => {
+      const clearbit = makeClearbit({
+        reveal_segments: ["2"],
+        reveal_enabled: true
+      });
+      const shouldReveal = clearbit.shouldReveal({
+        user: { "traits_clearbit/enriched_at": moment().format() },
+        segments: [{ id: "1" }]
+      });
+      assert.equal(shouldReveal, false);
+    });
+
+    it("shouldn't reveal people who have been revealed", () => {
+      const clearbit = makeClearbit({
+        reveal_segments: ["2"],
+        reveal_enabled: true
+      });
+      const shouldReveal = clearbit.shouldReveal({
+        user: { "traits_clearbit/revealed_at": moment().format() },
+        segments: [{ id: "1" }]
+      });
+      assert.equal(shouldReveal, false);
+    });
+
+    it("shouldn't reveal people who don't belong to a whitelisted segment", () => {
+      const clearbit = makeClearbit({
+        reveal_segments: ["2"],
+        reveal_enabled: true
+      });
+      const shouldReveal = clearbit.shouldReveal({
+        user: { },
+        segments: [{ id: "1" }]
+      });
+      assert.equal(shouldReveal, false);
+    });
+
+    it("should reveal people who belong to an whitelisted segment", () => {
+      const clearbit = makeClearbit({
+        reveal_segments: ["1"],
+        reveal_enabled: true
+      });
+      const shouldReveal = clearbit.shouldReveal({
+        user: { },
+        segments: [{ id: "1" }]
+      });
+      assert.equal(shouldReveal, true);
+    });
+  });
+
+  describe("fetchProspect function", () => {
     const makeHull = () => {
       const mock = {};
       mock.logger = { info: () => {} };
@@ -175,7 +450,7 @@ describe("HullClearbit Client", () => {
     });
   });
 
-  describe("for prospectUsers function", () => {
+  describe("prospectUsers function", () => {
     const hull = {
       asUser: sinon.spy(() => hull),
       traits: sinon.spy(() => Promise.resolve()),
@@ -362,7 +637,7 @@ describe("HullClearbit Client", () => {
       const cb = new Clearbit({ ship: { private_settings: { prospect_limit_count: 5 } }, hull });
       cb.fetchProspects = sinon.spy(() => {});
 
-      cb.prospectUsers({ domain: "foo.bar", "traits_clearbit_company/email": "test@foo.bar" }).then(() => {
+      cb.prospectUsers({ "domain": "foo.bar", "traits_clearbit_company/email": "test@foo.bar" }).then(() => {
         assert.equal(cb.fetchProspects.firstCall.args[1]["clearbit_company/email"], "test@foo.bar");
       });
     });
