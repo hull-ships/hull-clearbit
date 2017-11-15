@@ -58,10 +58,7 @@ In most cases this process will take no longer than a couple of minutes. In some
 
 The Reveal feature of the connector allows you to turn your anonymous website traffic into company profiles to power targeted campaigns and close more named accounts.
 
-You can enable or disable the feature by toggling the checkbox in the **Reveal** section of the Settings tab:
-![Reveal 1](./docs/reveal01.png)
-
-Reveal will turn anonymous users into Company profiles. By default, your Hull organization does not store data about anonymous traffic, so you need to enable “Anonymous Users” for your organization.
+Reveal will turn anonymous users in one or more of the segments you listed into Company profiles. By default, your Hull organization does not store data about anonymous traffic, so you need to enable “Anonymous Users” for your organization.
 
 Reveal provides you a company profile by performing a reverse IP lookup which provides your sales team the account information, but you can go one step further by automating the process to find prospects for this account. More details, see "How does the Trigger for Prospection work?".
 

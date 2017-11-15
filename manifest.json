@@ -2,7 +2,7 @@
   "name": "Clearbit",
   "description": "Reveal anonymous users from your website and enrich them with the data you need",
   "picture": "picture.png",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "tags": [
     "incoming",
     "outgoing",
@@ -69,8 +69,19 @@
     {
       "name": "reveal_enabled",
       "title": "Enable Reveal",
+      "description": "Deprecated. Please set some revealable segments and stop relying on this checkbox - Keep it enabled for now",
       "type": "boolean",
       "default": false
+    },
+    {
+      "name": "reveal_segments",
+      "title": "Which user segments to send to reveal. I.E. 'at least 2 page views' - Reveals everyone if empty",
+      "type": "array",
+      "format": "segment",
+      "items": {
+        "type": "string"
+      },
+      "default": []
     },
     {
       "name": "reveal_prospect_min_contacts",
