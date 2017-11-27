@@ -5,7 +5,7 @@ export default function handleUserUpdate({ hostSecret, stream = false, onMetric 
   return ({ client, ship, hostname, smartNotifierResponse }, messages) => {
     if (smartNotifierResponse) {
       smartNotifierResponse.setFlowControl({
-        type: "next", size: 100
+        type: "next", size: 100, in: 100
       });
     }
 
