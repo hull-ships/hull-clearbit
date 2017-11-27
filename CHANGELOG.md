@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.3.0
+- Smart Notifier
+
 ## 0.2.8
 - Stores `prospected_at` in account domain
 - Looks in Accounts for domain attributes

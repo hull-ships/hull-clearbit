@@ -1,29 +1,20 @@
 import devMode from "./dev-mode";
-import { notifHandler } from "hull/lib/utils";
+import { notifHandler, smartNotifierHandler } from "hull/lib/utils";
 import Hull from "hull";
 
-import handleProspect from "./handlers/prospect";
-import handleUserUpdate from "./handlers/user-update";
-import handleBatchUpdate from "./handlers/batch-update";
-import handleClearbitWebhook from "./handlers/clearbit-webhook";
+import handleProspect from "./actions/prospect";
+import handleUserUpdate from "./actions/user-update";
+import handleBatchUpdate from "./actions/batch-update";
+import handleClearbitWebhook from "./actions/clearbit-webhook";
 
 import bodyParser from "body-parser";
-
-function extractToken(req, res, next) {
-  req.hull = req.hull || {};
-  const token = req.query.id;
-  req.hull.token = token;
-  return next();
-}
 
 module.exports = function Server(app, options = {}) {
   const { hostSecret } = options;
 
-  app.use(extractToken);
-
   if (options.devMode) app.use(devMode());
 
-  app.post("/clearbit", (req, res, next) => {
+  app.post("/clearbit", bodyParser.json(), (req, res, next) => {
     Hull.logger.debug("clearbit.webhook.payload", {
       query: req.query,
       body: req.body
@@ -32,6 +23,7 @@ module.exports = function Server(app, options = {}) {
   }, handleClearbitWebhook(options));
 
   app.post("/clearbit-enrich",
+    bodyParser.json(),
     handleClearbitWebhook(options)
   );
 
@@ -58,6 +50,12 @@ module.exports = function Server(app, options = {}) {
       maxSize: 1,
       maxTime: 1
     },
+    handlers: {
+      "user:update": handleUserUpdate(options)
+    }
+  }));
+
+  app.post("/smart-notifier", smartNotifierHandler({
     handlers: {
       "user:update": handleUserUpdate(options)
     }

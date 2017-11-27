@@ -45,6 +45,13 @@ const cache = new Cache({
   ttl: process.env.SHIP_CACHE_TTL || 60
 });
 
+function extractToken(req, res, next) {
+  req.hull = req.hull || {};
+  const token = req.query.id;
+  req.hull.token = token;
+  return next();
+}
+
 const options = {
   hostSecret: process.env.SECRET || "1234",
   devMode: process.env.NODE_ENV === "development",
@@ -58,6 +65,7 @@ const options = {
 
 const connector = new Hull.Connector(options);
 const app = express();
+app.use(extractToken);
 connector.setupApp(app);
 server(app, options);
 connector.startApp(app);
