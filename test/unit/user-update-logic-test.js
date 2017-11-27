@@ -3,7 +3,7 @@ const assert = require("assert");
 const sinon = require("sinon");
 const moment = require("moment");
 const Clearbit = require("../../server/clearbit").default;
-const userUpdateLogic = require("../../server/handlers/user-update-logic").default;
+const userUpdateLogic = require("../../server/actions/user-update-logic").default;
 
 describe("User Update Logic", () => {
   const makeHull = () => {
