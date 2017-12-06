@@ -76,9 +76,9 @@ export default class ClearbitClient {
     return this.client.Discovery.search(params);
   }
 
-  prospect(params) {
+  prospect(params, asUser) {
     this.metric("clearbit.prospect");
-    this.hull.logger.debug("outgoing.user.start", { params, source: "prospect" });
+    (asUser || this.hull).logger.debug("outgoing.user.start", { params, source: "prospect" });
     return ClearbitApi({ path: "/people/search", params, key: this.key });
   }
 }
