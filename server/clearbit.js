@@ -402,9 +402,10 @@ export default class Clearbit {
 
     if (!domain) return false;
 
+    const asUser = this.hull.asUser(user);
     return this.shouldProspectUsersFromDomain(domain).then(doPropect => {
       if (!doPropect) {
-        this.logSkip(this.hull.asUser(user), "prospector", "We already have known users with that domain");
+        this.logSkip(asUser, "prospector", "We already have known users with that domain");
         return false;
       }
       const query = {
@@ -428,15 +429,14 @@ export default class Clearbit {
         return traits;
       }, {});
 
-      return this.fetchProspects(query, company_traits);
+      return this.fetchProspects(query, company_traits, asUser, user);
     })
     .catch((error) => {
-      this.hull.asUser(_.pick(user, ["id", "external_id", "email"]))
-        .logger.info("outgoing.user.error", { errors: _.get(error, "message", error) });
+      asUser.logger.info("outgoing.user.error", { errors: _.get(error, "message", error) });
     });
   }
 
-  fetchProspects(query = {}, company_traits = {}) {
+  fetchProspects(query = {}, company_traits = {}, asUser, user) {
     const { titles = [], domain, role, seniority, limit = 5 } = query;
 
     // Allow prospecting even if no titles passed
@@ -448,20 +448,28 @@ export default class Clearbit {
       if (newLimit <= 0) return Promise.resolve(prospects);
       const params = { domain, role, seniority, title, limit: newLimit, email: true };
       return this.client
-        .prospect(params)
+        .prospect(params, asUser)
         .then((results = []) => {
           results.forEach((p) => { prospects[p.email] = p; });
         });
     }).then(() => {
       const ret = _.values(prospects);
-      this.hull.logger.info("clearbit.prospector.success", {
+      const emails = _.keys(prospects);
+      (asUser || this.hull).logger.info("clearbit.prospector.success", {
         action: "prospector",
         message: `Found ${ret.length} new Prospects`,
         ...query,
         company_traits,
         ret
       });
-      ret.map(this.saveProspect.bind(this, company_traits));
+      if (asUser) {
+        asUser.track("Clearbit Prospector Triggered", {
+          ..._.mapKeys(query, (v, k) => `query_${k}`),
+          found: ret.length,
+          emails
+        });
+      }
+      ret.map(this.saveProspect.bind(this, user, company_traits));
       return ret;
     });
   }
@@ -471,9 +479,12 @@ export default class Clearbit {
    * @param  {Object({ person })} payload - Clearbit/Person object
    * @return {Promise -> Object({ person })}
    */
-  saveProspect(company_traits, person = {}) {
+  saveProspect(user = {}, company_traits, person = {}) {
     const traits = getUserTraitsFromPerson({ person }, "Prospect");
     traits["clearbit/prospected_at"] = { operation: "setIfNull", value: now() };
+    if (user.id) {
+      traits["clearbit/prospected_from"] = { operation: "setIfNull", value: user.id };
+    }
     traits["clearbit/source"] = { operation: "setIfNull", value: "prospect" };
 
     const hullUser = this.hull.asUser({ email: person.email, anonymous_id: `clearbit-prospect:${person.id}` });

@@ -60,10 +60,16 @@ describe("Clearbit API errors", function test() {
       }
     });
     minihull.on("incoming.request@/api/v1/firehose", (req) => {
-      expect(req.body.batch[0].type).to.equal("traits");
-      expect(req.body.batch[0].body.email.value).to.equal("foo@foo.bar");
-      expect(req.body.batch[0].body["clearbit/prospected_at"].value).to.not.be.null;
-      expect(req.body.batch[0].body["clearbit/source"].value).to.equal("prospect");
+      expect(req.body.batch[0].type).to.equal("track");
+      expect(req.body.batch[0].body.properties.emails[0]).to.equal("foo@foo.bar");
+      expect(req.body.batch[0].body.properties.found).to.equal(1);
+      expect(req.body.batch[0].body.event).to.equal("Clearbit Prospector Triggered");
+
+      expect(req.body.batch[1].type).to.equal("traits");
+      expect(req.body.batch[1].body.email.value).to.equal("foo@foo.bar");
+      expect(req.body.batch[1].body["clearbit/prospected_at"].value).to.not.be.null;
+      expect(req.body.batch[1].body["clearbit/prospected_from"].value).to.equal("abc");
+      expect(req.body.batch[1].body["clearbit/source"].value).to.equal("prospect");
       clearbit.done();
       done();
     });
@@ -138,11 +144,20 @@ describe("Clearbit API errors", function test() {
       }
     });
     minihull.on("incoming.request@/api/v1/firehose", (req) => {
-      expect(req.body.batch.length).to.equal(2);
-      expect(req.body.batch[0].type).to.equal("traits");
-      expect(req.body.batch[0].body.email.value).to.equal("foo@foo.bar");
-      expect(req.body.batch[0].body["clearbit/prospected_at"].value).to.not.be.null;
-      expect(req.body.batch[0].body["clearbit/source"].value).to.equal("prospect");
+      expect(req.body.batch.length).to.equal(3);
+
+      expect(req.body.batch[0].type).to.equal("track");
+      expect(req.body.batch[0].body.properties.emails[0]).to.equal("foo@foo.bar");
+      expect(req.body.batch[0].body.properties.emails[1]).to.equal("foo@bar.bar");
+      expect(req.body.batch[0].body.properties.found).to.equal(2);
+      expect(req.body.batch[0].body.event).to.equal("Clearbit Prospector Triggered");
+
+      expect(req.body.batch[1].type).to.equal("traits");
+      expect(req.body.batch[1].body.email.value).to.equal("foo@foo.bar");
+      expect(req.body.batch[1].body["clearbit/prospected_at"].value).to.not.be.null;
+      expect(req.body.batch[1].body["clearbit/prospected_from"].value).to.equal("abc");
+      expect(req.body.batch[1].body["clearbit/source"].value).to.equal("prospect");
+
       expect(thirdTitleCall.isDone()).is.false;
       done();
     });

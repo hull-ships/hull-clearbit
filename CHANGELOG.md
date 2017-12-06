@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.7
+
+- Stores a `Clearbit Prospector Triggered` event on the user that triggers prospection, storing the following values:
+  + query content
+  + number of results found
+  + list of prospected emails found
+- Adds a `clearbit/prospected_from` field on the prospected users with the identity of the User that triggered the prospection
+
 ## 0.2.6
 
 - changes default behaviour of Reveal to only send users in a set of segments. Transition phase: Empty reveal_segments sends everyone.
