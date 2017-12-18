@@ -2,7 +2,9 @@ import Clearbit from "../clearbit";
 import userUpdateLogic from "./user-update-logic";
 
 export default function handleUserUpdate({ hostSecret, stream = false, onMetric }) {
-  return ({ client, ship, hostname, smartNotifierResponse }, messages) => {
+  return ({
+    client, ship, hostname, smartNotifierResponse
+  }, messages) => {
     if (smartNotifierResponse) {
       smartNotifierResponse.setFlowControl({
         type: "next", size: 100, in: 100
@@ -13,8 +15,6 @@ export default function handleUserUpdate({ hostSecret, stream = false, onMetric 
       hull: client, ship, hostSecret, stream, onMetric, hostname
     });
 
-    return Promise.all(messages.map(
-      message => userUpdateLogic({ message, clearbit, client })
-    ));
+    return Promise.all(messages.map(message => userUpdateLogic({ message, clearbit, client })));
   };
 }

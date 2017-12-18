@@ -42,11 +42,9 @@ export default function handleBatchUpdate({ hostSecret, onMetric }) {
       done(user);
     };
 
-    return users.map(
-      user => limiter.submit(handleMessage, user, () => {
-        // DO NOT REMOVE THIS CALLBACK
-        printLimits();
-      })
-    );
+    return users.map(user => limiter.submit(handleMessage, user, () => {
+      // DO NOT REMOVE THIS CALLBACK
+      printLimits();
+    }));
   };
 }
