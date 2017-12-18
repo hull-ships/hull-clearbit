@@ -1,6 +1,8 @@
 # Changelog
 
 ## 0.3.0
+- update dependencies
+- use Clearbit's Prospector endpoint -> remove need for custom clearbit client
 - upgrade hull to 0.13.9
 - add support for smart-notifier
 
