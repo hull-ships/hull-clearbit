@@ -42,7 +42,6 @@ describe("HullClearbit Client", () => {
     assert(!isValidIpAddress("192.168.0.1"), "Private Network");
   });
 
-
   it("Sould directly exclude domains from prospect", (done) => {
     const post = () => Promise.resolve({
       pagination: {},
@@ -179,7 +178,6 @@ describe("HullClearbit Client", () => {
       assert.equal(shouldEnrich, true);
     });
   });
-
 
   describe("canReveal function", () => {
     const makeHull = () => {
@@ -451,8 +449,41 @@ describe("HullClearbit Client", () => {
   });
 
   describe("prospectUsers function", () => {
+    const postWithoutMatchingUsers = () => sinon.spy(() => Promise.resolve({
+      pagination: {
+        total: 1
+      },
+      aggregations: {
+        without_email: {
+          doc_count: 1
+        },
+        by_source: {
+          buckets: [
+            { key: "123", doc_count: "doc_count" }
+          ]
+        }
+      }
+    }));
+
+    const postWithMatchingUsers = () => sinon.spy(() => Promise.resolve({
+      pagination: {
+        total: 1
+      },
+      aggregations: {
+        without_email: {
+          doc_count: 2
+        },
+        by_source: {
+          buckets: [
+            { key: "123", doc_count: "doc_count" }
+          ]
+        }
+      }
+    }));
+
     const hull = {
       asUser: sinon.spy(() => hull),
+      asAccount: sinon.spy(() => hull),
       traits: sinon.spy(() => Promise.resolve()),
       logger: {
         info: () => {}
@@ -500,41 +531,103 @@ describe("HullClearbit Client", () => {
       });
     });
 
-    it("should try to get email that we sent to clearbit previously and then skip it", () => {
-      const cb = new Clearbit({ ship: { private_settings: {} }, hull });
+    it("should use Account attributes if we have account traits for Domain lookups", () => {
+      hull.post = postWithoutMatchingUsers();
+      const cb = new Clearbit({
+        ship: {
+          private_settings: {
+            prospect_domain: "account.domain"
+          }
+        },
+        hull
+      });
       cb.logSkip = sinon.spy(() => {});
+      cb.fetchProspects = sinon.spy(() => {});
 
-      cb.prospectUsers({ "traits_clearbit_company/domain": "gmail.com" }).then(result => {
-        assert(!result);
-        assert(cb.logSkip.calledOnce);
-        assert.equal(cb.logSkip.firstCall.args[1], "prospector");
-        assert.equal(cb.logSkip.firstCall.args[2], "We already have known users with that domain");
+      cb.prospectUsers({
+        "traits_clearbit_company/domain": "hull.io"
+      }, {
+        "domain": "clearbit.com"
+      }).then(() => {
+        assert(cb.fetchProspects.calledOnce);
+        assert.equal(cb.fetchProspects.firstCall.args[0].domain, "clearbit.com");
+      });
+    });
+
+    it("should use User attributes if no account traits for Domain lookups", () => {
+      hull.post = postWithoutMatchingUsers();
+      const cb = new Clearbit({
+        ship: {
+          private_settings: {
+            prospect_domain: "account.domain"
+          }
+        },
+        hull
+      });
+      cb.logSkip = sinon.spy(() => {});
+      cb.fetchProspects = sinon.spy(() => {});
+
+      cb.prospectUsers({
+        "domain": "foobar.com"
+      }, {
+        "clearbit_domain": "clearbit.com"
+      }).then(() => {
+        assert(cb.fetchProspects.calledOnce);
+        assert.equal(cb.fetchProspects.firstCall.args[0].domain, "foobar.com");
+      });
+    });
+
+    it("should use custom Account attributes if specified", () => {
+      hull.post = postWithoutMatchingUsers();
+      const cb = new Clearbit({
+        ship: {
+          private_settings: {
+            prospect_domain: "account.clearbit/domain"
+          }
+        },
+        hull
+      });
+      cb.logSkip = sinon.spy(() => {});
+      cb.fetchProspects = sinon.spy(() => {});
+
+      cb.prospectUsers({
+        "domain": "foobar.com"
+      }, {
+        "clearbit/domain": "clearbit.com"
+      }).then(() => {
+        assert(cb.fetchProspects.calledOnce);
+        assert.equal(cb.fetchProspects.firstCall.args[0].domain, "clearbit.com");
+      });
+    });
+
+    it("should use Account fallbacks if we have no data in primary domain lookups", () => {
+      hull.post = postWithoutMatchingUsers();
+      const cb = new Clearbit({
+        ship: {
+          private_settings: {
+            prospect_domain: "user.empty_domain_field"
+          }
+        },
+        hull
+      });
+      cb.logSkip = sinon.spy(() => {});
+      cb.fetchProspects = sinon.spy(() => {});
+
+      cb.prospectUsers({ "domain": "hull.io" }, { "domain": "clearbit.com" })
+      .then(() => {
+        assert(cb.fetchProspects.calledOnce);
+        assert.equal(cb.fetchProspects.firstCall.args[0].domain, "clearbit.com");
       });
     });
 
     it("should call fetchUsers method with appropriate arguments", () => {
-      hull.post = sinon.spy(() => {
-        return Promise.resolve({
-          pagination: {
-            total: 1
-          },
-          aggregations: {
-            without_email: {
-              doc_count: 1
-            },
-            by_source: {
-              buckets: [
-                { key: "123", doc_count: "doc_count" }
-              ]
-            }
-          }
-        });
-      });
+      hull.post = postWithoutMatchingUsers();
 
       const cb = new Clearbit({ ship: { private_settings: { prospect_limit_count: 3 } }, hull });
       cb.fetchProspects = sinon.spy(() => {});
 
-      cb.prospectUsers({ domain: "foo.bar" }).then(() => {
+      cb.prospectUsers({ domain: "foo.bar" })
+      .then(() => {
         assert.equal(hull.post.firstCall.args[1].aggs.by_source.terms.field, "traits_clearbit/source.exact");
         assert.equal(hull.post.firstCall.args[1].query.bool.should[0].term["traits_clearbit_company/domain.exact"], "foo.bar");
         assert.equal(hull.post.firstCall.args[1].query.bool.should[1].term["domain.exact"], "foo.bar");
@@ -549,23 +642,7 @@ describe("HullClearbit Client", () => {
     });
 
     it("should skip user if prospect if we have known users with that domain", () => {
-      hull.post = sinon.spy(() => {
-        return Promise.resolve({
-          pagination: {
-            total: 1
-          },
-          aggregations: {
-            without_email: {
-              doc_count: 2
-            },
-            by_source: {
-              buckets: [
-                { key: "123", doc_count: "doc_count" }
-              ]
-            }
-          }
-        });
-      });
+      hull.post = postWithMatchingUsers();
 
       const cb = new Clearbit({ ship: { private_settings: { prospect_limit_count: 3 } }, hull });
       cb.fetchProspects = sinon.spy(() => {});
@@ -580,23 +657,7 @@ describe("HullClearbit Client", () => {
     });
 
     it("should add to query prospect filters", () => {
-      hull.post = sinon.spy(() => {
-        return Promise.resolve({
-          pagination: {
-            total: 1
-          },
-          aggregations: {
-            without_email: {
-              doc_count: 1
-            },
-            by_source: {
-              buckets: [
-                { key: "123", doc_count: "doc_count" }
-              ]
-            }
-          }
-        });
-      });
+      hull.post = postWithoutMatchingUsers();
 
       const cb = new Clearbit({ ship: { private_settings: {
         prospect_limit_count: 5,
@@ -616,23 +677,7 @@ describe("HullClearbit Client", () => {
     });
 
     it("should add company traits to user", () => {
-      hull.post = sinon.spy(() => {
-        return Promise.resolve({
-          pagination: {
-            total: 1
-          },
-          aggregations: {
-            without_email: {
-              doc_count: 1
-            },
-            by_source: {
-              buckets: [
-                { key: "123", doc_count: "doc_count" }
-              ]
-            }
-          }
-        });
-      });
+      hull.post = postWithoutMatchingUsers();
 
       const cb = new Clearbit({ ship: { private_settings: { prospect_limit_count: 5 } }, hull });
       cb.fetchProspects = sinon.spy(() => {});
