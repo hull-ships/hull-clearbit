@@ -6,14 +6,15 @@ import Client from "./clearbit/client";
 import { isInSegments, getDomain, now } from "./clearbit/utils";
 import { canEnrich, shouldEnrich, enrichUser } from "./clearbit/enrich";
 import { canReveal, shouldReveal, revealUser } from "./clearbit/reveal";
-import { getUserTraitsFromPerson } from "./clearbit/mapping";
+import getUserTraitsFromPerson from "./clearbit/mapping";
 
 import excludes from "./excludes";
 
 
 export default class Clearbit {
-
-  constructor({ hull, ship, stream = false, hostSecret, onMetric, hostname }) {
+  constructor({
+    hull, ship, stream = false, hostSecret, onMetric, hostname
+  }) {
     this.ship = ship;
 
     if (!ship.private_settings) {
@@ -78,35 +79,31 @@ export default class Clearbit {
   }
 
   enrichUser(user) {
-    return enrichUser(user, this).then(
-      (response) => {
-        if (!response || !response.source) return false;
-        const { person, source } = response;
-        return this.saveUser(user, person, { source });
-      }
-    )
-    .catch((error) => {
-      this.hull.asUser(_.pick(user, ["id", "external_id", "email"]))
-        .logger.info("outgoing.user.error", { errors: error, method: "enrichUser" });
-    });
+    return enrichUser(user, this).then((response) => {
+      if (!response || !response.source) return false;
+      const { person, source } = response;
+      return this.saveUser(user, person, { source });
+    })
+      .catch((error) => {
+        this.hull.asUser(_.pick(user, ["id", "external_id", "email"]))
+          .logger.info("outgoing.user.error", { errors: error, method: "enrichUser" });
+      });
   }
 
   revealUser(user) {
-    return revealUser(user, this).then(
-      (response) => {
-        if (!response || !response.source) return false;
-        const { person, source } = response;
-        return this.saveUser(user, person, { source });
-      }
-    )
-    .catch((error) => {
-      const filteredErrors = ["unknown_ip"];
-      // we filter error messages
-      if (!_.includes(filteredErrors, error.type)) {
-        this.hull.asUser(_.pick(user, ["id", "external_id", "email"]))
-          .logger.info("outgoing.user.error", { errors: error, method: "revealUser" });
-      }
-    });
+    return revealUser(user, this).then((response) => {
+      if (!response || !response.source) return false;
+      const { person, source } = response;
+      return this.saveUser(user, person, { source });
+    })
+      .catch((error) => {
+        const filteredErrors = ["unknown_ip"];
+        // we filter error messages
+        if (!_.includes(filteredErrors, error.type)) {
+          this.hull.asUser(_.pick(user, ["id", "external_id", "email"]))
+            .logger.info("outgoing.user.error", { errors: error, method: "revealUser" });
+        }
+      });
   }
 
   /**
@@ -273,10 +270,10 @@ export default class Clearbit {
         return this.saveDiscoveredCompanies(results, domain);
       });
     })
-    .catch((error) => {
-      this.hull.asUser(_.pick(user, ["id", "external_id", "email"]))
-        .logger.info("outgoing.user.error", { errors: _.get(error, "message", error) });
-    });
+      .catch((error) => {
+        this.hull.asUser(_.pick(user, ["id", "external_id", "email"]))
+          .logger.info("outgoing.user.error", { errors: _.get(error, "message", error) });
+      });
   }
 
   companiesDiscoveredFromDomain(domain) {
@@ -287,7 +284,7 @@ export default class Clearbit {
 
   saveDiscoveredCompanies(companies = [], discovered_from_domain) {
     // TODO -> Support Accounts
-    return Promise.all(companies.map(company => {
+    return Promise.all(companies.map((company) => {
       const person = { company };
       // TODO: save account instead of user
       const traits = getUserTraitsFromPerson({ person });
@@ -350,13 +347,15 @@ export default class Clearbit {
       return Promise.resolve(false);
     }
 
-    const query = { bool: {
-      should: [
-        { term: { "traits_clearbit_company/domain.exact": domain } },
-        { term: { "domain.exact": domain } }
-      ],
-      minimum_should_match: 1
-    } };
+    const query = {
+      bool: {
+        should: [
+          { term: { "traits_clearbit_company/domain.exact": domain } },
+          { term: { "domain.exact": domain } }
+        ],
+        minimum_should_match: 1
+      }
+    };
 
     if (this.settings.handle_accounts) {
       query.bool.should.push(
@@ -372,32 +371,31 @@ export default class Clearbit {
 
     const params = { query, aggs, search_type: "count" };
 
-    return this.hull.post("search/user_reports", params).then(
-      ({ pagination, aggregations }) => {
-        const { total } = pagination;
-        const anonymous = aggregations.without_email.doc_count;
-        const bySource = _.reduce(aggregations.by_source.buckets, (bs, bkt) => {
-          return { ...bs, [bkt.key]: bkt.doc_count };
-        }, {});
+    return this.hull.post("search/user_reports", params).then(({ pagination, aggregations }) => {
+      const { total } = pagination;
+      const anonymous = aggregations.without_email.doc_count;
+      const bySource = _.reduce(aggregations.by_source.buckets, (bs, bkt) => {
+        return { ...bs, [bkt.key]: bkt.doc_count };
+      }, {});
 
         // Skip prospect if we have known users with that domain
-        if (total > 0 && total !== anonymous) {
-          return false;
-        }
+      if (total > 0 && total !== anonymous) {
+        return false;
+      }
 
-        // Prospect if at least one of those anonymous has been discovered
-        if (bySource.discover && bySource.discover > 0) {
-          return true;
-        }
-
-        const min_contacts = this.settings.reveal_prospect_min_contacts || 1;
-
-        if (bySource.reveal && anonymous >= min_contacts) {
-          return true;
-        }
-
+      // Prospect if at least one of those anonymous has been discovered
+      if (bySource.discover && bySource.discover > 0) {
         return true;
-      });
+      }
+
+      const min_contacts = this.settings.reveal_prospect_min_contacts || 1;
+
+      if (bySource.reveal && anonymous >= min_contacts) {
+        return true;
+      }
+
+      return true;
+    });
   }
 
   prospectUsers(user, account = {}) {
@@ -406,13 +404,13 @@ export default class Clearbit {
       (prospect_domain.indexOf("account.") === 0)
         ? _.get(account, prospect_domain.replace(/^account./, ""))
         : _.get(user, prospect_domain)
-      ) || getDomain(user, account);
+    ) || getDomain(user, account);
 
     if (!domain) return false;
 
     const asUser = this.hull.asUser(user);
     const asAccount = this.hull.asAccount({ domain });
-    return this.shouldProspectUsersFromDomain(domain).then(doPropect => {
+    return this.shouldProspectUsersFromDomain(domain).then((doPropect) => {
       if (!doPropect) {
         this.logSkip(asUser, "prospector", "We already have known users with that domain");
         return false;
@@ -423,7 +421,7 @@ export default class Clearbit {
         email: true
       };
 
-      ["seniority", "titles", "role"].forEach(k => {
+      ["seniority", "titles", "role"].forEach((k) => {
         const filter = this.settings[`prospect_filter_${k}`];
         if (!_.isEmpty(filter)) {
           query[k] = filter;
@@ -440,13 +438,15 @@ export default class Clearbit {
 
       return this.fetchProspects(query, company_traits, asUser, user, asAccount);
     })
-    .catch((error) => {
-      asUser.logger.info("outgoing.user.error", { errors: _.get(error, "message", error) });
-    });
+      .catch((error) => {
+        asUser.logger.info("outgoing.user.error", { errors: _.get(error, "message", error) });
+      });
   }
 
   fetchProspects(query = {}, company_traits = {}, asUser, user, asAccount) {
-    const { titles = [], domain, role, seniority, limit = 5 } = query;
+    const {
+      titles = [], domain, role, seniority, limit = 5
+    } = query;
 
     // Allow prospecting even if no titles passed
     if (titles.length === 0) titles.push(null);
@@ -455,7 +455,9 @@ export default class Clearbit {
     return Promise.mapSeries(titles, (title) => {
       const newLimit = limit - _.size(prospects);
       if (newLimit <= 0) return Promise.resolve(prospects);
-      const params = { domain, role, seniority, title, limit: newLimit, email: true };
+      const params = {
+        domain, role, seniority, title, limit: newLimit, email: true
+      };
       return this.client
         .prospect(params, asUser)
         .then((results = []) => {

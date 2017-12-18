@@ -2,12 +2,13 @@
   "name": "Clearbit",
   "description": "Reveal anonymous users from your website and enrich them with the data you need",
   "picture": "picture.png",
-  "version": "0.2.8",
+  "version": "0.3.0",
   "tags": [
     "incoming",
     "outgoing",
     "batch",
-    "oneColumn"
+    "oneColumn",
+    "smart-notifier"
   ],
   "private_settings": [
     {
@@ -273,7 +274,7 @@
   "ui": false,
   "subscriptions": [
     {
-      "url": "/notify"
+      "url": "/smart-notifier"
     }
   ]
 }

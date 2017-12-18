@@ -6,7 +6,7 @@ export default function handleWebhook({ hostSecret, onMetric }) {
     const { status, type, body } = req.body;
     const { client: hull, ship } = req.hull;
     const { hostname } = req;
-    const userId = req.hull.config.userId;
+    const { userId } = req.hull.config;
 
     if ((type === "person" || type === "person_company") && status === 200 && userId) {
       let person;
@@ -18,8 +18,14 @@ export default function handleWebhook({ hostSecret, onMetric }) {
       }
 
       if (person) {
-        hull.logger.info("incoming.user.start", { person, source: "webhook" });
-        const cb = new Clearbit({ hull, ship, hostSecret, hostname, onMetric });
+        hull.asUser({ id: userId }).logger.info("incoming.user.start", { source: "webhook" });
+        const cb = new Clearbit({
+          hull,
+          ship,
+          hostSecret,
+          hostname,
+          onMetric
+        });
         cb.saveUser({ id: userId }, person, "enrich");
       }
 

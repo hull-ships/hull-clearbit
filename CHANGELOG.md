@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.0
+- update dependencies
+- metrics calls
+- upgrade hull to 0.13.9
+- add support for smart-notifier
+
 ## 0.2.8
 - Stores `prospected_at` in account domain
 - Looks in Accounts for domain attributes
@@ -13,6 +19,7 @@
   + number of results found
   + list of prospected emails found
 - Adds a `clearbit/prospected_from` field on the prospected users with the identity of the User that triggered the prospection
+
 
 ## 0.2.6
 

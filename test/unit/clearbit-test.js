@@ -6,7 +6,7 @@ const sinon = require("sinon");
 import moment from "moment";
 
 const Clearbit = require("../../server/clearbit").default;
-const { getUserTraitsFromPerson } = require("../../server/clearbit/mapping");
+const getUserTraitsFromPerson = require("../../server/clearbit/mapping").default;
 const { isValidIpAddress } = require("../../server/clearbit/utils");
 
 const reveal = require("./fixtures/reveal.json");
