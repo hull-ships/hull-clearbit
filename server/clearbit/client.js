@@ -1,4 +1,45 @@
 import { Client } from "clearbit";
+import request from "request";
+import qs from "qs";
+import Promise from "bluebird";
+import { STATUS_CODES } from "http";
+
+function ClearbitApi({
+  path, method = "get", params = {}, key
+}) {
+  const baseUrl = `https://prospector.clearbit.com/v1${path}`;
+  const url = `${baseUrl}?${qs.stringify(params, { arrayFormat: "brackets" })}`;
+  return new Promise((resolve, reject) => {
+    request(url, {
+      method,
+      headers: {
+        "content-type": "application/json",
+        "accept": "application/json"
+      },
+      auth: { bearer: key }
+    }, (error, response, rawBody) => {
+      let body;
+
+      try {
+        body = JSON.parse(rawBody);
+      } catch (err) {
+        body = {};
+      }
+      if (error) {
+        reject(error);
+      } else if (response.statusCode === 202 || response.statusCode >= 400) {
+        const message = body.error ? body.error.message : STATUS_CODES[response.statusCode] || "Unknown";
+        reject(new Error(message));
+      } else {
+        try {
+          resolve(body);
+        } catch (err) {
+          reject(err);
+        }
+      }
+    });
+  });
+}
 
 export default class ClearbitClient {
   constructor(key, onMetric, hull) {
@@ -17,7 +58,7 @@ export default class ClearbitClient {
   enrich(params) {
     this.metric("clearbit.enrich");
     this.hull.logger.debug("outgoing.user.start", { params, source: "enrich" });
-    this._metric.increment("ship.service_api.call", 1);
+    this.metric("ship.service_api.call", 1);
     return this.client.Enrichment.find(params).catch(
       this.client.Enrichment.QueuedError,
       this.client.Enrichment.NotFoundError,
@@ -28,21 +69,21 @@ export default class ClearbitClient {
   reveal(params) {
     this.metric("clearbit.reveal");
     this.hull.logger.debug("outgoing.user.start", { params, source: "reveal" });
-    this._metric.increment("ship.service_api.call", 1);
+    this.metric("ship.service_api.call", 1);
     return this.client.Reveal.find(params);
   }
 
   discover(params) {
     this.metric("clearbit.discover");
     this.hull.logger.debug("outgoing.user.start", { params, source: "discover" });
-    this._metric.increment("ship.service_api.call", 1);
+    this.metric("ship.service_api.call", 1);
     return this.client.Discovery.search(params);
   }
 
   prospect(params, asUser) {
     this.metric("clearbit.prospect");
     (asUser || this.hull).logger.debug("outgoing.user.start", { params, source: "prospect" });
-    this._metric.increment("ship.service_api.call", 1);
-    return this.client.Prospector.search(params);
+    this.metric("ship.service_api.call", 1);
+    return ClearbitApi({ path: "/people/search", params, key: this.key });
   }
 }

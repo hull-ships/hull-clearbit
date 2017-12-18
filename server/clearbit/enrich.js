@@ -56,7 +56,7 @@ function fetchFromEnrich(user = {}, clearbit) {
     payload.webhook_url = `https://${clearbit.hostname}/clearbit-enrich?ship=${clearbit.ship.id}&id=${getWebhookId(user.id, clearbit)}`;
   }
 
-  const logger = clearbit.hull.asUser(user).logger;
+  const { logger } = clearbit.hull.asUser(user);
 
   return clearbit.client
     .enrich(payload)

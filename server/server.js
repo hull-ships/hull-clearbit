@@ -1,13 +1,13 @@
-import devMode from "./dev-mode";
+import bodyParser from "body-parser";
 import { notifHandler, smartNotifierHandler } from "hull/lib/utils";
 import Hull from "hull";
 
+import devMode from "./dev-mode";
 import handleProspect from "./actions/prospect";
 import handleUserUpdate from "./actions/user-update";
 import handleBatchUpdate from "./actions/batch-update";
 import handleClearbitWebhook from "./actions/clearbit-webhook";
 
-import bodyParser from "body-parser";
 
 module.exports = function Server(app, options = {}) {
   const { hostSecret } = options;
@@ -22,7 +22,8 @@ module.exports = function Server(app, options = {}) {
     next();
   }, handleClearbitWebhook(options));
 
-  app.post("/clearbit-enrich",
+  app.post(
+    "/clearbit-enrich",
     bodyParser.json(),
     handleClearbitWebhook(options)
   );
@@ -39,7 +40,8 @@ module.exports = function Server(app, options = {}) {
     }
   }));
 
-  app.post("/prospect",
+  app.post(
+    "/prospect",
     bodyParser.urlencoded(),
     handleProspect(options)
   );

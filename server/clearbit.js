@@ -6,7 +6,7 @@ import Client from "./clearbit/client";
 import { isInSegments, getDomain, now } from "./clearbit/utils";
 import { canEnrich, shouldEnrich, enrichUser } from "./clearbit/enrich";
 import { canReveal, shouldReveal, revealUser } from "./clearbit/reveal";
-import { getUserTraitsFromPerson } from "./clearbit/mapping";
+import getUserTraitsFromPerson from "./clearbit/mapping";
 
 import excludes from "./excludes";
 

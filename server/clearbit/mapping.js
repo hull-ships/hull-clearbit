@@ -16,7 +16,7 @@ function getMapping(key) {
  * @param  {mappings} mappings - mappings to user
  * @return {Object}
  */
-export function getUserTraitsFromPerson({ user = {}, person = {} }, mappingName) {
+export default function getUserTraitsFromPerson({ user = {}, person = {} }, mappingName) {
   const mappings = getMapping(mappingName);
   const mapping = _.reduce(mappings, (map, key, val) => {
     return Object.assign(map, {

@@ -2,7 +2,7 @@
 
 ## 0.3.0
 - update dependencies
-- use Clearbit's Prospector endpoint -> remove need for custom clearbit client
+- metrics calls
 - upgrade hull to 0.13.9
 - add support for smart-notifier
 

@@ -9,7 +9,7 @@ import { isInSegments, isValidIpAddress } from "./utils";
  */
 function fetchFromReveal(user = {}, clearbit) {
   const ip = user.last_known_ip;
-  const logger = clearbit.hull.asUser(user).logger;
+  const { logger } = clearbit.hull.asUser(user);
   return clearbit.client
     .reveal({ ip })
     .then(({ company }) => {
@@ -53,22 +53,22 @@ export function shouldReveal(message = {}, settings = {}) {
   }
 
   // Skip if clearbit company already set
-  if (!!user["traits_clearbit_company/id"]) {
+  if (user["traits_clearbit_company/id"]) {
     return { should: false, message: "Clearbit Company ID present" };
   }
 
   // Skip if clearbit company already set on account
-  if (handle_accounts && !!account["clearbit_company/id"]) {
+  if (handle_accounts && account["clearbit_company/id"]) {
     return { should: false, message: "Clearbit Company ID present" };
   }
 
   // Skip if user has been enriched
-  if (!!user["traits_clearbit/enriched_at"]) {
+  if (user["traits_clearbit/enriched_at"]) {
     return { should: false, message: "enriched_at present" };
   }
 
   // Skip if user has been revealed
-  if (!!user["traits_clearbit/revealed_at"]) {
+  if (user["traits_clearbit/revealed_at"]) {
     return { should: false, message: "revealed_at present" };
   }
 
