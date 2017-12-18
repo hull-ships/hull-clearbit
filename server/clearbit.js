@@ -149,7 +149,7 @@ export default class Clearbit {
     }
 
     this.metric("saveUser");
-    this.hull.asUser(_.pick(userIdent, ["id", "external_id", "email"])).logger.info("incoming.user.success", { source });
+    this.hull.asUser(_.pick(userIdent, ["id", "external_id", "email"])).logger.info("incoming.user.success", { traits, source });
 
     const promises = [];
 
@@ -504,7 +504,7 @@ export default class Clearbit {
     const hullUser = this.hull.asUser({ email: person.email, anonymous_id: `clearbit-prospect:${person.id}` });
     const domain = company_traits["clearbit_company/domain"];
 
-    hullUser.logger.info("incoming.user.success", { source: "prospector" });
+    hullUser.logger.info("incoming.user.success", { person, source: "prospector" });
     this.metric("saveProspect");
 
     if (this.settings.handle_accounts && domain) {
