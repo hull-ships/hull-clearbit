@@ -61,7 +61,8 @@ function fetchFromEnrich(user = {}, clearbit) {
   return clearbit.client
     .enrich(payload)
     .then(({ person = {}, company = {} }) => {
-      logger.info("clearbit.enrich.success", {
+      logger.info("outgoing.user.success", {
+        action: "enrich",
         person: _.pick(person, "id", "name", "email"),
         company: _.pick(company, "id", "name", "domain")
       });
@@ -127,7 +128,6 @@ export function enrichUser(user, clearbit) {
   }
 
   if (user.email) {
-    clearbit.metric("enrich");
     return fetchFromEnrich(user, clearbit)
       .then(person => ({ source: "enrich", person }));
   }

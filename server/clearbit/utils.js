@@ -15,12 +15,17 @@ export function isInSegments(userSegments = [], segmentsListIds = []) {
   ).length > 0;
 }
 
-export function getDomain(user, account = {}) {
-  return user["traits_clearbit/employment_domain"]
-      || user["traits_clearbit_company/domain"]
-      || account.domain
-      || account["clearbit_company/domain"]
-      || user.domain;
+export function getDomain(user = {}, account = {}, attribute) {
+  return (
+    (attribute.indexOf("account.") === 0)
+      ? _.get(account, attribute.replace(/^account./, ""))
+      : _.get(user, attribute)
+  )
+  || _.get(user, "traits_clearbit/employment_domain")
+  || _.get(user, "traits_clearbit_company/domain")
+  || _.get(account, "domain")
+  || _.get(account, "clearbit_company/domain")
+  || _.get(user, "domain");
 }
 
 export function now() {
