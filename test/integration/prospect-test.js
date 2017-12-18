@@ -147,7 +147,7 @@ describe("Clearbit API errors", function test() {
       }
     });
     minihull.on("incoming.request@/api/v1/firehose", (req) => {
-      expect(req.body.batch.length).to.equal(3);
+      expect(req.body.batch.length).to.equal(4);
 
       expect(req.body.batch[0].type).to.equal("track");
       expect(req.body.batch[0].body.properties.emails[0]).to.equal("foo@foo.bar");
