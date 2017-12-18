@@ -66,10 +66,13 @@ describe("Clearbit API errors", function test() {
       expect(req.body.batch[0].body.event).to.equal("Clearbit Prospector Triggered");
 
       expect(req.body.batch[1].type).to.equal("traits");
-      expect(req.body.batch[1].body.email.value).to.equal("foo@foo.bar");
       expect(req.body.batch[1].body["clearbit/prospected_at"].value).to.not.be.null;
-      expect(req.body.batch[1].body["clearbit/prospected_from"].value).to.equal("abc");
-      expect(req.body.batch[1].body["clearbit/source"].value).to.equal("prospect");
+
+      expect(req.body.batch[2].type).to.equal("traits");
+      expect(req.body.batch[2].body.email.value).to.equal("foo@foo.bar");
+      expect(req.body.batch[2].body["clearbit/prospected_at"].value).to.not.be.null;
+      expect(req.body.batch[2].body["clearbit/prospected_from"].value).to.equal("abc");
+      expect(req.body.batch[2].body["clearbit/source"].value).to.equal("prospect");
       clearbit.done();
       done();
     });
@@ -153,10 +156,13 @@ describe("Clearbit API errors", function test() {
       expect(req.body.batch[0].body.event).to.equal("Clearbit Prospector Triggered");
 
       expect(req.body.batch[1].type).to.equal("traits");
-      expect(req.body.batch[1].body.email.value).to.equal("foo@foo.bar");
       expect(req.body.batch[1].body["clearbit/prospected_at"].value).to.not.be.null;
-      expect(req.body.batch[1].body["clearbit/prospected_from"].value).to.equal("abc");
-      expect(req.body.batch[1].body["clearbit/source"].value).to.equal("prospect");
+
+      expect(req.body.batch[2].type).to.equal("traits");
+      expect(req.body.batch[2].body.email.value).to.equal("foo@foo.bar");
+      expect(req.body.batch[2].body["clearbit/prospected_at"].value).to.not.be.null;
+      expect(req.body.batch[2].body["clearbit/prospected_from"].value).to.equal("abc");
+      expect(req.body.batch[2].body["clearbit/source"].value).to.equal("prospect");
 
       expect(thirdTitleCall.isDone()).is.false;
       done();
