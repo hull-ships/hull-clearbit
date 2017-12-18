@@ -60,6 +60,8 @@ describe("Clearbit API errors", function test() {
       }
     });
     minihull.on("incoming.request@/api/v1/firehose", (req) => {
+      expect(req.body.batch.length).to.equal(4);
+
       expect(req.body.batch[0].type).to.equal("track");
       expect(req.body.batch[0].body.properties.emails[0]).to.equal("foo@foo.bar");
       expect(req.body.batch[0].body.properties.found).to.equal(1);
@@ -69,10 +71,13 @@ describe("Clearbit API errors", function test() {
       expect(req.body.batch[1].body["clearbit/prospected_at"].value).to.not.be.null;
 
       expect(req.body.batch[2].type).to.equal("traits");
-      expect(req.body.batch[2].body.email.value).to.equal("foo@foo.bar");
       expect(req.body.batch[2].body["clearbit/prospected_at"].value).to.not.be.null;
-      expect(req.body.batch[2].body["clearbit/prospected_from"].value).to.equal("abc");
-      expect(req.body.batch[2].body["clearbit/source"].value).to.equal("prospect");
+
+      expect(req.body.batch[3].type).to.equal("traits");
+      expect(req.body.batch[3].body.email.value).to.equal("foo@foo.bar");
+      expect(req.body.batch[3].body["clearbit/prospected_at"].value).to.not.be.null;
+      expect(req.body.batch[3].body["clearbit/prospected_from"].value).to.equal("abc");
+      expect(req.body.batch[3].body["clearbit/source"].value).to.equal("prospect");
       clearbit.done();
       done();
     });
@@ -97,7 +102,6 @@ describe("Clearbit API errors", function test() {
         prospect_limit_count: 2
       }
     });
-
 
     nock("https://prospector.clearbit.com")
       .get("/v1/people/search")
@@ -147,7 +151,7 @@ describe("Clearbit API errors", function test() {
       }
     });
     minihull.on("incoming.request@/api/v1/firehose", (req) => {
-      expect(req.body.batch.length).to.equal(4);
+      expect(req.body.batch.length).to.equal(5);
 
       expect(req.body.batch[0].type).to.equal("track");
       expect(req.body.batch[0].body.properties.emails[0]).to.equal("foo@foo.bar");
@@ -155,24 +159,33 @@ describe("Clearbit API errors", function test() {
       expect(req.body.batch[0].body.properties.found).to.equal(2);
       expect(req.body.batch[0].body.event).to.equal("Clearbit Prospector Triggered");
 
+      //Accounts trait
       expect(req.body.batch[1].type).to.equal("traits");
       expect(req.body.batch[1].body["clearbit/prospected_at"].value).to.not.be.null;
 
+      //Source user trait
       expect(req.body.batch[2].type).to.equal("traits");
-      expect(req.body.batch[2].body.email.value).to.equal("foo@foo.bar");
       expect(req.body.batch[2].body["clearbit/prospected_at"].value).to.not.be.null;
-      expect(req.body.batch[2].body["clearbit/prospected_from"].value).to.equal("abc");
-      expect(req.body.batch[2].body["clearbit/source"].value).to.equal("prospect");
+
+      expect(req.body.batch[3].type).to.equal("traits");
+      expect(req.body.batch[3].body.email.value).to.equal("foo@foo.bar");
+      expect(req.body.batch[3].body["clearbit/prospected_at"].value).to.not.be.null;
+      expect(req.body.batch[3].body["clearbit/prospected_from"].value).to.equal("abc");
+      expect(req.body.batch[3].body["clearbit/source"].value).to.equal("prospect");
+
+      expect(req.body.batch[4].type).to.equal("traits");
+      expect(req.body.batch[4].body.email.value).to.equal("foo@bar.bar");
+      expect(req.body.batch[4].body["clearbit/prospected_at"].value).to.not.be.null;
+      expect(req.body.batch[4].body["clearbit/prospected_from"].value).to.equal("abc");
+      expect(req.body.batch[4].body["clearbit/source"].value).to.equal("prospect");
 
       expect(thirdTitleCall.isDone()).is.false;
       done();
     });
 
     minihull.notifyConnector("123456789012345678901234", "http://localhost:8000/notify", "user_report:update", {
-      user: {
-        id: "abc",
-        domain: "foo.bar"
-      },
+      user: { id: "abc", domain: "foo.bar"},
+      account: {},
       segments: [{ id: "1" }]
     }).then(() => {});
   });

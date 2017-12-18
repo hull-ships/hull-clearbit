@@ -302,7 +302,7 @@ export default class Clearbit {
    * Clearbit Prospection
    */
 
-  shouldProspect({ segments = [], user }) {
+  shouldProspect({ segments = [], user, account = {} }) {
     const { prospect_segments, prospect_enabled } = this.settings;
 
     // We need a domain to prospect
@@ -326,7 +326,11 @@ export default class Clearbit {
     }
 
     // Don't prospect twice
-    if (user["traits_clearbit/prospected_at"]) {
+    if (
+      user["traits_clearbit/prospected_at"] ||
+      user["traits_clearbit/prospector_triggered_at"] ||
+      account["clearbit/prospected_at"]
+    ) {
       this.logSkip(asUser, "prospector", "Already prospected", { domain });
       return false;
     }
@@ -396,13 +400,18 @@ export default class Clearbit {
       });
   }
 
-  prospectUsers(user) {
+  prospectUsers(user, account = {}) {
     const { prospect_domain = "domain" } = this.settings;
-    const domain = user[prospect_domain] || getDomain(user);
+    const domain = (
+      (prospect_domain.indexOf("account.") === 0)
+        ? _.get(account, prospect_domain.replace(/^account./, ""))
+        : _.get(user, prospect_domain)
+      ) || getDomain(user, account);
 
     if (!domain) return false;
 
     const asUser = this.hull.asUser(user);
+    const asAccount = this.hull.asAccount({ domain });
     return this.shouldProspectUsersFromDomain(domain).then(doPropect => {
       if (!doPropect) {
         this.logSkip(asUser, "prospector", "We already have known users with that domain");
@@ -429,14 +438,14 @@ export default class Clearbit {
         return traits;
       }, {});
 
-      return this.fetchProspects(query, company_traits, asUser, user);
+      return this.fetchProspects(query, company_traits, asUser, user, asAccount);
     })
     .catch((error) => {
       asUser.logger.info("outgoing.user.error", { errors: _.get(error, "message", error) });
     });
   }
 
-  fetchProspects(query = {}, company_traits = {}, asUser, user) {
+  fetchProspects(query = {}, company_traits = {}, asUser, user, asAccount) {
     const { titles = [], domain, role, seniority, limit = 5 } = query;
 
     // Allow prospecting even if no titles passed
@@ -468,8 +477,11 @@ export default class Clearbit {
           ...props,
           found: ret.length,
           emails
+        }, {
+          ip: 0
         });
-        asUser.traits({ prospected_at: now() }, { source: "clearbit" });
+        asUser.traits({ prospected_at: { value: now(), operation: "setIfNull" } }, { source: "clearbit" });
+        asAccount.traits({ prospected_at: { operation: "setIfNull", value: now() } }, { source: "clearbit" });
       }
       ret.map(this.saveProspect.bind(this, user, company_traits));
       return ret;

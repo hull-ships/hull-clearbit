@@ -1,5 +1,6 @@
 export default function userUpdateLogic({ message = {}, clearbit, client }) {
-  const { user } = message;
+  const { segments, user, account } = message;
+  const acc = account || user.account;
 
   if (clearbit.canEnrich(user)) {
     client.asUser(user).logger.info("outgoing.user.start", { action: "shouldEnrich" });
@@ -20,9 +21,9 @@ export default function userUpdateLogic({ message = {}, clearbit, client }) {
     return clearbit.discoverSimilarCompanies(user);
   }
 
-  if (clearbit.shouldProspect(message)) {
+  if (clearbit.shouldProspect({ segments, user, account: acc })) {
     client.asUser(user).logger.info("outgoing.user.start", { action: "shouldProspect" });
-    return clearbit.prospectUsers(user);
+    return clearbit.prospectUsers(user, acc);
   }
 
   return false;

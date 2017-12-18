@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.8
+- Stores `prospected_at` in account domain
+- Looks in Accounts for domain attributes
+- Has fallback strategy for domain looking into Account data
+- factors tests
+
 ## 0.2.7
 
 - Stores a `Clearbit Prospector Triggered` event on the user that triggers prospection, storing the following values:
