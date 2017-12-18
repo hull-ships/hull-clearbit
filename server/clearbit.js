@@ -462,13 +462,14 @@ export default class Clearbit {
         company_traits,
         ret
       });
-      if (asUser && ret.length) {
+      if (asUser) {
         const props = _.mapKeys(query, (v, k) => `query_${k}`);
         asUser.track("Clearbit Prospector Triggered", {
           ...props,
           found: ret.length,
           emails
         });
+        asUser.traits({ prospected_at: now() }, { source: "clearbit" });
       }
       ret.map(this.saveProspect.bind(this, user, company_traits));
       return ret;
