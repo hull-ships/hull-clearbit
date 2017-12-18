@@ -115,6 +115,14 @@
       "default": false
     },
     {
+      "name": "discover_domain",
+      "title": "Attribute that defines the company domain",
+      "type": "string",
+      "format": "trait",
+      "default": "domain",
+      "description": "The connector will use the value of this attribute as domain when fetching people from Clearbit."
+    },
+    {
       "name": "discover_segments",
       "title": "Search for companies similar to the ones in these segments",
       "type": "array",

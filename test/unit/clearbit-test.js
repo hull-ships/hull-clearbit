@@ -7,6 +7,7 @@ import moment from "moment";
 
 const Clearbit = require("../../server/clearbit").default;
 const getUserTraitsFromPerson = require("../../server/clearbit/mapping").default;
+const { shouldProspectUsersFromDomain } = require("../../server/clearbit/prospect");
 const { isValidIpAddress } = require("../../server/clearbit/utils");
 
 const reveal = require("./fixtures/reveal.json");
@@ -42,22 +43,31 @@ describe("HullClearbit Client", () => {
     assert(!isValidIpAddress("192.168.0.1"), "Private Network");
   });
 
-  it("Sould directly exclude domains from prospect", (done) => {
-    const post = () => Promise.resolve({
-      pagination: {},
-      aggregations: {
-        without_email: { doc_count: 0 },
-        by_source: { buckets: [] }
-      }
-    });
-    const cb = new Clearbit({ ship: { private_settings: {} }, hull: { post } });
+  it("Should directly exclude domains from prospect", (done) => {
+    const hull = {
+      post: () => Promise.resolve({
+        pagination: {},
+        aggregations: {
+          without_email: { doc_count: 0 },
+          by_source: { buckets: [] }
+        }
+      })
+    };
+    const private_settings = {};
+    const cb = new Clearbit({ ship: { private_settings }, hull });
     const domains = ["hull.io", "google.com", "hotmail.com"];
 
-    Promise.all(domains.map(cb.shouldProspectUsersFromDomain.bind(cb))).then(([hull_io, google_com, hotmail_com]) => {
-      assert(hull_io);
-      assert(!google_com);
-      assert(!hotmail_com);
-    }).then(done, done);
+    Promise.all(domains.map(domain => shouldProspectUsersFromDomain({
+      domain,
+      hull,
+      settings: private_settings
+    })))
+      .then(([hull_io, google_com, hotmail_com]) => {
+        assert(hull_io);
+        assert(!google_com);
+        assert(!hotmail_com);
+      })
+      .then(done, done);
   });
 
   describe("canEnrich function", () => {
