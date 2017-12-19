@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.3.1
+- Use hull-node's metrics tooling
+
 ## 0.3.0
 - update dependencies
 - metrics calls

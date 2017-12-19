@@ -2,7 +2,7 @@
   "name": "Clearbit",
   "description": "Reveal anonymous users from your website and enrich them with the data you need",
   "picture": "picture.png",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "tags": [
     "incoming",
     "outgoing",

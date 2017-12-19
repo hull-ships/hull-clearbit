@@ -11,7 +11,7 @@ import getUserTraitsFromPerson from "./clearbit/mapping";
 
 export default class Clearbit {
   constructor({
-    hull, ship, stream = false, hostSecret, onMetric, hostname
+    hull, ship, stream = false, hostSecret, metric, hostname
   }) {
     this.ship = ship;
 
@@ -28,9 +28,9 @@ export default class Clearbit {
     this.hull = hull;
     this.hostname = hostname;
 
-    this.metric = (metric, value = 1) => {
-      if (_.isFunction(onMetric)) {
-        onMetric(metric, value, { id: ship.id });
+    this.metric = (m, value = 1, tags) => {
+      if (_.isFunction(metric.increment)) {
+        metric.increment(m, value, tags);
       }
     };
 
@@ -152,7 +152,7 @@ export default class Clearbit {
       traits["clearbit/source"] = { value: source, operation: "setIfNull" };
     }
 
-    this.metric("saveUser");
+    this.metric("ship.incoming.users", 1, ["saveUser"]);
     this.hull.asUser(_.pick(userIdent, ["id", "external_id", "email"])).logger.info("incoming.user.success", { traits, source });
 
     const promises = [];
@@ -417,7 +417,7 @@ export default class Clearbit {
     const domain = company_traits["clearbit_company/domain"];
 
     hullUser.logger.info("incoming.user.success", { person, source: "prospector" });
-    this.metric("saveProspect");
+    this.metric("ship.incoming.users", 1, ["prospect"]);
 
     if (this.settings.handle_accounts && domain) {
       const company = _.reduce(company_traits, (m, v, k) => {

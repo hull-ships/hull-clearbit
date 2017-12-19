@@ -1,10 +1,10 @@
 import _ from "lodash";
 import Clearbit from "../clearbit";
 
-export default function handleWebhook({ hostSecret, onMetric }) {
+export default function handleWebhook({ hostSecret }) {
   return (req, res) => {
     const { status, type, body } = req.body;
-    const { client: hull, ship } = req.hull;
+    const { client: hull, ship, metric } = req.hull;
     const { hostname } = req;
     const { userId } = req.hull.config;
 
@@ -24,7 +24,7 @@ export default function handleWebhook({ hostSecret, onMetric }) {
           ship,
           hostSecret,
           hostname,
-          onMetric
+          metric
         });
         cb.saveUser({ id: userId }, person, "enrich");
       }
@@ -35,8 +35,8 @@ export default function handleWebhook({ hostSecret, onMetric }) {
     }
 
     try {
-      if (_.isFunction(onMetric)) {
-        onMetric("webhook", 1, { id: ship ? ship.id : null });
+      if (_.isFunction(metric)) {
+        metric("ship.clearbit.incoming_webhook", 1);
       }
     } catch (err) {
       console.warn("Error on webhook onMetric: ", err);

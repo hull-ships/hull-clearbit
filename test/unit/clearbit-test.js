@@ -352,7 +352,9 @@ describe("HullClearbit Client", () => {
       mock.asUser = sinon.spy(() => mock);
       return mock;
     };
-    const onMetric = sinon.spy(() => {});
+    const metric = {
+      increment: sinon.spy(() => {})
+    };
 
     it("should return empty results if titles are empty", () => {
       const cb = new Clearbit({ ship: { private_settings: {} }, hull: makeHull() });
@@ -375,7 +377,7 @@ describe("HullClearbit Client", () => {
         return Promise.resolve([{ email: `${counter}@email.com` }]);
       });
 
-      const cb = new Clearbit({ ship: { id: "123", private_settings: {} }, hull, onMetric });
+      const cb = new Clearbit({ ship: { id: "123", private_settings: {} }, hull, metric });
 
       cb.client = {};
       cb.client.prospect = prospect;
@@ -409,18 +411,18 @@ describe("HullClearbit Client", () => {
         assert.equal(prospect.thirdCall.args[0].limit, 5);
         assert.equal(prospect.thirdCall.args[0].email, true);
 
-        assert(onMetric.calledThrice);
-        assert.equal(onMetric.firstCall.args[0], "saveProspect");
-        assert.equal(onMetric.firstCall.args[1], 1);
-        assert.equal(onMetric.firstCall.args[2].id, "123");
+        assert(metric.increment.calledThrice);
+        assert.equal(metric.increment.firstCall.args[0], "ship.incoming.users");
+        assert.equal(metric.increment.firstCall.args[1], 1);
+        assert.equal(metric.increment.firstCall.args[2][0], "prospect");
 
-        assert.equal(onMetric.secondCall.args[0], "saveProspect");
-        assert.equal(onMetric.secondCall.args[1], 1);
-        assert.equal(onMetric.secondCall.args[2].id, "123");
+        assert.equal(metric.increment.secondCall.args[0], "ship.incoming.users");
+        assert.equal(metric.increment.secondCall.args[1], 1);
+        assert.equal(metric.increment.secondCall.args[2][0], "prospect");
 
-        assert.equal(onMetric.thirdCall.args[0], "saveProspect");
-        assert.equal(onMetric.thirdCall.args[1], 1);
-        assert.equal(onMetric.thirdCall.args[2].id, "123");
+        assert.equal(metric.increment.thirdCall.args[0], "ship.incoming.users");
+        assert.equal(metric.increment.thirdCall.args[1], 1);
+        assert.equal(metric.increment.thirdCall.args[2][0], "prospect");
 
 
         assert.equal(hull.asUser.callCount, 3);
