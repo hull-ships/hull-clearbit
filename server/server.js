@@ -7,7 +7,7 @@ import handleProspect from "./actions/prospect";
 import handleUserUpdate from "./actions/user-update";
 import handleBatchUpdate from "./actions/batch-update";
 import handleClearbitWebhook from "./actions/clearbit-webhook";
-
+import statusCheck from "./actions/status";
 
 module.exports = function Server(app, options = {}) {
   const { hostSecret } = options;
@@ -62,6 +62,8 @@ module.exports = function Server(app, options = {}) {
       "user:update": handleUserUpdate(options)
     }
   }));
+
+  app.all("/status", statusCheck);
 
   app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
     if (err) {
