@@ -113,11 +113,11 @@ export default class Clearbit {
         if (!response || !response.source) return false;
         const { person = {}, source } = response;
         const { company } = person;
-        asUser.logger.info("outgoing.user.success", {
-          ip: last_known_ip,
-          company: _.pick(company, "name", "domain")
+        return this.saveUser(user, person, {
+          source,
+          company: _.pick(company, "name", "domain"),
+          ip: last_known_ip
         });
-        return this.saveUser(user, person, { source });
       }, logError)
       .catch(logError);
   }
@@ -131,7 +131,7 @@ export default class Clearbit {
   saveUser(user = {}, person = {}, options = {}) {
     const { id, external_id } = user;
     const email = user.email || person.email;
-    // const userIdent = { id, external_id, email };
+    const userIdent = { id, external_id, email };
     const { source } = options;
 
     // Custom Resolution strategy.
@@ -198,7 +198,6 @@ export default class Clearbit {
 
 
       promises.push(asUser.traits(all_traits.user));
-      asUser.logger.info("outgoing.user.success", { traits, source });
 
       if (domain) {
         const asAccount = asUser.account({ domain });
@@ -209,11 +208,18 @@ export default class Clearbit {
         promises.push(asAccount.traits(all_traits.account));
       }
     } else {
-      asUser.logger.info("outgoing.user.success", { traits, source });
       promises.push(asUser.traits(traits));
     }
 
-    return Promise.all(promises).then(() => { return { traits, user, person }; });
+    return Promise.all(promises).then(() => {
+      this
+        .hull
+        .asUser(userIdent)
+        .logger
+        .info("outgoing.user.success", { ...options, traits });
+
+      return { traits, user, person };
+    });
   }
 
 
