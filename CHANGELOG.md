@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.2
+- Add Status Endpoint
+- Improve Logging
+- Improve Settings UI
+
 ## 0.3.1
 - Use hull-node's metrics tooling
 

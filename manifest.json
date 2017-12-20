@@ -2,7 +2,7 @@
   "name": "Clearbit",
   "description": "Reveal anonymous users from your website and enrich them with the data you need",
   "picture": "picture.png",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "tags": [
     "incoming",
     "outgoing",
@@ -36,7 +36,7 @@
     {
       "title": "Enrich users belonging to one of these segments",
       "name": "enrich_segments",
-      "description": "The above list of segments is a whitelist. You need to *explicitely specify one or more segments* for which enrichment shall be performed. No one is sent if this field is empty",
+      "description": "Specify one or more segments for which enrichment will be performed. *No one is sent if this is empty*",
       "type": "array",
       "format": "segment",
       "items": {
@@ -62,7 +62,7 @@
     },
     {
       "title": "Reveal users belonging to one of these segments",
-      "description": "*Every anonymous user* is sent to Reveal if this field is empty. We never send anyone who has identifiable information",
+      "description": "Specify one or more segments to filter who will be sent to Reveal. *Every anonymous user is sent if this is empty*. We never send anyone who has identifiable information",
       "name": "reveal_segments",
       "type": "array",
       "format": "segment",
@@ -108,7 +108,7 @@
     {
       "name": "discover_segments",
       "title": "Discover companies similar to the ones in these segments",
-      "description": "Define which segments are going to trigger new Discovery calls to find similar companies.",
+      "description": "Specify one or more segments to Define which companies are going to trigger new Discovery calls to find similar companies.",
       "type": "array",
       "format": "segment",
       "items": {
@@ -162,7 +162,7 @@
     {
       "name": "prospect_segments",
       "title": "Prospect companies for these Segments",
-      "description": "Whenever a new User belonging to an Account will enter the segments listed above, The Clearbit Prospector API will be called to find leads for this Account that match your targeted profiles. We recommend to use only segments that describe your targeted company profiles.",
+      "description": "Select one or more segments. When Users belonging to an Account enter the segments listed above, The Clearbit Prospector API will be called to find leads for this Account that match your targeted profiles.",
       "type": "array",
       "format": "segment",
       "items": {
