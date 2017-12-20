@@ -92,6 +92,8 @@ export default class Clearbit {
     };
     return enrichUser(user, this)
       .then((response) => {
+        console.log("Enrich User");
+        console.log(response);
         if (!response || !response.source) return false;
         const { person, source } = response;
         return this.saveUser(user, person, { source });
@@ -167,7 +169,6 @@ export default class Clearbit {
 
     this.metric("ship.outgoing.users", 1, ["saveUser"]);
 
-
     const promises = [];
 
     if (this.settings.handle_accounts) {
@@ -195,7 +196,6 @@ export default class Clearbit {
           _.set(all_traits.account, top_level_name, { value, operation: "setIfNull" });
         }
       });
-
 
       promises.push(asUser.traits(all_traits.user));
 
@@ -398,7 +398,7 @@ export default class Clearbit {
       const ret = _.values(prospects);
       const emails = _.keys(prospects);
       const log = {
-        action: "prospector",
+        source: "prospector",
         message: `Found ${ret.length} new Prospects`,
         ...query,
         company_traits,
