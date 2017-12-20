@@ -2,23 +2,6 @@ import _ from "lodash";
 import { isInSegments, isValidIpAddress } from "./utils";
 
 /**
- * Lookup data from Clearbit's Reveal API and save it as
- * traits on the Hull user
- * @param  {User} user - Hull User
- * @return {Promise -> ClearbitPerson}
- */
-function fetchFromReveal(user = {}, clearbit) {
-  const ip = user.last_known_ip;
-  const { logger } = clearbit.hull.asUser(user);
-  return clearbit.client
-    .reveal({ ip })
-    .then(({ company }) => {
-      logger.info("clearbit.reveal.success", { ip, company: _.pick(company, "name", "domain") });
-      return { company };
-    });
-}
-
-/**
  * Checks if the user fullfills the right conditions to be revealed.
  * @param  {User({ last_known_ip, email })} user - A user profile
  * @return {Boolean}
@@ -75,8 +58,9 @@ export function shouldReveal(message = {}, settings = {}) {
   return { should: true };
 }
 
-export function revealUser(user, clearbit) {
+export function revealUser(user = {}, clearbit) {
   clearbit.metric("reveal");
-  return fetchFromReveal(user, clearbit)
+  return clearbit.client
+    .reveal({ ip: user.last_known_ip })
     .then(person => (person && { source: "reveal", person }));
 }
