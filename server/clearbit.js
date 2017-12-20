@@ -9,6 +9,8 @@ import { canEnrich, shouldEnrich, enrichUser } from "./clearbit/enrich";
 import { canReveal, shouldReveal, revealUser } from "./clearbit/reveal";
 import getUserTraitsFromPerson from "./clearbit/mapping";
 
+const FILTERED_ERRORS = ["unknown_ip"];
+
 export default class Clearbit {
   constructor({
     hull, ship, stream = false, hostSecret, metric, hostname
@@ -27,7 +29,6 @@ export default class Clearbit {
     };
     this.hull = hull;
     this.hostname = hostname;
-
     this.metric = (m, value = 1, tags) => {
       if (_.isFunction(metric.increment)) {
         metric.increment(m, value, tags);
@@ -40,7 +41,6 @@ export default class Clearbit {
   }
 
   logSkip = (asUser, action, reason, additionalData = {}) => {
-    console.log("Skipping", action, reason, additionalData);
     asUser.logger.info("outgoing.user.skip", { reason, action, additionalData });
   };
 
@@ -86,31 +86,40 @@ export default class Clearbit {
   }
 
   enrichUser(user) {
-    return enrichUser(user, this).then((response) => {
-      if (!response || !response.source) return false;
-      const { person, source } = response;
-      return this.saveUser(user, person, { source });
-    })
-      .catch((error) => {
-        this.hull.asUser(_.pick(user, ["id", "external_id", "email"]))
-          .logger.info("outgoing.user.error", { errors: error, method: "enrichUser" });
-      });
+    const asUser = this.hull.asUser(_.pick(user, ["id", "external_id", "email"]));
+    const logError = (error) => {
+      asUser.logger.info("outgoing.user.error", { errors: error, method: "revealUser" });
+    };
+    return enrichUser(user, this)
+      .then((response) => {
+        if (!response || !response.source) return false;
+        const { person, source } = response;
+        return this.saveUser(user, person, { source });
+      }, logError)
+      .catch(logError);
   }
 
-  revealUser(user) {
-    return revealUser(user, this).then((response) => {
-      if (!response || !response.source) return false;
-      const { person, source } = response;
-      return this.saveUser(user, person, { source });
-    })
-      .catch((error) => {
-        const filteredErrors = ["unknown_ip"];
-        // we filter error messages
-        if (!_.includes(filteredErrors, error.type)) {
-          this.hull.asUser(_.pick(user, ["id", "external_id", "email"]))
-            .logger.info("outgoing.user.error", { errors: error, method: "revealUser" });
-        }
-      });
+  revealUser(user = {}) {
+    const asUser = this.hull.asUser(_.pick(user, ["id", "external_id", "email"]));
+    const { last_known_ip } = user;
+    const logError = (error) => {
+      // we filter error messages
+      if (!_.includes(FILTERED_ERRORS, error.type)) {
+        asUser.logger.info("outgoing.user.error", { errors: error, method: "revealUser" });
+      }
+    };
+    return revealUser(user, this)
+      .then((response) => {
+        if (!response || !response.source) return false;
+        const { person = {}, source } = response;
+        const { company } = person;
+        asUser.logger.info("outgoing.user.success", {
+          ip: last_known_ip,
+          company: _.pick(company, "name", "domain")
+        });
+        return this.saveUser(user, person, { source });
+      }, logError)
+      .catch(logError);
   }
 
   /**
@@ -121,16 +130,18 @@ export default class Clearbit {
    */
   saveUser(user = {}, person = {}, options = {}) {
     const { id, external_id } = user;
-    let ident = id;
     const email = user.email || person.email;
-    const userIdent = { id, external_id, email };
+    // const userIdent = { id, external_id, email };
     const { source } = options;
 
-    if (!ident && external_id) {
+    // Custom Resolution strategy.
+    // Only uses one identifier. [Why did we do this ?]
+    let ident;
+    if (id) {
+      ident = {};
+    } else if (external_id) {
       ident = { external_id };
-    }
-
-    if (!ident && email) {
+    } else if (email) {
       ident = { email };
     }
 
@@ -139,6 +150,8 @@ export default class Clearbit {
       error.status = 400;
       return Promise.reject(error);
     }
+
+    const asUser = this.hull.asUser(ident);
 
     const traits = getUserTraitsFromPerson(
       { user, person },
@@ -152,8 +165,8 @@ export default class Clearbit {
       traits["clearbit/source"] = { value: source, operation: "setIfNull" };
     }
 
-    this.metric("ship.incoming.users", 1, ["saveUser"]);
-    this.hull.asUser(_.pick(userIdent, ["id", "external_id", "email"])).logger.info("incoming.user.success", { traits, source });
+    this.metric("ship.outgoing.users", 1, ["saveUser"]);
+
 
     const promises = [];
 
@@ -183,18 +196,24 @@ export default class Clearbit {
         }
       });
 
-      const client = this.hull.asUser(ident);
 
-      promises.push(client.traits(all_traits.user));
+      promises.push(asUser.traits(all_traits.user));
+      asUser.logger.info("outgoing.user.success", { traits, source });
 
       if (domain) {
-        promises.push(client.account({ domain }).traits(all_traits.account));
+        const asAccount = asUser.account({ domain });
+        asAccount.logger.info("outgoing.account.success", {
+          source,
+          traits: all_traits.account
+        });
+        promises.push(asAccount.traits(all_traits.account));
       }
     } else {
-      promises.push(this.hull.asUser(ident).traits(traits));
+      asUser.logger.info("outgoing.user.success", { traits, source });
+      promises.push(asUser.traits(traits));
     }
 
-    return Promise.all(promises).then(() => { return { user, person }; });
+    return Promise.all(promises).then(() => { return { traits, user, person }; });
   }
 
 
