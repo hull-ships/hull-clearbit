@@ -51,7 +51,7 @@ export default class ClearbitClient {
 
   enrich(params) {
     this.hull.logger.debug("clearbit.start", { params, action: "enrich" });
-    this.metric("ship.service_api.call", 1, ["ship.service_action.clearbit-enrich"]);
+    this.metric("ship.service_api.call", 1, ["ship_action:clearbit:enrich"]);
     return this.client.Enrichment.find(params).catch(
       this.client.Enrichment.QueuedError,
       this.client.Enrichment.NotFoundError,
@@ -61,20 +61,20 @@ export default class ClearbitClient {
 
   reveal(params) {
     this.hull.logger.debug("clearbit.start", { params, action: "reveal" });
-    this.metric("ship.service_api.call", 1, ["ship.service_action.clearbit-reveal"]);
+    this.metric("ship.service_api.call", 1, ["ship_action:clearbit:reveal"]);
     return this.client.Reveal.find(params);
   }
 
   discover(params) {
     this.hull.logger.debug("clearbit.start", { params, action: "discover" });
-    this.metric("ship.service_api.call", 1, ["ship.service_action.clearbit-discover"]);
+    this.metric("ship.service_api.call", 1, ["ship_action:clearbit:discover"]);
     return this.client.Discovery.search(params);
   }
 
   prospect(params, asUser) {
     this.metric("clearbit.prospect");
     (asUser || this.hull).logger.debug("clearbit.start", { params, action: "prospect" });
-    this.metric("ship.service_api.call", 1, ["ship.service_action.clearbit-prospect"]);
+    this.metric("ship.service_api.call", 1, ["ship_action:clearbit:prospect"]);
     return ClearbitApi({ path: "/people/search", params, key: this.key });
   }
 }
