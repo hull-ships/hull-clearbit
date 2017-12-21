@@ -92,8 +92,6 @@ export default class Clearbit {
     };
     return enrichUser(user, this)
       .then((response) => {
-        console.log("Enrich User");
-        console.log(response);
         if (!response || !response.source) return false;
         const { person, source } = response;
         return this.saveUser(user, person, { source });
@@ -212,6 +210,7 @@ export default class Clearbit {
     }
 
     return Promise.all(promises).then(() => {
+      console.log("Logging success", JSON.stringify({ options, traits }));
       this
         .hull
         .asUser(userIdent)
