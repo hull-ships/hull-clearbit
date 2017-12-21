@@ -259,12 +259,14 @@
   "ui": false,
   "subscriptions": [
     {
+      "url": "/smart-notifier"
+    }
+  ],
+  "schedules" : [
+    {
       "url": "/status",
       "type": "cron",
       "value": "*/5 * * * *"
-    },
-    {
-      "url": "/smart-notifier"
     }
   ]
 }
