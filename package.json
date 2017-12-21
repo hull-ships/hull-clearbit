@@ -1,7 +1,7 @@
 {
   "name": "hull-clearbit",
   "description": "Enrich Customer data with Clearbit",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "homepage": "https://github.com/hull-ships/hull-clearbit",
   "license": "MIT",
   "main": "bin/start",
@@ -31,8 +31,8 @@
     "test": "npm run test:lint && npm run test:unit && npm run test:integration",
     "test:lint": "./node_modules/.bin/eslint server",
     "test:modules": "npm outdated --depth=0",
-    "test:unit": "NODE_ENV=test mocha --exit --require babel-register -R spec ./test/unit/*.js",
-    "test:integration": "NODE_ENV=test mocha --exit --require babel-register -R spec ./test/integration/*.js",
+    "test:unit": "NODE_ENV=test mocha ./test/unit/*.js",
+    "test:integration": "NODE_ENV=test mocha ./test/integration/*.js",
     "clean": "./node_modules/.bin/rimraf dist; ./node_modules/.bin/rimraf build",
     "update": "./node_modules/.bin/updtr",
     "postinstall": "npm run build"

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.3
+- Even better metrics.
+- use `/test/mocha.opts` to centralize mocha config, now atom's `mocha-test-runner plugin can be used` - no need to open a terminal, open the test file and run `ctrl-alt-m`
+
 ## 0.3.2
 - Add Status Endpoint
 - Improve Logging
