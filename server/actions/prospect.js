@@ -11,10 +11,16 @@ export default function handleProspect({ hostSecret }) {
     const { client: hull, ship, metric } = req.hull;
 
     if (domains) {
-      const cb = new Clearbit({ hull, ship, hostSecret, metric });
+      const cb = new Clearbit({
+        hull, ship, hostSecret, metric
+      });
       const prospecting = Promise.mapSeries(domains, (domain) => {
         const params = {
-          domain, role, seniority, titles, limit
+          domain,
+          role,
+          seniority,
+          titles,
+          limit
         };
         return cb.fetchProspects(params).then((ret) => {
           return ret;
