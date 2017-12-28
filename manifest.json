@@ -1,6 +1,8 @@
 {
   "name": "Clearbit",
   "description": "Reveal anonymous users from your website and enrich them with the data you need",
+  "source": "clearbit",
+  "logo": "logo.png",
   "picture": "picture.png",
   "version": "0.3.3",
   "tags": [
