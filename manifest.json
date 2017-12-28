@@ -265,8 +265,8 @@
   "schedules" : [
     {
       "url": "/status",
-      "type": "cron",
-      "value": "*/5 * * * *"
+      "type": "interval",
+      "value": 5
     }
   ]
 }
