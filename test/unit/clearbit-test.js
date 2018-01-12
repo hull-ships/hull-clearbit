@@ -1,12 +1,15 @@
 /* eslint-env node, mocha */
+import moment from "moment";
+
 const assert = require("assert");
 const _ = require("lodash");
 const expect = require("chai").expect;
 const sinon = require("sinon");
-import moment from "moment";
+
 
 const Clearbit = require("../../server/clearbit").default;
-const { getUserTraitsFromPerson } = require("../../server/clearbit/mapping");
+const getUserTraitsFromPerson = require("../../server/clearbit/mapping").default;
+const { shouldProspectUsersFromDomain } = require("../../server/clearbit/prospect");
 const { isValidIpAddress } = require("../../server/clearbit/utils");
 
 const reveal = require("./fixtures/reveal.json");
@@ -42,22 +45,31 @@ describe("HullClearbit Client", () => {
     assert(!isValidIpAddress("192.168.0.1"), "Private Network");
   });
 
-  it("Sould directly exclude domains from prospect", (done) => {
-    const post = () => Promise.resolve({
-      pagination: {},
-      aggregations: {
-        without_email: { doc_count: 0 },
-        by_source: { buckets: [] }
-      }
-    });
-    const cb = new Clearbit({ ship: { private_settings: {} }, hull: { post } });
+  it("Should directly exclude domains from prospect", (done) => {
+    const hull = {
+      post: () => Promise.resolve({
+        pagination: {},
+        aggregations: {
+          without_email: { doc_count: 0 },
+          by_source: { buckets: [] }
+        }
+      })
+    };
+    const private_settings = {};
+    const cb = new Clearbit({ ship: { private_settings }, hull });
     const domains = ["hull.io", "google.com", "hotmail.com"];
 
-    Promise.all(domains.map(cb.shouldProspectUsersFromDomain.bind(cb))).then(([hull_io, google_com, hotmail_com]) => {
-      assert(hull_io);
-      assert(!google_com);
-      assert(!hotmail_com);
-    }).then(done, done);
+    Promise.all(domains.map(domain => shouldProspectUsersFromDomain({
+      domain,
+      hull,
+      settings: private_settings
+    })))
+      .then(([hull_io, google_com, hotmail_com]) => {
+        assert(hull_io);
+        assert(!google_com);
+        assert(!hotmail_com);
+      })
+      .then(done, done);
   });
 
   describe("canEnrich function", () => {
@@ -342,35 +354,53 @@ describe("HullClearbit Client", () => {
       mock.asUser = sinon.spy(() => mock);
       return mock;
     };
-    const onMetric = sinon.spy(() => {});
 
     it("should return empty results if titles are empty", () => {
-      const cb = new Clearbit({ ship: { private_settings: {} }, hull: makeHull() });
+      const hull = makeHull();
+      const metric = {
+        increment: sinon.spy(() => {})
+      };
+      const cb = new Clearbit({
+        ship: { private_settings: {} },
+        hull,
+        metric
+      });
+
       const prospect = sinon.spy(({ role, seniority, domain }) => {
         return Promise.resolve([{ email: `${role}+${seniority}@${domain}` }]);
       });
       cb.client = {};
       cb.client.prospect = prospect;
 
-      cb.fetchProspects({ titles: [], domain: "hull.io", role: "ceo", seniority: "manager", limit: 5 }).then(result => {
+      cb.fetchProspects({
+        titles: [], domain: "hull.io", role: "ceo", seniority: "manager", limit: 5
+      }).then((result) => {
         assert.deepEqual(result, [{ email: "ceo+manager@hull.io" }]);
       });
     });
 
     it("should run prospects method 3 times", () => {
-      const hull = makeHull();
       let counter = 0;
+      const hull = makeHull();
+      const metric = {
+        increment: sinon.spy(() => {})
+      };
+      const cb = new Clearbit({
+        ship: { private_settings: {} },
+        hull,
+        metric
+      });
       const prospect = sinon.spy(() => {
         counter += 1;
         return Promise.resolve([{ email: `${counter}@email.com` }]);
       });
 
-      const cb = new Clearbit({ ship: { id: "123", private_settings: {} }, hull, onMetric });
-
       cb.client = {};
       cb.client.prospect = prospect;
 
-      cb.fetchProspects({ titles: ["veni", "vidi", "vici"], domain: "hull.io", role: "ceo", seniority: "manager", limit: 7 }).then(result => {
+      cb.fetchProspects({
+        titles: ["veni", "vidi", "vici"], domain: "hull.io", role: "ceo", seniority: "manager", limit: 7
+      }).then((result) => {
         expect(result).to.have.lengthOf(3);
 
         assert.equal(result[0].email, "1@email.com");
@@ -399,18 +429,18 @@ describe("HullClearbit Client", () => {
         assert.equal(prospect.thirdCall.args[0].limit, 5);
         assert.equal(prospect.thirdCall.args[0].email, true);
 
-        assert(onMetric.calledThrice);
-        assert.equal(onMetric.firstCall.args[0], "saveProspect");
-        assert.equal(onMetric.firstCall.args[1], 1);
-        assert.equal(onMetric.firstCall.args[2].id, "123");
+        assert(metric.increment.calledThrice);
+        assert.equal(metric.increment.firstCall.args[0], "ship.incoming.users");
+        assert.equal(metric.increment.firstCall.args[1], 1);
+        assert.equal(metric.increment.firstCall.args[2][0], "prospect");
 
-        assert.equal(onMetric.secondCall.args[0], "saveProspect");
-        assert.equal(onMetric.secondCall.args[1], 1);
-        assert.equal(onMetric.secondCall.args[2].id, "123");
+        assert.equal(metric.increment.secondCall.args[0], "ship.incoming.users");
+        assert.equal(metric.increment.secondCall.args[1], 1);
+        assert.equal(metric.increment.secondCall.args[2][0], "prospect");
 
-        assert.equal(onMetric.thirdCall.args[0], "saveProspect");
-        assert.equal(onMetric.thirdCall.args[1], 1);
-        assert.equal(onMetric.thirdCall.args[2].id, "123");
+        assert.equal(metric.increment.thirdCall.args[0], "ship.incoming.users");
+        assert.equal(metric.increment.thirdCall.args[1], 1);
+        assert.equal(metric.increment.thirdCall.args[2][0], "prospect");
 
 
         assert.equal(hull.asUser.callCount, 3);
@@ -499,7 +529,7 @@ describe("HullClearbit Client", () => {
       const cb = new Clearbit({ ship: { private_settings: {} }, hull });
       cb.logSkip = sinon.spy(() => {});
 
-      cb.prospectUsers({ domain: "gmail.com" }).then(result => {
+      cb.prospectUsers({ domain: "gmail.com" }).then((result) => {
         assert(!result);
         assert(cb.logSkip.calledOnce);
         assert.equal(cb.logSkip.firstCall.args[1], "prospector");
@@ -511,7 +541,7 @@ describe("HullClearbit Client", () => {
       const cb = new Clearbit({ ship: { private_settings: { prospect_domain: "prospect_domain" } }, hull });
       cb.logSkip = sinon.spy(() => {});
 
-      cb.prospectUsers({ prospect_domain: "gmail.com" }).then(result => {
+      cb.prospectUsers({ prospect_domain: "gmail.com" }).then((result) => {
         assert(!result);
         assert(cb.logSkip.calledOnce);
         assert.equal(cb.logSkip.firstCall.args[1], "prospector");
@@ -523,7 +553,7 @@ describe("HullClearbit Client", () => {
       const cb = new Clearbit({ ship: { private_settings: {} }, hull });
       cb.logSkip = sinon.spy(() => {});
 
-      cb.prospectUsers({ "traits_clearbit/employment_domain": "gmail.com" }).then(result => {
+      cb.prospectUsers({ "traits_clearbit/employment_domain": "gmail.com" }).then((result) => {
         assert(!result);
         assert(cb.logSkip.calledOnce);
         assert.equal(cb.logSkip.firstCall.args[1], "prospector");
@@ -614,10 +644,10 @@ describe("HullClearbit Client", () => {
       cb.fetchProspects = sinon.spy(() => {});
 
       cb.prospectUsers({ "domain": "hull.io" }, { "domain": "clearbit.com" })
-      .then(() => {
-        assert(cb.fetchProspects.calledOnce);
-        assert.equal(cb.fetchProspects.firstCall.args[0].domain, "clearbit.com");
-      });
+        .then(() => {
+          assert(cb.fetchProspects.calledOnce);
+          assert.equal(cb.fetchProspects.firstCall.args[0].domain, "clearbit.com");
+        });
     });
 
     it("should call fetchUsers method with appropriate arguments", () => {
@@ -627,18 +657,18 @@ describe("HullClearbit Client", () => {
       cb.fetchProspects = sinon.spy(() => {});
 
       cb.prospectUsers({ domain: "foo.bar" })
-      .then(() => {
-        assert.equal(hull.post.firstCall.args[1].aggs.by_source.terms.field, "traits_clearbit/source.exact");
-        assert.equal(hull.post.firstCall.args[1].query.bool.should[0].term["traits_clearbit_company/domain.exact"], "foo.bar");
-        assert.equal(hull.post.firstCall.args[1].query.bool.should[1].term["domain.exact"], "foo.bar");
-        assert.equal(hull.post.firstCall.args[0], "search/user_reports");
-        assert.equal(hull.post.firstCall.args[1].aggs.without_email.missing.field, "email");
-        assert.equal(hull.post.firstCall.args[1].search_type, "count");
+        .then(() => {
+          assert.equal(hull.post.firstCall.args[1].aggs.by_source.terms.field, "traits_clearbit/source.exact");
+          assert.equal(hull.post.firstCall.args[1].query.bool.should[0].term["traits_clearbit_company/domain.exact"], "foo.bar");
+          assert.equal(hull.post.firstCall.args[1].query.bool.should[1].term["domain.exact"], "foo.bar");
+          assert.equal(hull.post.firstCall.args[0], "search/user_reports");
+          assert.equal(hull.post.firstCall.args[1].aggs.without_email.missing.field, "email");
+          assert.equal(hull.post.firstCall.args[1].search_type, "count");
 
-        assert.equal(cb.fetchProspects.firstCall.args[0].domain, "foo.bar");
-        assert.equal(cb.fetchProspects.firstCall.args[0].limit, 3);
-        assert(cb.fetchProspects.firstCall.args[0].email);
-      });
+          assert.equal(cb.fetchProspects.firstCall.args[0].domain, "foo.bar");
+          assert.equal(cb.fetchProspects.firstCall.args[0].limit, 3);
+          assert(cb.fetchProspects.firstCall.args[0].email);
+        });
     });
 
     it("should skip user if prospect if we have known users with that domain", () => {
@@ -659,12 +689,17 @@ describe("HullClearbit Client", () => {
     it("should add to query prospect filters", () => {
       hull.post = postWithoutMatchingUsers();
 
-      const cb = new Clearbit({ ship: { private_settings: {
-        prospect_limit_count: 5,
-        prospect_filter_seniority: ["manager"],
-        prospect_filter_titles: ["veni", "vidi", "vici"],
-        prospect_filter_role: ["ceo"]
-      } }, hull });
+      const cb = new Clearbit({
+        ship: {
+          private_settings: {
+            prospect_limit_count: 5,
+            prospect_filter_seniority: ["manager"],
+            prospect_filter_titles: ["veni", "vidi", "vici"],
+            prospect_filter_role: ["ceo"]
+          }
+        },
+        hull
+      });
       cb.fetchProspects = sinon.spy(() => {});
 
       cb.prospectUsers({ domain: "foo.bar" }).then(() => {

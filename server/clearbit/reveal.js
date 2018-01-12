@@ -2,23 +2,6 @@ import _ from "lodash";
 import { isInSegments, isValidIpAddress } from "./utils";
 
 /**
- * Lookup data from Clearbit's Reveal API and save it as
- * traits on the Hull user
- * @param  {User} user - Hull User
- * @return {Promise -> ClearbitPerson}
- */
-function fetchFromReveal(user = {}, clearbit) {
-  const ip = user.last_known_ip;
-  const logger = clearbit.hull.asUser(user).logger;
-  return clearbit.client
-    .reveal({ ip })
-    .then(({ company }) => {
-      logger.info("clearbit.reveal.success", { ip, company: _.pick(company, "name", "domain") });
-      return { company };
-    });
-}
-
-/**
  * Checks if the user fullfills the right conditions to be revealed.
  * @param  {User({ last_known_ip, email })} user - A user profile
  * @return {Boolean}
@@ -53,30 +36,31 @@ export function shouldReveal(message = {}, settings = {}) {
   }
 
   // Skip if clearbit company already set
-  if (!!user["traits_clearbit_company/id"]) {
+  if (user["traits_clearbit_company/id"]) {
     return { should: false, message: "Clearbit Company ID present" };
   }
 
   // Skip if clearbit company already set on account
-  if (handle_accounts && !!account["clearbit_company/id"]) {
+  if (handle_accounts && account["clearbit_company/id"]) {
     return { should: false, message: "Clearbit Company ID present" };
   }
 
   // Skip if user has been enriched
-  if (!!user["traits_clearbit/enriched_at"]) {
+  if (user["traits_clearbit/enriched_at"]) {
     return { should: false, message: "enriched_at present" };
   }
 
   // Skip if user has been revealed
-  if (!!user["traits_clearbit/revealed_at"]) {
+  if (user["traits_clearbit/revealed_at"]) {
     return { should: false, message: "revealed_at present" };
   }
 
   return { should: true };
 }
 
-export function revealUser(user, clearbit) {
+export function revealUser(user = {}, clearbit) {
   clearbit.metric("reveal");
-  return fetchFromReveal(user, clearbit)
+  return clearbit.client
+    .reveal({ ip: user.last_known_ip })
     .then(person => (person && { source: "reveal", person }));
 }

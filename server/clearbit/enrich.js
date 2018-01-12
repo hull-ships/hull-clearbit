@@ -11,7 +11,9 @@ import { isInSegments } from "./utils";
 function getWebhookId(userId, clearbit) {
   const { hostSecret } = clearbit.settings;
   const { id, secret, organization } = clearbit.hull.configuration();
-  const claims = { ship: id, secret, organization, userId };
+  const claims = {
+    ship: id, secret, organization, userId
+  };
   return hostSecret && jwt.encode(claims, hostSecret);
 }
 
@@ -54,17 +56,9 @@ function fetchFromEnrich(user = {}, clearbit) {
     payload.webhook_url = `https://${clearbit.hostname}/clearbit-enrich?ship=${clearbit.ship.id}&id=${getWebhookId(user.id, clearbit)}`;
   }
 
-  const logger = clearbit.hull.asUser(user).logger;
-
   return clearbit.client
     .enrich(payload)
-    .then(({ person = {}, company = {} }) => {
-      logger.info("clearbit.enrich.success", {
-        person: _.pick(person, "id", "name", "email"),
-        company: _.pick(company, "id", "name", "domain")
-      });
-      return { ...person, company };
-    });
+    .then(({ person = {}, company = {} }) => ({ ...person, company }));
 }
 
 /**
@@ -125,9 +119,8 @@ export function enrichUser(user, clearbit) {
   }
 
   if (user.email) {
-    clearbit.metric("enrich");
     return fetchFromEnrich(user, clearbit)
-    .then(person => ({ source: "enrich", person }));
+      .then(person => ({ source: "enrich", person }));
   }
 
   return Promise.resolve(false);

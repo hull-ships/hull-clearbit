@@ -1,13 +1,16 @@
 {
   "name": "Clearbit",
   "description": "Reveal anonymous users from your website and enrich them with the data you need",
+  "source": "clearbit",
+  "logo": "logo.png",
   "picture": "picture.png",
-  "version": "0.2.8",
+  "version": "0.3.3",
   "tags": [
     "incoming",
     "outgoing",
     "batch",
-    "oneColumn"
+    "oneColumn",
+    "smart-notifier"
   ],
   "private_settings": [
     {
@@ -17,28 +20,25 @@
       "title": "Authentication"
     },
     {
-      "name": "api_key",
       "title": "Clearbit API Key",
+      "name": "api_key",
       "description": "Use the secret API key from https://dashboard.clearbit.com/api",
       "type": "string",
       "format": "text"
     },
+
+
     {
-      "type": "string",
-      "format": "title",
-      "name": "enrich_info",
-      "title": "Enrichment",
-      "description": "Transform the email address or domain in a person or company profile with more than 85 data points."
-    },
-    {
+      "title": "Enable Enrich API",
       "name": "enrich_enabled",
-      "title": "Enable Enrichment",
+      "description": "Transform the email address or domain in a person or company profile with more than 85 data points.",
       "type": "boolean",
       "default": true
     },
     {
-      "name": "enrich_segments",
       "title": "Enrich users belonging to one of these segments",
+      "name": "enrich_segments",
+      "description": "Specify one or more segments for which enrichment will be performed. *No one is sent if this is empty*",
       "type": "array",
       "format": "segment",
       "items": {
@@ -46,36 +46,26 @@
       },
       "default": []
     },
+
+
+
     {
-      "name": "enrich_segments_hero",
-      "type": "string",
-      "headerTemplate": "The above list of segments is a whitelist. You need to *explicitely specify one or more segments* for which enrichment shall be performed.<br>If you do not specify any segment, no user will be sent to Clearbit's API. An empty list has the same effect as disabling the feature via the checkbox.",
-      "format": "information",
-      "title": "Whitelisted Segments"
-    },
-    {
+      "title": "Reveal",
       "type": "string",
       "format": "title",
-      "name": "reveal",
-      "title": "Reveal"
+      "name": "reveal"
     },
     {
-      "type": "string",
-      "format": "information",
-      "name": "reveal_information",
-      "title": "- Precondition -",
-      "headerTemplate": "Reveal will only work with anonymous users. You need to enable **Anonymous Users** from your [Dashboard Settings](../../settings/user_settings) to store anonymous website traffic in Hull."
-    },
-    {
+      "title": "Enable Reveal API",
       "name": "reveal_enabled",
-      "title": "Enable Reveal",
-      "description": "Deprecated. Please set some revealable segments and stop relying on this checkbox - Keep it enabled for now",
+      "description": "Please set some revealable segments and stop relying on this checkbox - Keep it enabled for now",
       "type": "boolean",
       "default": false
     },
     {
+      "title": "Reveal users belonging to one of these segments",
+      "description": "Specify one or more segments to filter who will be sent to Reveal. *Every anonymous user is sent if this is empty*. We never send anyone who has identifiable information",
       "name": "reveal_segments",
-      "title": "Which user segments to send to reveal. I.E. 'at least 2 page views' - Reveals everyone if empty",
       "type": "array",
       "format": "segment",
       "items": {
@@ -84,38 +74,43 @@
       "default": []
     },
     {
+      "title": "Minimum distinct visitors from same company to trigger Prospect API",
       "name": "reveal_prospect_min_contacts",
-      "title": "Trigger Prospection - Minimum distinct visitors",
       "type": "number",
+      "description": "As soon as this number of distinct visitors from the same Company is met, the connector will run the Prospect workflow (if it's enabled)",
       "format": "range",
       "default": 1,
       "minimum": 1,
       "maximum": 10,
       "multipleOf": 1
     },
+
+
     {
-      "type": "string",
-      "format": "information",
-      "name": "reveal_trigger_prospector_info",
-      "title": "How does the trigger work?",
-      "headerTemplate": "The trigger let's you define when our connector automatically runs the Prospector workflow by defining the number of distinct users from the same IP address. As soon as this threshold is met, the connector will run the Prospect workflow if enabled."
-    },
-    {
+      "title": "Discovery",
       "type": "string",
       "format": "title",
       "name": "discovery_info",
-      "title": "Discovery",
       "description": "The Discovery API lets you search for companies that are similar to your existing customers."
     },
     {
+      "title": "Enable Discover API",
       "name": "discover_enabled",
-      "title": "Enable Discovery",
       "type": "boolean",
       "default": false
     },
     {
+      "title": "Attribute that defines the company domain",
+      "name": "discover_domain",
+      "type": "string",
+      "format": "trait",
+      "default": "domain",
+      "description": "Use this attribute as domain when fetching people from Clearbit."
+    },
+    {
       "name": "discover_segments",
-      "title": "Search for companies similar to the ones in these segments",
+      "title": "Discover companies similar to the ones in these segments",
+      "description": "Specify one or more segments to Define which companies are going to trigger new Discovery calls to find similar companies.",
       "type": "array",
       "format": "segment",
       "items": {
@@ -124,15 +119,8 @@
       "default": []
     },
     {
-      "type": "string",
-      "format": "information",
-      "name": "discover_segments_info",
-      "title": "Segmentation Tip",
-      "headerTemplate": "The connector uses the segments as whitelist to tigger the Clearbit flow for finding companies with a similar profile. We recommend to use only segments that describe your targeted company profiles."
-    },
-    {
       "name": "discover_limit_count",
-      "title": "Maximum number of companies to fetch",
+      "title": "Maximum number of companies to fetch for each new company triggerering Discovery",
       "type": "number",
       "format": "range",
       "default": 5,
@@ -140,6 +128,9 @@
       "maximum": 10,
       "multipleOf": 1
     },
+
+
+
     {
       "type": "string",
       "format": "title",
@@ -152,9 +143,12 @@
       "type": "boolean",
       "default": false
     },
+
+
+
     {
       "name": "handle_accounts",
-      "title": "Use Accounts Feature (Beta)",
+      "title": "Use Accounts Feature",
       "type": "boolean",
       "default": false,
       "format": "hidden"
@@ -169,20 +163,14 @@
     },
     {
       "name": "prospect_segments",
-      "title": "Fetch prospects for companies in these segments",
+      "title": "Prospect companies for these Segments",
+      "description": "Select one or more segments. When Users belonging to an Account enter the segments listed above, The Clearbit Prospector API will be called to find leads for this Account that match your targeted profiles.",
       "type": "array",
       "format": "segment",
       "items": {
         "type": "string"
       },
       "default": []
-    },
-    {
-      "type": "string",
-      "format": "information",
-      "name": "prospect_segments_info",
-      "title": "Segmentation Tip",
-      "headerTemplate": "The connector uses the segments as whitelist to tigger the Clearbit flow for finding leads within accounts that match your targeted profiles. We recommend to use only segments that describe your targeted company profiles."
     },
     {
       "name": "prospect_limit_count",
@@ -198,7 +186,7 @@
       "type": "string",
       "format": "information",
       "name": "prospect_filter_info",
-      "title": "> DESCRIBE YOUR IDEAL LEAD <",
+      "title": "Describe Lead Search Criteria",
       "headerTemplate": "Search by role, seniority or title to identify your ideal prospects."
     },
     {
@@ -273,7 +261,14 @@
   "ui": false,
   "subscriptions": [
     {
-      "url": "/notify"
+      "url": "/smart-notifier"
+    }
+  ],
+  "schedules" : [
+    {
+      "url": "/status",
+      "type": "interval",
+      "value": 5
     }
   ]
 }

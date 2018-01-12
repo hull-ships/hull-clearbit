@@ -3,6 +3,7 @@ bower_components
 stats.json
 .DS_Store
 dist
+npm-debug.log*
 npm-debug.log
 .idea
 .env*
