@@ -3,7 +3,7 @@ const assert = require("assert");
 const sinon = require("sinon");
 const moment = require("moment");
 const Clearbit = require("../../server/clearbit").default;
-const userUpdateLogic = require("../../server/actions/user-update-logic").default;
+const userUpdateLogic = require("../../server/lib/user-update-logic").default;
 
 describe("User Update Logic", () => {
   const makeHull = () => {
@@ -92,7 +92,7 @@ describe("User Update Logic", () => {
     });
     const message = {
       user: {
-        "last_known_ip": "1.2.3.4",
+        last_known_ip: "1.2.3.4",
         "traits_clearbit_company/id": "1234"
       },
       segments: [{ id: "1" }]
@@ -113,8 +113,8 @@ describe("User Update Logic", () => {
     });
     const message = {
       user: {
-        "last_known_ip": "1.2.3.4",
-        "email": "foo@bar.com",
+        last_known_ip: "1.2.3.4",
+        email: "foo@bar.com",
         "traits_clearbit/id": "1234"
       },
       segments: [{ id: "1" }]
@@ -135,8 +135,8 @@ describe("User Update Logic", () => {
     });
     const message = {
       user: {
-        "last_known_ip": "1.2.3.4",
-        "email": "foo@bar.com",
+        last_known_ip: "1.2.3.4",
+        email: "foo@bar.com",
         "traits_clearbit/enriched_at": "1234"
       },
       segments: [{ id: "1" }]
@@ -157,8 +157,8 @@ describe("User Update Logic", () => {
     });
     const message = {
       user: {
-        "last_known_ip": "1.2.3.4",
-        "email": "foo@bar.com",
+        last_known_ip: "1.2.3.4",
+        email: "foo@bar.com",
         "traits_clearbit/revealed_at": moment().format(),
         "traits_clearbit_company/id": "1234"
       },
@@ -180,8 +180,8 @@ describe("User Update Logic", () => {
     });
     const message = {
       user: {
-        "last_known_ip": "1.2.3.4",
-        "email": "foo@bar.com",
+        last_known_ip: "1.2.3.4",
+        email: "foo@bar.com",
         "traits_clearbit/enriched_at": moment().format(),
         "traits_clearbit/revealed_at": moment().format(),
         "traits_clearbit_company/id": "1234"

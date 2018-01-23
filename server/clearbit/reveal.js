@@ -32,7 +32,10 @@ export function shouldReveal(message = {}, settings = {}) {
 
   // Skip if no segments match
   if (!_.isEmpty(reveal_segments) && !isInSegments(segments, reveal_segments)) {
-    return { should: false, message: "Reveal segments are defined but user isn't in any of them" };
+    return {
+      should: false,
+      message: "Reveal segments are defined but user isn't in any of them"
+    };
   }
 
   // Skip if clearbit company already set
@@ -62,5 +65,5 @@ export function revealUser(user = {}, clearbit) {
   clearbit.metric("reveal");
   return clearbit.client
     .reveal({ ip: user.last_known_ip })
-    .then(person => (person && { source: "reveal", person }));
+    .then(person => person && { source: "reveal", person });
 }

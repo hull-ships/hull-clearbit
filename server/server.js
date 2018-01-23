@@ -1,85 +1,43 @@
 import bodyParser from "body-parser";
-import { notifHandler, smartNotifierHandler } from "hull/lib/utils";
-import Hull from "hull";
+import express from "express";
+import { errorHandler } from "hull-connector";
+import {
+  webhookHandler,
+  prospectHandler,
+  statusHandler,
+  batchHandler,
+  notifyHandler
+} from "./handlers";
 
-import devMode from "./dev-mode";
-import handleProspect from "./actions/prospect";
-import handleUserUpdate from "./actions/user-update";
-import handleBatchUpdate from "./actions/batch-update";
-import handleClearbitWebhook from "./actions/clearbit-webhook";
-import statusCheck from "./actions/status";
+function extractToken(req, res, next) {
+  req.hull = req.hull || {};
+  const token = req.query.id;
+  req.hull.token = token;
+  return next();
+}
 
-module.exports = function Server(app, options = {}) {
-  const { hostSecret } = options;
+export default function Server(options = {}) {
+  const app = express();
+  const { Hull } = options;
 
-  if (options.devMode) app.use(devMode());
+  app.use(extractToken);
 
-  app.post("/clearbit", bodyParser.json(), (req, res, next) => {
-    Hull.logger.debug("clearbit.webhook.payload", {
-      query: req.query,
-      body: req.body
-    });
-    next();
-  }, handleClearbitWebhook(options));
+  const connector = new Hull.Connector(options);
 
-  app.post(
-    "/clearbit-enrich",
-    bodyParser.json(),
-    handleClearbitWebhook(options)
-  );
+  if (options.devMode) {
+    const { devMode } = require("hull-connector"); // eslint-disable-line global-require
+    devMode(app, options);
+  }
+  connector.setupApp(app);
 
-  app.post("/batch", notifHandler({
-    hostSecret,
-    userHandlerOptions: {
-      groupTraits: false,
-      maxSize: 100,
-      maxTime: 120
-    },
-    handlers: {
-      "user:update": handleBatchUpdate(options)
-    }
-  }));
+  app.post("/smart-notifier", notifyHandler(options));
+  app.post("/clearbit-enrich", bodyParser.json(), webhookHandler(options));
+  app.post("/prospect", bodyParser.urlencoded(), prospectHandler(options));
+  app.post("/batch", batchHandler(options));
+  app.all("/status", statusHandler);
 
-  app.post(
-    "/prospect",
-    bodyParser.urlencoded(),
-    handleProspect(options)
-  );
-
-  app.post("/notify", notifHandler({
-    userHandlerOptions: {
-      groupTraits: false,
-      maxSize: 1,
-      maxTime: 1
-    },
-    handlers: {
-      "user:update": handleUserUpdate(options)
-    }
-  }));
-
-  app.post("/smart-notifier", smartNotifierHandler({
-    handlers: {
-      "user:update": handleUserUpdate(options)
-    }
-  }));
-
-  app.all("/status", statusCheck);
-
-  app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
-    if (err) {
-      const data = {
-        status: err.status,
-        method: req.method,
-        headers: req.headers,
-        url: req.url,
-        params: req.params,
-        body: req.body
-      };
-      console.log("Error ----------------", err.message, err.status, err.stack, data);
-    }
-
-    return res.status(err.status || 500).send({ message: err.message });
-  });
-
-  return app;
-};
+  // Error Handler
+  app.use(errorHandler);
+  console.debug("Starting on port", options.port)
+  return connector.startApp(app);
+}

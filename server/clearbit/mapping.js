@@ -16,44 +16,56 @@ function getMapping(key) {
  * @param  {mappings} mappings - mappings to user
  * @return {Object}
  */
-export default function getUserTraitsFromPerson({ user = {}, person = {} }, mappingName) {
+export default function getUserTraitsFromPerson(
+  { user = {}, person = {} },
+  mappingName
+) {
   const mappings = getMapping(mappingName);
-  const mapping = _.reduce(mappings, (map, key, val) => {
-    return Object.assign(map, {
-      [val]: {
-        key,
-        transform: (v) => {
-          // Replace the key to build an accessor compatible with lodash's _.get
-          // address.city -> address_city
-          // name -> name
-          // clearbit/foo -> clearbit.foo
-          const accessor = key.replace(".", "_").replace("/", ".");
-          const userVal = _.get(user, accessor);
+  const mapping = _.reduce(
+    mappings,
+    (map, key, val) => {
+      return Object.assign(map, {
+        [val]: {
+          key,
+          transform: v => {
+            // Replace the key to build an accessor compatible with lodash's _.get
+            // address.city -> address_city
+            // name -> name
+            // clearbit/foo -> clearbit.foo
+            const accessor = key.replace(".", "_").replace("/", ".");
+            const userVal = _.get(user, accessor);
 
-          // Return early is undefined
-          if (_.isUndefined(v)) return undefined;
+            // Return early is undefined
+            if (_.isUndefined(v)) return undefined;
 
-          // Only return the value if :
-          // - it's a user property and it's undefined
-          if (_.isUndefined(userVal)) return v;
+            // Only return the value if :
+            // - it's a user property and it's undefined
+            if (_.isUndefined(userVal)) return v;
 
-          // - it's a clearbit trait and it has changed
-          if (key.match(/^clearbit/) && userVal !== v) {
-            return v;
+            // - it's a clearbit trait and it has changed
+            if (key.match(/^clearbit/) && userVal !== v) {
+              return v;
+            }
+
+            return undefined;
           }
-
-          return undefined;
         }
-      }
-    });
-  }, {});
-
+      });
+    },
+    {}
+  );
 
   // Use setIfNull for top level fields
-  const traits = _.reduce(ObjectMapper.merge(person, {}, mapping), (ts, value, key) => {
-    const val = key.match(/^clearbit/) ? value : { operation: "setIfNull", value };
-    return { ...ts, [key]: val };
-  }, {});
+  const traits = _.reduce(
+    ObjectMapper.merge(person, {}, mapping),
+    (ts, value, key) => {
+      const val = key.match(/^clearbit/)
+        ? value
+        : { operation: "setIfNull", value };
+      return { ...ts, [key]: val };
+    },
+    {}
+  );
 
   return _.omitBy(traits, _.isNil);
 }

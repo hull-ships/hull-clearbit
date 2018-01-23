@@ -5,16 +5,17 @@ import Clearbit from "../clearbit";
 
 export default function handleProspect({ hostSecret }) {
   return (req, res) => {
-    const {
-      domains, role, seniority, titles = [], limit
-    } = req.body;
+    const { domains, role, seniority, titles = [], limit } = req.body;
     const { client: hull, ship, metric } = req.hull;
 
     if (domains) {
       const cb = new Clearbit({
-        hull, ship, hostSecret, metric
+        hull,
+        ship,
+        hostSecret,
+        metric
       });
-      const prospecting = Promise.mapSeries(domains, (domain) => {
+      const prospecting = Promise.mapSeries(domains, domain => {
         const params = {
           domain,
           role,
@@ -22,13 +23,13 @@ export default function handleProspect({ hostSecret }) {
           titles,
           limit
         };
-        return cb.fetchProspects(params).then((ret) => {
+        return cb.fetchProspects(params).then(ret => {
           return ret;
         });
       });
 
       Promise.all(prospecting)
-        .then((results) => {
+        .then(results => {
           const resData = _.flatten(results);
           // We need to check in case the request timed out earlier.
           // It seems that one of the middleware components is setting headers and writing into the
@@ -39,7 +40,7 @@ export default function handleProspect({ hostSecret }) {
             res.end();
           }
         })
-        .catch((error) => {
+        .catch(error => {
           console.warn("Error prospecting...", error);
           res.status(500).json({ error: error.message });
         });
