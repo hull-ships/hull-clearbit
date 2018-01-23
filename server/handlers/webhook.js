@@ -1,14 +1,22 @@
 import _ from "lodash";
 import Clearbit from "../clearbit";
 
-export default function handleWebhook({ hostSecret }) {
+export default function handleWebhook({ hostSecret, Hull }) {
   return (req, res) => {
+    Hull.logger.debug("clearbit.webhook.payload", {
+      query: req.query,
+      body: req.body
+    });
     const { status, type, body } = req.body;
     const { client: hull, ship, metric } = req.hull;
     const { hostname } = req;
     const { userId } = req.hull.config;
 
-    if ((type === "person" || type === "person_company") && status === 200 && userId) {
+    if (
+      (type === "person" || type === "person_company") &&
+      status === 200 &&
+      userId
+    ) {
       let person;
 
       if (type === "person") {
@@ -18,7 +26,9 @@ export default function handleWebhook({ hostSecret }) {
       }
 
       if (person) {
-        hull.asUser({ id: userId }).logger.info("incoming.user.start", { source: "webhook" });
+        hull
+          .asUser({ id: userId })
+          .logger.info("incoming.user.start", { source: "webhook" });
         const cb = new Clearbit({
           hull,
           ship,

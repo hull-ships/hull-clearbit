@@ -12,7 +12,10 @@ function getWebhookId(userId, clearbit) {
   const { hostSecret } = clearbit.settings;
   const { id, secret, organization } = clearbit.hull.configuration();
   const claims = {
-    ship: id, secret, organization, userId
+    ship: id,
+    secret,
+    organization,
+    userId
   };
   return hostSecret && jwt.encode(claims, hostSecret);
 }
@@ -53,7 +56,9 @@ function fetchFromEnrich(user = {}, clearbit) {
   }
 
   if (clearbit.hostname) {
-    payload.webhook_url = `https://${clearbit.hostname}/clearbit-enrich?ship=${clearbit.ship.id}&id=${getWebhookId(user.id, clearbit)}`;
+    payload.webhook_url = `https://${clearbit.hostname}/clearbit-enrich?ship=${
+      clearbit.ship.id
+    }&id=${getWebhookId(user.id, clearbit)}`;
   }
 
   return clearbit.client
@@ -80,10 +85,7 @@ export function canEnrich(user = {}, settings = {}) {
  */
 export function shouldEnrich(message = {}, settings = {}) {
   const { user = {}, segments = [] } = message;
-  const {
-    enrich_segments = [],
-    enrich_enabled
-  } = settings;
+  const { enrich_segments = [], enrich_enabled } = settings;
 
   // Skip if enrich is disabled
   if (!enrich_enabled) {
@@ -92,7 +94,10 @@ export function shouldEnrich(message = {}, settings = {}) {
 
   // Skip if no segments match
   if (!_.isEmpty(enrich_segments) && !isInSegments(segments, enrich_segments)) {
-    return { should: false, message: "Enrich Segments are defined but User isn't in any of them" };
+    return {
+      should: false,
+      message: "Enrich Segments are defined but User isn't in any of them"
+    };
   }
 
   // Skip if we are waiting for the webhook
@@ -119,8 +124,10 @@ export function enrichUser(user, clearbit) {
   }
 
   if (user.email) {
-    return fetchFromEnrich(user, clearbit)
-      .then(person => ({ source: "enrich", person }));
+    return fetchFromEnrich(user, clearbit).then(person => ({
+      source: "enrich",
+      person
+    }));
   }
 
   return Promise.resolve(false);

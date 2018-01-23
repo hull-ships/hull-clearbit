@@ -7,13 +7,7 @@ import excludes from "../excludes";
  * @param  {User({ email })} user - A user profile
  * @return {Boolean}
  */
-export function canProspect(
-  {
-    user = {},
-    account = {}
-  },
-  settings = {}
-) {
+export function canProspect({ user = {}, account = {} }, settings = {}) {
   // Merge enrich and prospect segments lists
   // To check if the user matches one of them
   const { prospect_domain = "domain" } = settings;
@@ -26,13 +20,9 @@ export function canProspect(
   return true;
 }
 
-
 export function shouldProspect(message = {}, settings = {}) {
   const { user = {}, account = {}, segments = [] } = message;
-  const {
-    prospect_segments = [],
-    prospect_enabled
-  } = settings;
+  const { prospect_segments = [], prospect_enabled } = settings;
 
   // Skip if prospect is disabled
   if (!prospect_enabled) {
@@ -42,7 +32,6 @@ export function shouldProspect(message = {}, settings = {}) {
   if (!isInSegments(segments, prospect_segments)) {
     return { should: false, message: "user isn't in any prospectable segment" };
   }
-
 
   // Only prospect anonymous users
   if (user.email) {
@@ -68,11 +57,11 @@ export function shouldProspect(message = {}, settings = {}) {
 }
 
 /**
-   * Check if we already have known users from that domain
-   * or if we have enough revealed visitors to prospect
-   * @param  {Object(user)} payload - Hull user object
-   * @return {Promise -> Bool}
-   */
+ * Check if we already have known users from that domain
+ * or if we have enough revealed visitors to prospect
+ * @param  {Object(user)} payload - Hull user object
+ * @return {Promise -> Bool}
+ */
 export function shouldProspectUsersFromDomain({ domain, hull, settings }) {
   if (_.includes(excludes.domains, domain)) {
     return Promise.resolve(false);
@@ -102,29 +91,35 @@ export function shouldProspectUsersFromDomain({ domain, hull, settings }) {
 
   const params = { query, aggs, search_type: "count" };
 
-  return hull.post("search/user_reports", params).then(({ pagination, aggregations }) => {
-    const { total } = pagination;
-    const anonymous = aggregations.without_email.doc_count;
-    const bySource = _.reduce(aggregations.by_source.buckets, (bs, bkt) => {
-      return { ...bs, [bkt.key]: bkt.doc_count };
-    }, {});
+  return hull
+    .post("search/user_reports", params)
+    .then(({ pagination, aggregations }) => {
+      const { total } = pagination;
+      const anonymous = aggregations.without_email.doc_count;
+      const bySource = _.reduce(
+        aggregations.by_source.buckets,
+        (bs, bkt) => {
+          return { ...bs, [bkt.key]: bkt.doc_count };
+        },
+        {}
+      );
 
       // Skip prospect if we have known users with that domain
-    if (total > 0 && total !== anonymous) {
-      return false;
-    }
+      if (total > 0 && total !== anonymous) {
+        return false;
+      }
 
-    // Prospect if at least one of those anonymous has been discovered
-    if (bySource.discover && bySource.discover > 0) {
+      // Prospect if at least one of those anonymous has been discovered
+      if (bySource.discover && bySource.discover > 0) {
+        return true;
+      }
+
+      const min_contacts = settings.reveal_prospect_min_contacts || 1;
+
+      if (bySource.reveal && anonymous >= min_contacts) {
+        return true;
+      }
+
       return true;
-    }
-
-    const min_contacts = settings.reveal_prospect_min_contacts || 1;
-
-    if (bySource.reveal && anonymous >= min_contacts) {
-      return true;
-    }
-
-    return true;
-  });
+    });
 }

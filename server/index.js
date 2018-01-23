@@ -1,39 +1,37 @@
+import { dotEnv } from "hull-connector";
 import Hull from "hull";
-import { Cache } from "hull/lib/infra";
-import express from "express";
-
 import server from "./server";
+import pkg from "../package.json";
 
-if (process.env.LOG_LEVEL) {
-  Hull.logger.transports.console.level = process.env.LOG_LEVEL;
-}
+dotEnv();
 
-const cache = new Cache({
-  store: "memory",
-  max: process.env.SHIP_CACHE_MAX || 100,
-  ttl: process.env.SHIP_CACHE_TTL || 60
-});
-
-function extractToken(req, res, next) {
-  req.hull = req.hull || {};
-  const token = req.query.id;
-  req.hull.token = token;
-  return next();
-}
+const {
+  SECRET = "1234",
+  NODE_ENV,
+  OVERRIDE_FIREHOSE_URL,
+  LOG_LEVEL,
+  PORT = 8082
+} = process.env;
 
 const options = {
-  hostSecret: process.env.SECRET || "1234",
-  devMode: process.env.NODE_ENV === "development",
-  port: process.env.PORT || 8082,
-  clientConfig: {
-    firehoseUrl: process.env.OVERRIDE_FIREHOSE_URL
+  hostSecret: SECRET,
+  devMode: NODE_ENV === "development",
+  port: PORT,
+  ngrok: {
+    subdomain: pkg.name
   },
-  cache
+  Hull,
+  clientConfig: {
+    firehoseUrl: OVERRIDE_FIREHOSE_URL
+  }
 };
 
-const connector = new Hull.Connector(options);
-const app = express();
-app.use(extractToken);
-connector.setupApp(app);
-server(app, options);
-connector.startApp(app);
+if (LOG_LEVEL) {
+  Hull.logger.transports.console.level = LOG_LEVEL;
+}
+
+Hull.logger.transports.console.json = true;
+Hull.logger.debug(`${pkg.name}.boot`);
+
+server(options);
+Hull.logger.debug(`${pkg.name}.started`, { port: PORT });

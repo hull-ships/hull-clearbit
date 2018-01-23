@@ -24,7 +24,7 @@ The Clearbit connector supports to `create users`, `add traits` and `update trai
 
 ## Find Your Clearbit API Key
 
-You can find your key in your Clearbit dashboard under the API menu link or by navigating to [https://dashboard.clearbit.com/api](https://dashboard.clearbit.com/api). Clearbit provides two keys, a *secret API key* and a *publishable API key*. Use the **secret API key** to integrate Hull with Clearbit:
+You can find your key in your Clearbit dashboard under the API menu link or by navigating to [https://dashboard.clearbit.com/api](https://dashboard.clearbit.com/api). Clearbit provides two keys, a _secret API key_ and a _publishable API key_. Use the **secret API key** to integrate Hull with Clearbit:
 ![Find your Clearbit API Key](./docs/clearbitapi01.png)
 
 ## Enrichment
@@ -39,7 +39,7 @@ Enrichment is enabled by default but will only result in API calls to Clearbit�
 ![Enrichment 2](./docs/enrichment02.png)
 
 **Which users do get enriched?**
-The connector only enriches users who have an *email address* *and have never been enriched before*. The connector sets the trait `clearbit/enriched_at` with the value of the timestamp if the user has been sent to Clearbit’s API.
+The connector only enriches users who have an _email address_ _and have never been enriched before_. The connector sets the trait `clearbit/enriched_at` with the value of the timestamp if the user has been sent to Clearbit’s API.
 
 ![Enrichment 3](./docs/enrichment03.png)
 
@@ -49,7 +49,7 @@ Note: The connector will perform the enrich operation exactly only once, even if
 The connector attempts the enrichment as soon as the user enters one of the whitelisted segments. Please note that the segment needs to exist before the user gets created, otherwise this automatic enrichment will not be performed.
 You can always enforce the enrichment by selecting one or multiple users on the users page and send them to your Clearbit connector via the “Actions” button. If you perform this route, the whitelisted segments will be ignored and all users that have an email address and no trait `clearbit/enriched_at` will be processed.
 
-Please note that users get only enriched ***exactly once***. Even if this enrichment does not yield any data, the Connector will not run another enrichment.
+Please note that users get only enriched **_exactly once_**. Even if this enrichment does not yield any data, the Connector will not run another enrichment.
 
 **How long does it take to enrich users?**
 In most cases this process will take no longer than a couple of minutes. In some cases the Clearbit API marks a lookup as pending, which results in a delay of processing for up to an hour.
@@ -62,7 +62,7 @@ Reveal will turn anonymous users in one or more of the segments you listed into 
 
 Reveal provides you a company profile by performing a reverse IP lookup which provides your sales team the account information, but you can go one step further by automating the process to find prospects for this account. More details, see "How does the Trigger for Prospection work?".
 
-**How to enable Anonymous Users for your organization?** 
+**How to enable Anonymous Users for your organization?**
 You can enable anonymous users or check the feature status within your **Organization Settings**. To access your organization settings, click on Settings in the main menu bar and select the (User) Settings from the menu to the left:
 ![Reveal 2](./docs/reveal02.png)
 
@@ -86,11 +86,11 @@ While the general settings control the overall behavior of the connector, you ca
 ![Prospector 2](./docs/prospector02.png)
 
 **When does the Prospector workflow run?**
-The Prospector workflow gets triggered exactly once per user, if ***all*** of the following conditions are met:
+The Prospector workflow gets triggered exactly once per user, if **_all_** of the following conditions are met:
 
-- The user/account does not have the attribute `clearbit/prospected_at` set.
-- There are no named users in your Hull organization with the same domain.
-- The number of anonymous users with the same company domain has reached the threshold defined via the trigger in the [Reveal](#Reveal) configuration.
+* The user/account does not have the attribute `clearbit/prospected_at` set.
+* There are no named users in your Hull organization with the same domain.
+* The number of anonymous users with the same company domain has reached the threshold defined via the trigger in the [Reveal](#Reveal) configuration.
 
 **How do I know if the Prospector workflow has been executed?**
 The Clearbit Connector sets the attribute `prospected_at` within the Clearbit attribute group that contains the timestamp when prospector has been executed.
@@ -114,5 +114,5 @@ Discovery will search for companies matching your target profile. In Hull you de
 **When does the Discover Workflow run?**
 The workflow runs as when a new user/account enters one of the whitelisted segments, but only if all of the following conditions are met:
 
-- The user has not been created by the prospector workflow (attribute `clearbit/prospected_at`  is unknown)
-- The user has not been created by the discover workflow (attribute `clearbit/discovered_at` is unknown)
+* The user has not been created by the prospector workflow (attribute `clearbit/prospected_at` is unknown)
+* The user has not been created by the discover workflow (attribute `clearbit/discovered_at` is unknown)

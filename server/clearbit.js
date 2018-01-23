@@ -4,7 +4,11 @@ import Promise from "bluebird";
 import Client from "./clearbit/client";
 
 import { isInSegments, getDomain, now } from "./clearbit/utils";
-import { canProspect, shouldProspect, shouldProspectUsersFromDomain } from "./clearbit/prospect";
+import {
+  canProspect,
+  shouldProspect,
+  shouldProspectUsersFromDomain
+} from "./clearbit/prospect";
 import { canEnrich, shouldEnrich, enrichUser } from "./clearbit/enrich";
 import { canReveal, shouldReveal, revealUser } from "./clearbit/reveal";
 import getUserTraitsFromPerson from "./clearbit/mapping";
@@ -12,9 +16,7 @@ import getUserTraitsFromPerson from "./clearbit/mapping";
 const FILTERED_ERRORS = ["unknown_ip"];
 
 export default class Clearbit {
-  constructor({
-    hull, ship, stream = false, hostSecret, metric, hostname
-  }) {
+  constructor({ hull, ship, stream = false, hostSecret, metric, hostname }) {
     this.ship = ship;
 
     if (!ship.private_settings) {
@@ -41,9 +43,12 @@ export default class Clearbit {
   }
 
   logSkip = (asUser, action, reason, additionalData = {}) => {
-    asUser.logger.info("outgoing.user.skip", { reason, action, additionalData });
+    asUser.logger.info("outgoing.user.skip", {
+      reason,
+      action,
+      additionalData
+    });
   };
-
 
   /** *********************************************************
    * Clearbit Enrichment
@@ -86,12 +91,17 @@ export default class Clearbit {
   }
 
   enrichUser(user) {
-    const asUser = this.hull.asUser(_.pick(user, ["id", "external_id", "email"]));
-    const logError = (error) => {
-      asUser.logger.info("outgoing.user.error", { errors: error, method: "revealUser" });
+    const asUser = this.hull.asUser(
+      _.pick(user, ["id", "external_id", "email"])
+    );
+    const logError = error => {
+      asUser.logger.info("outgoing.user.error", {
+        errors: error,
+        method: "revealUser"
+      });
     };
     return enrichUser(user, this)
-      .then((response) => {
+      .then(response => {
         if (!response || !response.source) return false;
         const { person, source } = response;
         return this.saveUser(user, person, { source });
@@ -100,16 +110,21 @@ export default class Clearbit {
   }
 
   revealUser(user = {}) {
-    const asUser = this.hull.asUser(_.pick(user, ["id", "external_id", "email"]));
+    const asUser = this.hull.asUser(
+      _.pick(user, ["id", "external_id", "email"])
+    );
     const { last_known_ip } = user;
-    const logError = (error) => {
+    const logError = error => {
       // we filter error messages
       if (!_.includes(FILTERED_ERRORS, error.type)) {
-        asUser.logger.info("outgoing.user.error", { errors: error, method: "revealUser" });
+        asUser.logger.info("outgoing.user.error", {
+          errors: error,
+          method: "revealUser"
+        });
       }
     };
     return revealUser(user, this)
-      .then((response) => {
+      .then(response => {
         if (!response || !response.source) return false;
         const { person = {}, source } = response;
         const { company } = person;
@@ -153,15 +168,15 @@ export default class Clearbit {
 
     const asUser = this.hull.asUser(ident);
 
-    const traits = getUserTraitsFromPerson(
-      { user, person },
-      "Person"
-    );
+    const traits = getUserTraitsFromPerson({ user, person }, "Person");
 
     traits["clearbit/fetched_at"] = { value: now(), operation: "setIfNull" };
 
     if (source) {
-      traits[`clearbit/${source}ed_at`] = { value: now(), operation: "setIfNull" };
+      traits[`clearbit/${source}ed_at`] = {
+        value: now(),
+        operation: "setIfNull"
+      };
       traits["clearbit/source"] = { value: source, operation: "setIfNull" };
     }
 
@@ -172,26 +187,33 @@ export default class Clearbit {
     if (this.settings.handle_accounts) {
       const all_traits = { user: {}, account: {} };
 
-      _.map(traits, (v, k) => {
-        const [group, trait] = k.split("/");
-        if (group === "clearbit_company") {
-          all_traits.account[`clearbit/${trait}`] = v;
-        } else {
-          all_traits.user[k] = v;
-        }
-      }, {});
+      _.map(
+        traits,
+        (v, k) => {
+          const [group, trait] = k.split("/");
+          if (group === "clearbit_company") {
+            all_traits.account[`clearbit/${trait}`] = v;
+          } else {
+            all_traits.user[k] = v;
+          }
+        },
+        {}
+      );
 
       const domain = all_traits.account["clearbit/domain"];
 
       // Set top level traits
       const top_level_traits = {
-        "name": "name",
-        "domain": "domain",
+        name: "name",
+        domain: "domain"
       };
       _.forIn(top_level_traits, (clearbit_name, top_level_name) => {
         const value = all_traits.account[`clearbit/${clearbit_name}`];
         if (value) {
-          _.set(all_traits.account, top_level_name, { value, operation: "setIfNull" });
+          _.set(all_traits.account, top_level_name, {
+            value,
+            operation: "setIfNull"
+          });
         }
       });
 
@@ -211,16 +233,13 @@ export default class Clearbit {
 
     return Promise.all(promises).then(() => {
       console.log("Logging success", JSON.stringify({ options, traits }));
-      this
-        .hull
+      this.hull
         .asUser(userIdent)
-        .logger
-        .info("outgoing.user.success", { ...options, traits });
+        .logger.info("outgoing.user.success", { ...options, traits });
 
       return { traits, user, person };
     });
   }
-
 
   /** *********************************************************
    * Clearbit Discovery
@@ -236,18 +255,26 @@ export default class Clearbit {
       discover_enabled,
       discover_segments = [],
       discover_domain = "domain"
-    } = this.settings || {};
+    } =
+      this.settings || {};
     const domain = getDomain(user, account, discover_domain);
 
     const asUser = this.hull.asUser(user);
 
     if (!this.client || !discover_enabled || _.isEmpty(discover_segments)) {
-      this.logSkip(asUser, "discover", "Discover not enabled", { discover_segments });
+      this.logSkip(asUser, "discover", "Discover not enabled", {
+        discover_segments
+      });
       return false;
     }
 
     if (!domain) {
-      this.logSkip(asUser, "discover", "No 'domain' in User. We need a domain", { domain });
+      this.logSkip(
+        asUser,
+        "discover",
+        "No 'domain' in User. We need a domain",
+        { domain }
+      );
       return false;
     }
 
@@ -262,12 +289,21 @@ export default class Clearbit {
     }
 
     if (user["traits_clearbit/discovered_from_domain"]) {
-      this.logSkip(asUser, "discover", "User is himself a discovery. Prevent Loops");
+      this.logSkip(
+        asUser,
+        "discover",
+        "User is himself a discovery. Prevent Loops"
+      );
       return false;
     }
 
     if (!isInSegments(segments, discover_segments)) {
-      this.logSkip(asUser, "discover", "User is not in a discoverable segment", { discover_segments });
+      this.logSkip(
+        asUser,
+        "discover",
+        "User is not in a discoverable segment",
+        { discover_segments }
+      );
       return false;
     }
 
@@ -288,48 +324,76 @@ export default class Clearbit {
     const query = { similar: domain };
 
     // Let's not call the Discovery API if we have already done it before...
-    return this.companiesDiscoveredFromDomain(domain).then(({ pagination }) => {
-      if (pagination && pagination.total > 0) {
-        this.hull.logger.debug("domain.discover.skip", { reason: "domain already used for discovery !", domain });
-        return false;
-      }
-
-      return this.client.discover({ query, limit }).then(({ results = [] }) => {
-        const discovered_similar_companies_at = user["traits_clearbit/discovered_similar_companies_at"];
-        if (user.id && !discovered_similar_companies_at) {
-          this.hull.asUser(user.id).traits({
-            discovered_similar_companies_at: now()
-          }, { source: "clearbit", sync: true });
+    return this.companiesDiscoveredFromDomain(domain)
+      .then(({ pagination }) => {
+        if (pagination && pagination.total > 0) {
+          this.hull.logger.debug("domain.discover.skip", {
+            reason: "domain already used for discovery !",
+            domain
+          });
+          return false;
         }
 
-        return this.saveDiscoveredCompanies(results, domain);
-      });
-    })
-      .catch((error) => {
-        this.hull.asUser(_.pick(user, ["id", "external_id", "email"]))
-          .logger.info("outgoing.user.error", { errors: _.get(error, "message", error) });
+        return this.client
+          .discover({ query, limit })
+          .then(({ results = [] }) => {
+            const discovered_similar_companies_at =
+              user["traits_clearbit/discovered_similar_companies_at"];
+            if (user.id && !discovered_similar_companies_at) {
+              this.hull.asUser(user.id).traits(
+                {
+                  discovered_similar_companies_at: now()
+                },
+                { source: "clearbit", sync: true }
+              );
+            }
+
+            return this.saveDiscoveredCompanies(results, domain);
+          });
+      })
+      .catch(error => {
+        this.hull
+          .asUser(_.pick(user, ["id", "external_id", "email"]))
+          .logger.info("outgoing.user.error", {
+            errors: _.get(error, "message", error)
+          });
       });
   }
 
   companiesDiscoveredFromDomain(domain) {
     // TODO -> Support Accounts
-    const query = { term: { "traits_clearbit/discovered_from_domain.exact": domain } };
+    const query = {
+      term: { "traits_clearbit/discovered_from_domain.exact": domain }
+    };
     return this.hull.post("search/user_reports", { query });
   }
 
   saveDiscoveredCompanies(companies = [], discovered_from_domain) {
     // TODO -> Support Accounts
-    return Promise.all(companies.map((company) => {
-      const person = { company };
-      // TODO: save account instead of user
-      const traits = getUserTraitsFromPerson({ person });
-      traits["clearbit/discovered_from_domain"] = { value: discovered_from_domain, operation: "setIfNull" };
-      traits["clearbit/discovered_at"] = { value: now(), operation: "setIfNull" };
-      traits["clearbit/source"] = { value: "discover", operation: "setIfNull" };
-      return this.hull.asUser({ anonymous_id: `clearbit-company:${company.id}` }).traits(traits).then(() => traits);
-    }));
+    return Promise.all(
+      companies.map(company => {
+        const person = { company };
+        // TODO: save account instead of user
+        const traits = getUserTraitsFromPerson({ person });
+        traits["clearbit/discovered_from_domain"] = {
+          value: discovered_from_domain,
+          operation: "setIfNull"
+        };
+        traits["clearbit/discovered_at"] = {
+          value: now(),
+          operation: "setIfNull"
+        };
+        traits["clearbit/source"] = {
+          value: "discover",
+          operation: "setIfNull"
+        };
+        return this.hull
+          .asUser({ anonymous_id: `clearbit-company:${company.id}` })
+          .traits(traits)
+          .then(() => traits);
+      })
+    );
   }
-
 
   prospectUsers(user, account = {}) {
     const { prospect_domain = "domain" } = this.settings;
@@ -339,10 +403,18 @@ export default class Clearbit {
 
     const asUser = this.hull.asUser(user);
     const asAccount = this.hull.asAccount({ domain });
-    return shouldProspectUsersFromDomain({ domain, hull: this.hull, settings: this.settings })
-      .then((doPropect) => {
+    return shouldProspectUsersFromDomain({
+      domain,
+      hull: this.hull,
+      settings: this.settings
+    })
+      .then(doPropect => {
         if (!doPropect) {
-          this.logSkip(asUser, "prospector", "We already have known users with that domain");
+          this.logSkip(
+            asUser,
+            "prospector",
+            "We already have known users with that domain"
+          );
           return false;
         }
         const query = {
@@ -351,48 +423,63 @@ export default class Clearbit {
           email: true
         };
 
-        ["seniority", "titles", "role"].forEach((k) => {
+        ["seniority", "titles", "role"].forEach(k => {
           const filter = this.settings[`prospect_filter_${k}`];
           if (!_.isEmpty(filter)) {
             query[k] = filter;
           }
         });
 
-        const company_traits = _.reduce(user, (traits, val, k) => {
-          const [group, key] = k.split("/");
-          if (group === "traits_clearbit_company") {
-            traits[`clearbit_company/${key}`] = val;
-          }
-          return traits;
-        }, {});
+        const company_traits = _.reduce(
+          user,
+          (traits, val, k) => {
+            const [group, key] = k.split("/");
+            if (group === "traits_clearbit_company") {
+              traits[`clearbit_company/${key}`] = val;
+            }
+            return traits;
+          },
+          {}
+        );
 
-        return this.fetchProspects(query, company_traits, asUser, user, asAccount);
+        return this.fetchProspects(
+          query,
+          company_traits,
+          asUser,
+          user,
+          asAccount
+        );
       })
-      .catch((error) => {
-        asUser.logger.info("outgoing.user.error", { errors: _.get(error, "message", error) });
+      .catch(error => {
+        asUser.logger.info("outgoing.user.error", {
+          errors: _.get(error, "message", error)
+        });
       });
   }
 
   fetchProspects(query = {}, company_traits = {}, asUser, user, asAccount) {
-    const {
-      titles = [], domain, role, seniority, limit = 5
-    } = query;
+    const { titles = [], domain, role, seniority, limit = 5 } = query;
 
     // Allow prospecting even if no titles passed
     if (titles.length === 0) titles.push(null);
 
     const prospects = {};
-    return Promise.mapSeries(titles, (title) => {
+    return Promise.mapSeries(titles, title => {
       const newLimit = limit - _.size(prospects);
       if (newLimit <= 0) return Promise.resolve(prospects);
       const params = {
-        domain, role, seniority, title, limit: newLimit, email: true
+        domain,
+        role,
+        seniority,
+        title,
+        limit: newLimit,
+        email: true
       };
-      return this.client
-        .prospect(params, asUser)
-        .then((results = []) => {
-          results.forEach((p) => { prospects[p.email] = p; });
+      return this.client.prospect(params, asUser).then((results = []) => {
+        results.forEach(p => {
+          prospects[p.email] = p;
         });
+      });
     }).then(() => {
       const ret = _.values(prospects);
       const emails = _.keys(prospects);
@@ -409,15 +496,25 @@ export default class Clearbit {
       }
       if (asUser) {
         const props = _.mapKeys(query, (v, k) => `query_${k}`);
-        asUser.track("Clearbit Prospector Triggered", {
-          ...props,
-          found: ret.length,
-          emails
-        }, {
-          ip: 0
-        });
-        asUser.traits({ prospected_at: { value: now(), operation: "setIfNull" } }, { source: "clearbit" });
-        asAccount.traits({ prospected_at: { operation: "setIfNull", value: now() } }, { source: "clearbit" });
+        asUser.track(
+          "Clearbit Prospector Triggered",
+          {
+            ...props,
+            found: ret.length,
+            emails
+          },
+          {
+            ip: 0
+          }
+        );
+        asUser.traits(
+          { prospected_at: { value: now(), operation: "setIfNull" } },
+          { source: "clearbit" }
+        );
+        asAccount.traits(
+          { prospected_at: { operation: "setIfNull", value: now() } },
+          { source: "clearbit" }
+        );
       }
       ret.map(this.saveProspect.bind(this, user, company_traits));
       return ret;
@@ -433,25 +530,40 @@ export default class Clearbit {
     const traits = getUserTraitsFromPerson({ person }, "Prospect");
     traits["clearbit/prospected_at"] = { operation: "setIfNull", value: now() };
     if (user.id) {
-      traits["clearbit/prospected_from"] = { operation: "setIfNull", value: user.id };
+      traits["clearbit/prospected_from"] = {
+        operation: "setIfNull",
+        value: user.id
+      };
     }
     traits["clearbit/source"] = { operation: "setIfNull", value: "prospect" };
 
-    const hullUser = this.hull.asUser({ email: person.email, anonymous_id: `clearbit-prospect:${person.id}` });
+    const hullUser = this.hull.asUser({
+      email: person.email,
+      anonymous_id: `clearbit-prospect:${person.id}`
+    });
     const domain = company_traits["clearbit_company/domain"];
 
-    hullUser.logger.info("incoming.user.success", { person, source: "prospector" });
+    hullUser.logger.info("incoming.user.success", {
+      person,
+      source: "prospector"
+    });
     this.metric("ship.incoming.users", 1, ["prospect"]);
 
     if (this.settings.handle_accounts && domain) {
-      const company = _.reduce(company_traits, (m, v, k) => {
-        m[k.replace("clearbit_company/", "clearbit/")] = v;
-        return m;
-      }, {});
+      const company = _.reduce(
+        company_traits,
+        (m, v, k) => {
+          m[k.replace("clearbit_company/", "clearbit/")] = v;
+          return m;
+        },
+        {}
+      );
       hullUser.account({ domain }).traits(company);
       return hullUser.traits({ ...traits }).then(() => ({ person }));
     }
 
-    return hullUser.traits({ ...company_traits, ...traits }).then(() => ({ person }));
+    return hullUser
+      .traits({ ...company_traits, ...traits })
+      .then(() => ({ person }));
   }
 }

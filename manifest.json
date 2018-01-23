@@ -1,17 +1,12 @@
 {
-  "name": "Clearbit",
-  "description": "Reveal anonymous users from your website and enrich them with the data you need",
-  "source": "clearbit",
-  "logo": "logo.png",
+  "name": "hull-clearbit",
+  "description": "Synchronize Data with Clearbit",
+  "tags": ["incoming", "outgoing", "batch", "oneColumn", "smart-notifier"],
+  "ui": false,
   "picture": "picture.png",
-  "version": "0.3.3",
-  "tags": [
-    "incoming",
-    "outgoing",
-    "batch",
-    "oneColumn",
-    "smart-notifier"
-  ],
+  "admin": "admin.html",
+  "readme": "readme.md",
+  "version": "0.4.0",
   "private_settings": [
     {
       "type": "string",
@@ -255,10 +250,8 @@
       "description": "Restrict your search by specifying criteria for the prospect's title. If left blank, search is carried out without restriction."
     }
   ],
+  "settings": [],
   "resources": [],
-  "readme": "readme.md",
-  "admin": "admin.html",
-  "ui": false,
   "subscriptions": [
     {
       "url": "/smart-notifier"
