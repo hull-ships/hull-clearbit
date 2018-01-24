@@ -6042,7 +6042,7 @@ min-document@^2.19.0:
   dependencies:
     dom-walk "^0.1.0"
 
-mini-application@^1.0.4:
+mini-application@^1.0.4, mini-application@^1.0.6:
   version "1.0.6"
   resolved "https://registry.yarnpkg.com/mini-application/-/mini-application-1.0.6.tgz#18693ff8fe62f0d36c22ba9a896fdc01a62c5cc4"
   dependencies:
