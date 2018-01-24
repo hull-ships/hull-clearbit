@@ -80,14 +80,8 @@ export default class Clearbit {
 
   shouldLogic(msg, action, actionString) {
     const { user = {} } = msg;
-    if (!this.client) {
-      this.logSkip(this.hull.asUser(user), actionString, "no api_key set");
-      return false;
-    }
-    const { should, message } = action(msg, this.settings);
-    if (should) return true;
-    this.logSkip(this.hull.asUser(user), actionString, message);
-    return false;
+    if (!this.client) return { should: false, message: "no api_key set" };
+    return action(msg, this.settings);
   }
 
   enrichUser(user) {
@@ -147,7 +141,7 @@ export default class Clearbit {
     const { id, external_id } = user;
     const email = user.email || person.email;
     const userIdent = { id, external_id, email };
-    const { source } = options;
+    const { source, incoming } = options;
 
     // Custom Resolution strategy.
     // Only uses one identifier. [Why did we do this ?]
@@ -159,6 +153,8 @@ export default class Clearbit {
     } else if (email) {
       ident = { email };
     }
+
+    const direction = incoming ? "incoming" : "outgoing";
 
     if (!ident) {
       const error = new Error("Missing identifier for user");
@@ -180,7 +176,7 @@ export default class Clearbit {
       traits["clearbit/source"] = { value: source, operation: "setIfNull" };
     }
 
-    this.metric("ship.outgoing.users", 1, ["saveUser"]);
+    this.metric(`ship.${direction}.users`, 1, ["saveUser"]);
 
     const promises = [];
 
@@ -221,7 +217,7 @@ export default class Clearbit {
 
       if (domain) {
         const asAccount = asUser.account({ domain });
-        asAccount.logger.info("outgoing.account.success", {
+        asAccount.logger.info(`${direction}.account.success`, {
           source,
           traits: all_traits.account
         });
@@ -232,10 +228,9 @@ export default class Clearbit {
     }
 
     return Promise.all(promises).then(() => {
-      console.log("Logging success", JSON.stringify({ options, traits }));
       this.hull
         .asUser(userIdent)
-        .logger.info("outgoing.user.success", { ...options, traits });
+        .logger.info(`${direction}.user.success`, { ...options, traits });
 
       return { traits, user, person };
     });
@@ -259,55 +254,44 @@ export default class Clearbit {
       this.settings || {};
     const domain = getDomain(user, account, discover_domain);
 
-    const asUser = this.hull.asUser(user);
+    if (!this.client || !discover_enabled) {
+      return { should: false, message: "discover not enabled" };
+    }
 
-    if (!this.client || !discover_enabled || _.isEmpty(discover_segments)) {
-      this.logSkip(asUser, "discover", "Discover not enabled", {
-        discover_segments
-      });
-      return false;
+    if (_.isEmpty(discover_segments)) {
+      return { should: false, message: "No segments defined in Discover" };
     }
 
     if (!domain) {
-      this.logSkip(
-        asUser,
-        "discover",
-        "No 'domain' in User. We need a domain",
-        { domain }
-      );
-      return false;
+      return {
+        should: false,
+        message: "No 'domain' in User nor account. We need a domain"
+      };
     }
 
     if (user["traits_clearbit/discovered_similar_companies_at"]) {
-      this.logSkip(asUser, "discover", "Already discovered similar companies");
-      return false;
+      return { should: false, message: "Already discovered similar companies" };
     }
 
     if (!user.last_seen_at || !user.email) {
-      this.logSkip(asUser, "discover", "User has no email or no last_seen_at");
-      return false;
+      return { should: false, message: "User has no email or no last_seen_at" };
     }
 
     if (user["traits_clearbit/discovered_from_domain"]) {
-      this.logSkip(
-        asUser,
-        "discover",
-        "User is himself a discovery. Prevent Loops"
-      );
-      return false;
+      return {
+        should: false,
+        message: "User is himself a discovery. Prevent Loops"
+      };
     }
 
     if (!isInSegments(segments, discover_segments)) {
-      this.logSkip(
-        asUser,
-        "discover",
-        "User is not in a discoverable segment",
-        { discover_segments }
-      );
-      return false;
+      return {
+        should: false,
+        message: "User is not in a discoverable segment"
+      };
     }
 
-    return true;
+    return { should: true };
   }
 
   /**

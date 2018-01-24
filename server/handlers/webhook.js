@@ -36,7 +36,10 @@ export default function handleWebhook({ hostSecret, Hull }) {
           hostname,
           metric
         });
-        cb.saveUser({ id: userId }, person, "enrich");
+        cb.saveUser({ id: userId }, person, {
+          source: "enrich",
+          incoming: true
+        });
       }
 
       res.json({ message: "thanks" });
