@@ -83,30 +83,35 @@ describe("Enrich action", () => {
     );
   });
 
-  // it("should handle Invalid Email error", done => {
-  //   mocks.nock("https://person.clearbit.com")
-  //     .get(/\/v2\/combined\/find/)
-  //     .reply(422, {
-  //       error: {
-  //         message: "Invalid email.",
-  //         type: "email_invalid"
-  //       }
-  //     });
-  //
-  //   mocks.minihull.on("incoming.request@/api/v1/firehose", batch => {
-  //     console.log("---------------", req.body)
-  //     expect(req.body.batch.length).to.equal(0);
-  //     done();
-  //   });
-  //
-  //   mocks.minihull.userUpdate(connector, [
-  //     {
-  //       user: {
-  //         email: "foo@bar.com",
-  //         last_known_ip: "1.1.1.1"
-  //       },
-  //       segments: [{ id: "1" }]
-  //     }
-  //   ]);
-  // });
+  it("should handle Invalid Email error", done => {
+    mocks
+      .nock("https://person.clearbit.com")
+      .get(/\/v2\/combined\/find/)
+      .reply(422, {
+        error: {
+          message: "Invalid email.",
+          type: "email_invalid"
+        }
+      });
+
+    mocks.minihull.userUpdate(
+      {
+        connector,
+        messages: [
+          {
+            user: {
+              id: "1234",
+              email: "foo@bar.com",
+              last_known_ip: "1.1.1.1"
+            },
+            segments: [{ id: "1" }]
+          }
+        ]
+      },
+      batch => {
+        expect(batch.length).to.equal(0);
+        done();
+      }
+    );
+  });
 });

@@ -14,6 +14,7 @@ export default function handleUserUpdate({ hostSecret, stream = false }) {
       });
     }
 
+    const { private_settings: { handle_accounts } } = ship;
     const clearbit = new Clearbit({
       hull: client,
       ship,
@@ -24,7 +25,7 @@ export default function handleUserUpdate({ hostSecret, stream = false }) {
     });
 
     return Promise.all(
-      messages.map(message => userUpdateLogic({ message, clearbit, client }))
+      messages.map(message => userUpdateLogic({ message, clearbit, client, handle_accounts }))
     );
   };
 }
