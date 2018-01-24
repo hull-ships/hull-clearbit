@@ -1,3 +1,6 @@
 {
-  "extends" : ["./node_modules/hull-connector/config/.eslintrc"]
+  "extends" : ["./node_modules/hull-connector/config/.eslintrc"],
+  "rules": {
+    "jest/valid-expect": [0]
+  }
 }

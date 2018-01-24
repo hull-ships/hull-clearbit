@@ -10,13 +10,11 @@ export default function notifyHandler({ hostSecret, stream = false }) {
         { client, ship, hostname, smartNotifierResponse, metric },
         messages = []
       ) => {
-        console.debug("START")
         smartNotifierResponse.setFlowControl({
           type: "next",
           size: 100,
           in: 100
         });
-        console.debug("Processing data", messages)
         const clearbit = new Clearbit({
           hull: client,
           ship,

@@ -97,7 +97,7 @@ export default class Clearbit {
     const logError = error => {
       asUser.logger.info("outgoing.user.error", {
         errors: error,
-        method: "revealUser"
+        method: "enrichUser"
       });
     };
     return enrichUser(user, this)
@@ -447,7 +447,8 @@ export default class Clearbit {
           company_traits,
           asUser,
           user,
-          asAccount
+          asAccount,
+          account
         );
       })
       .catch(error => {
@@ -457,7 +458,14 @@ export default class Clearbit {
       });
   }
 
-  fetchProspects(query = {}, company_traits = {}, asUser, user, asAccount) {
+  fetchProspects(
+    query = {},
+    company_traits = {},
+    asUser,
+    user,
+    asAccount,
+    account
+  ) {
     const { titles = [], domain, role, seniority, limit = 5 } = query;
 
     // Allow prospecting even if no titles passed
@@ -508,15 +516,19 @@ export default class Clearbit {
           }
         );
         asUser.traits(
-          { prospected_at: { value: now(), operation: "setIfNull" } },
+          {
+            prospected_at: { value: now(), operation: "setIfNull" }
+          },
           { source: "clearbit" }
         );
         asAccount.traits(
-          { prospected_at: { operation: "setIfNull", value: now() } },
+          {
+            prospected_at: { operation: "setIfNull", value: now() }
+          },
           { source: "clearbit" }
         );
       }
-      ret.map(this.saveProspect.bind(this, user, company_traits));
+      ret.map(this.saveProspect.bind(this, user, account, company_traits));
       return ret;
     });
   }
@@ -526,7 +538,7 @@ export default class Clearbit {
    * @param  {Object({ person })} payload - Clearbit/Person object
    * @return {Promise -> Object({ person })}
    */
-  saveProspect(user = {}, company_traits, person = {}) {
+  saveProspect(user = {}, account = {}, company_traits, person = {}) {
     const traits = getUserTraitsFromPerson({ person }, "Prospect");
     traits["clearbit/prospected_at"] = { operation: "setIfNull", value: now() };
     if (user.id) {
@@ -535,7 +547,7 @@ export default class Clearbit {
         value: user.id
       };
     }
-    traits["clearbit/source"] = { operation: "setIfNull", value: "prospect" };
+    traits["clearbit/source"] = { operation: "setIfNull", value: "prospector" };
 
     const hullUser = this.hull.asUser({
       email: person.email,
@@ -558,7 +570,7 @@ export default class Clearbit {
         },
         {}
       );
-      hullUser.account({ domain }).traits(company);
+      hullUser.account({ id: account.id, domain }).traits(company);
       return hullUser.traits({ ...traits }).then(() => ({ person }));
     }
 

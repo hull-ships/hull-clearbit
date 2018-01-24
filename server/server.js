@@ -38,6 +38,5 @@ export default function Server(options = {}) {
 
   // Error Handler
   app.use(errorHandler);
-  console.debug("Starting on port", options.port)
   return connector.startApp(app);
 }
