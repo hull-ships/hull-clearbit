@@ -1,5 +1,4 @@
 import Minihull from "minihull";
-import _ from "lodash";
 import Hull from "hull";
 import nock from "nock";
 import jwt from "jwt-simple";
@@ -9,13 +8,18 @@ const noop = () => {};
 
 module.exports = function bootstrap({ beforeEach, afterEach, port, segments }) {
   const mocks = {};
+  mocks.nock = nock;
   beforeEach(done => {
     const minihull = new Minihull();
     minihull.listen(8001).then(done);
     minihull.stubSegments(segments);
     mocks.firehose = "firehose";
     minihull.userUpdate = ({ connector, messages }, callback = noop) => {
+      const t = setTimeout(() => {
+        callback([]);
+      }, 1800);
       mocks.minihull.on("incoming.request@/api/v1/firehose", req => {
+        clearTimeout(t);
         callback(
           req.body.batch.map(r => ({
             ...r,
@@ -48,7 +52,7 @@ module.exports = function bootstrap({ beforeEach, afterEach, port, segments }) {
   afterEach(() => {
     mocks.minihull.close();
     mocks.server.close();
-    nock.cleanAll();
+    mocks.nock.cleanAll();
   });
 
   return mocks;

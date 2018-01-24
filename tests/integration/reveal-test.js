@@ -1,6 +1,6 @@
 import { expect } from "chai";
-import nock from "nock";
-import bootstrap from "./support/bootstrap";
+import mockr from "hull-connector-dev/lib/mockr";
+import server from "../../server/server";
 
 describe("Reveal action", () => {
   const connector = {
@@ -11,7 +11,8 @@ describe("Reveal action", () => {
       reveal_segments: ["1"]
     }
   };
-  const mocks = bootstrap({
+  const mocks = mockr({
+    server,
     beforeEach,
     afterEach,
     port: 8000,
@@ -23,68 +24,69 @@ describe("Reveal action", () => {
       }
     ]
   });
-  // it("should properly reveal users", done => {
-  //   nock("https://reveal.clearbit.com")
-  //     .get(/v1\/companies\/find/)
-  //     .query({ ip: "100.0.0.0" })
-  //     .reply(200, {
-  //       ip: "100.0.0.0",
-  //       fuzzy: true,
-  //       domain: "hull.io",
-  //       company: {
-  //         name: "Hull",
-  //         tags: [
-  //           "Software",
-  //           "SAAS",
-  //           "B2B",
-  //           "Information Technology & Services",
-  //           "Technology",
-  //           "Internet"
-  //         ],
-  //         metrics: {
-  //           alexaUsRank: 1,
-  //           alexaGlobalRank: 1,
-  //           employees: 1000,
-  //           employeesRange: "1000-2000",
-  //           raised: 100000000
-  //         }
-  //       }
-  //     });
-  //
-  //   mocks.minihull.userUpdate(
-  //     {
-  //       connector,
-  //       messages: [
-  //         {
-  //           user: {
-  //             id: "1234",
-  //             anonymous_ids: ["foobar-anonymous"],
-  //             email: null,
-  //             last_known_ip: "100.0.0.0"
-  //           },
-  //           segments: [{ id: "1" }]
-  //         }
-  //       ]
-  //     },
-  //     batch => {
-  //       const [first] = batch;
-  //       expect(batch.length).to.equal(1);
-  //       expect(first.type).to.equal("traits");
-  //       expect(first.body["clearbit/source"].value).to.equal("reveal");
-  //       expect(first.body["clearbit/revealed_at"].value).to.not.be.null;
-  //       expect(first.body["clearbit/revealed_at"].operation).to.eql(
-  //         "setIfNull"
-  //       );
-  //       expect(first.body["clearbit/fetched_at"].value).to.not.be.null;
-  //       expect(first.body["clearbit/fetched_at"].operation).to.eql("setIfNull");
-  //       expect(first.body["clearbit_company/name"]).to.equal("Hull");
-  //       done();
-  //     }
-  //   );
-  // });
+
+  it("should properly reveal users", done => {
+    mocks.nock("https://reveal.clearbit.com")
+      .get(/v1\/companies\/find/)
+      .query({ ip: "100.0.0.0" })
+      .reply(200, {
+        ip: "100.0.0.0",
+        fuzzy: true,
+        domain: "hull.io",
+        company: {
+          name: "Hull",
+          tags: [
+            "Software",
+            "SAAS",
+            "B2B",
+            "Information Technology & Services",
+            "Technology",
+            "Internet"
+          ],
+          metrics: {
+            alexaUsRank: 1,
+            alexaGlobalRank: 1,
+            employees: 1000,
+            employeesRange: "1000-2000",
+            raised: 100000000
+          }
+        }
+      });
+
+    mocks.minihull.userUpdate(
+      {
+        connector,
+        messages: [
+          {
+            user: {
+              id: "1234",
+              anonymous_ids: ["foobar-anonymous"],
+              email: null,
+              last_known_ip: "100.0.0.0"
+            },
+            segments: [{ id: "1" }]
+          }
+        ]
+      },
+      batch => {
+        const [first] = batch;
+        expect(batch.length).to.equal(1);
+        expect(first.type).to.equal("traits");
+        expect(first.body["clearbit/source"].value).to.equal("reveal");
+        expect(first.body["clearbit/revealed_at"].value).to.not.be.null;
+        expect(first.body["clearbit/revealed_at"].operation).to.eql(
+          "setIfNull"
+        );
+        expect(first.body["clearbit/fetched_at"].value).to.not.be.null;
+        expect(first.body["clearbit/fetched_at"].operation).to.eql("setIfNull");
+        expect(first.body["clearbit_company/name"]).to.equal("Hull");
+        done();
+      }
+    );
+  });
 
   it("should properly reveal accounts if accounts enabled", done => {
-    nock("https://reveal.clearbit.com")
+    mocks.nock("https://reveal.clearbit.com")
       .get(/v1\/companies\/find/)
       .query({ ip: "100.0.0.0" })
       .reply(200, {
