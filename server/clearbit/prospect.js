@@ -106,20 +106,24 @@ export function shouldProspectUsersFromDomain({ domain, hull, settings }) {
 
       // Skip prospect if we have known users with that domain
       if (total > 0 && total !== anonymous) {
-        return false;
+        return { should: false, reason: "We have known users in that domain" };
       }
 
       // Prospect if at least one of those anonymous has been discovered
       if (bySource.discover && bySource.discover > 0) {
-        return true;
+        return { should: true };
       }
 
       const min_contacts = settings.reveal_prospect_min_contacts || 1;
 
       if (bySource.reveal && anonymous >= min_contacts) {
-        return true;
+        return { should: true };
       }
 
-      return true;
+      return {
+        should: true,
+        reason:
+          "We are under the unique anonymous visitors threshold for prospecting"
+      };
     });
 }

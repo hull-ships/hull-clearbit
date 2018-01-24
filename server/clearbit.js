@@ -392,13 +392,19 @@ export default class Clearbit {
       hull: this.hull,
       settings: this.settings
     })
-      .then(doPropect => {
-        if (!doPropect) {
-          this.logSkip(
-            asUser,
-            "prospector",
-            "We already have known users with that domain"
-          );
+      .then(({ should, reason }) => {
+        if (!should) {
+          this.logSkip(asUser, "prospector", reason);
+          // asUser.track(
+          //   "Clearbit Prospector Triggered",
+          //   {
+          //     action: "skipped",
+          //     reason
+          //   },
+          //   {
+          //     ip: 0
+          //   }
+          // );
           return false;
         }
         const query = {
@@ -484,6 +490,12 @@ export default class Clearbit {
       };
       (asUser || this.hull).logger.info("outgoing.user.success", log);
       if (asAccount) {
+        asAccount.traits(
+          {
+            prospected_at: { operation: "setIfNull", value: now() }
+          },
+          { source: "clearbit" }
+        );
         asAccount.logger.info("outgoing.account.success", log);
       }
       if (asUser) {
@@ -502,12 +514,6 @@ export default class Clearbit {
         asUser.traits(
           {
             prospected_at: { value: now(), operation: "setIfNull" }
-          },
-          { source: "clearbit" }
-        );
-        asAccount.traits(
-          {
-            prospected_at: { operation: "setIfNull", value: now() }
           },
           { source: "clearbit" }
         );
@@ -554,7 +560,15 @@ export default class Clearbit {
         },
         {}
       );
-      hullUser.account({ id: account.id, domain }).traits(company);
+      const hullAccount = hullUser.account({ id: account.id });
+      hullAccount.traits({
+        ...company,
+        domain: { operation: "setIfNull", value: domain }
+      });
+      hullAccount.logger.info("incoming.account.success", {
+        person,
+        source: "prospector"
+      });
       return hullUser.traits({ ...traits }).then(() => ({ person }));
     }
 

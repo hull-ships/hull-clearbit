@@ -12,8 +12,8 @@
     {
       "type": "string",
       "format": "title",
-      "name": "authentication",
-      "title": "Authentication"
+      "name": "setup",
+      "title": "setup"
     },
     {
       "title": "Clearbit API Key",
@@ -23,6 +23,20 @@
       "format": "text"
     },
 
+    {
+      "name": "handle_accounts",
+      "title": "Use Accounts Feature",
+      "type": "boolean",
+      "default": false,
+      "format": "hidden"
+    },
+
+    {
+      "type": "string",
+      "format": "title",
+      "name": "enrich",
+      "title": "Enrich"
+    },
 
     {
       "title": "Enable Enrich API",
@@ -141,14 +155,6 @@
     },
 
 
-
-    {
-      "name": "handle_accounts",
-      "title": "Use Accounts Feature",
-      "type": "boolean",
-      "default": false,
-      "format": "hidden"
-    },
     {
       "name": "prospect_domain",
       "title": "Attribute that defines the company domain",
