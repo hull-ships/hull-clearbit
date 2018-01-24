@@ -16,7 +16,6 @@ describe("Enrich action", () => {
     beforeEach,
     afterEach,
     port: 8000,
-    connector,
     segments: [
       {
         id: "1",
