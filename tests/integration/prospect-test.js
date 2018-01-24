@@ -1,22 +1,19 @@
 import { expect } from "chai";
-import nock from "nock";
-import bootstrap from "./support/bootstrap";
+import mockr from "hull-connector-dev/lib/mockr";
+import server from "../../server/server";
 
 describe("Clearbit API errors", () => {
-  const mocks = bootstrap({
+  const mocks = mockr({
+    server,
     beforeEach,
     afterEach,
     port: 8000,
-    segments: [
-      {
-        id: "1",
-        name: "A"
-      }
-    ]
+    segments: [{ id: "1", name: "A" }]
   });
 
   it("should prospect properly with accounts enabled", done => {
-    const clearbit = nock("https://prospector.clearbit.com")
+    const clearbit = mocks
+      .nock("https://prospector.clearbit.com")
       .get("/v1/people/search")
       .query({
         domain: "domain.com",
@@ -37,7 +34,6 @@ describe("Clearbit API errors", () => {
         }
       }
     });
-
     mocks.minihull.userUpdate(
       {
         connector: {
@@ -53,14 +49,8 @@ describe("Clearbit API errors", () => {
         },
         messages: [
           {
-            user: {
-              id: "abc",
-              "traits/clearbit/source": "reveal"
-            },
-            account: {
-              id: "ACCOUNTID",
-              domain: "domain.com"
-            },
+            user: { id: "abc", "traits/clearbit/source": "reveal" },
+            account: { id: "ACCOUNTID", domain: "domain.com" },
             segments: [{ id: "1" }]
           }
         ]
@@ -92,7 +82,8 @@ describe("Clearbit API errors", () => {
   });
 
   it("should handle automatic prospection", done => {
-    const clearbit = nock("https://prospector.clearbit.com")
+    const clearbit = mocks
+      .nock("https://prospector.clearbit.com")
       .get("/v1/people/search")
       .query({
         domain: "foo.bar",
@@ -176,7 +167,8 @@ describe("Clearbit API errors", () => {
     };
     mocks.minihull.stubConnector(connector);
 
-    nock("https://prospector.clearbit.com")
+    mocks
+      .nock("https://prospector.clearbit.com")
       .get("/v1/people/search")
       .query({
         domain: "foo.bar",
@@ -194,7 +186,8 @@ describe("Clearbit API errors", () => {
       })
       .reply(200, [{ email: "foo@bar.bar" }]);
 
-    const thirdTitleCall = nock("https://prospector.clearbit.com")
+    const thirdTitleCall = mocks
+      .nock("https://prospector.clearbit.com")
       .get("/v1/people/search")
       .query({
         domain: "foo.bar",
@@ -266,68 +259,62 @@ describe("Clearbit API errors", () => {
     );
   });
 
-  // it("should handle Rate limit error", done => {
-  //   nock("https://prospector.clearbit.com")
-  //     .get("/v1/people/search")
-  //     .query({
-  //       domain: "foo.bar",
-  //       limit: 2,
-  //       email: true,
-  //       title: "foo"
-  //     })
-  //     .reply(200, [{ email: "foo@foo.bar" }])
-  //     .get("/v1/people/search")
-  //     .query({
-  //       domain: "foo.baz",
-  //       limit: 2,
-  //       email: true,
-  //       title: "foo"
-  //     })
-  //     .reply(409, { error: { message: "Your account is over it's quota" } });
-  //
-  //   mocks.minihull.stubApp("/api/v1/search/user_reports").respond({
-  //     pagination: { total: 0 },
-  //     aggregations: {
-  //       without_email: {
-  //         doc_count: 0
-  //       },
-  //       by_source: {
-  //         buckets: []
-  //       }
-  //     }
-  //   });
-  //   mocks.minihull.userUpdate(
-  //     {
-  //       connector: {
-  //         id: "123456789012345678901234",
-  //         private_settings: {
-  //           api_key: "123",
-  //           prospect_enabled: true,
-  //           prospect_segments: ["1"],
-  //           prospect_filter_titles: ["foo"],
-  //           prospect_limit_count: 2
-  //         }
-  //       },
-  //       messages: [
-  //         {
-  //           user: {
-  //             id: "abc",
-  //             domain: "foo.bar"
-  //           },
-  //           segments: [{ id: "1" }]
-  //         },
-  //         {
-  //           user: {
-  //             id: "def",
-  //             domain: "foo.baz"
-  //           },
-  //           segments: [{ id: "1" }]
-  //         }
-  //       ]
-  //     },
-  //     batch => {
-  //       expect(batch.length).to.equal(4);
-  //     }
-  //   );
-  // });
+  it("should handle Rate limit error", done => {
+    mocks
+      .nock("https://prospector.clearbit.com")
+      .get("/v1/people/search")
+      .query({
+        domain: "foo.baz",
+        limit: 2,
+        email: true,
+        title: "foo"
+      })
+      .reply(409, { error: { message: "Your account is over it's quota" } });
+
+    mocks.minihull.stubApp("/api/v1/search/user_reports").respond({
+      pagination: { total: 0 },
+      aggregations: {
+        without_email: {
+          doc_count: 0
+        },
+        by_source: {
+          buckets: []
+        }
+      }
+    });
+    mocks.minihull.userUpdate(
+      {
+        connector: {
+          id: "123456789012345678901234",
+          private_settings: {
+            api_key: "123",
+            prospect_enabled: true,
+            prospect_segments: ["1"],
+            prospect_filter_titles: ["foo"],
+            prospect_limit_count: 2
+          }
+        },
+        messages: [
+          {
+            user: {
+              id: "abc",
+              domain: "foo.bar"
+            },
+            segments: [{ id: "1" }]
+          },
+          {
+            user: {
+              id: "def",
+              domain: "foo.baz"
+            },
+            segments: [{ id: "1" }]
+          }
+        ]
+      },
+      batch => {
+        expect(batch.length).to.equal(0);
+        done();
+      }
+    );
+  });
 });

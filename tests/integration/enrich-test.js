@@ -1,6 +1,6 @@
 import { expect } from "chai";
-import nock from "nock";
-import bootstrap from "./support/bootstrap";
+import mockr from "hull-connector-dev/lib/mockr";
+import server from "../../server/server";
 
 describe("Enrich action", () => {
   const connector = {
@@ -11,7 +11,8 @@ describe("Enrich action", () => {
       enrich_segments: ["1"]
     }
   };
-  const mocks = bootstrap({
+  const mocks = mockr({
+    server,
     beforeEach,
     afterEach,
     port: 8000,
@@ -25,7 +26,8 @@ describe("Enrich action", () => {
   });
 
   it("should properly enrich users", done => {
-    nock("https://person.clearbit.com")
+    mocks
+      .nock("https://person.clearbit.com")
       .get(/\/v2\/combined\/find/)
       .reply(200, {
         person: {
@@ -83,7 +85,7 @@ describe("Enrich action", () => {
   });
 
   // it("should handle Invalid Email error", done => {
-  //   nock("https://person.clearbit.com")
+  //   mocks.nock("https://person.clearbit.com")
   //     .get(/\/v2\/combined\/find/)
   //     .reply(422, {
   //       error: {

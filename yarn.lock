@@ -2828,7 +2828,7 @@ duplexer3@^0.1.4:
   version "0.1.4"
   resolved "https://registry.yarnpkg.com/duplexer3/-/duplexer3-0.1.4.tgz#ee01dd1cac0ed3cbc7fdbea37dc0a8f1ce002ce2"
 
-duplexer@^0.1.1, duplexer@~0.1.1:
+duplexer@^0.1.1:
   version "0.1.1"
   resolved "https://registry.yarnpkg.com/duplexer/-/duplexer-0.1.1.tgz#ace6ff808c1ce66b57d1ebf97977acb02334cfc1"
 
@@ -3277,18 +3277,6 @@ event-emitter@~0.3.5:
   dependencies:
     d "1"
     es5-ext "~0.10.14"
-
-event-stream@^3.3.4:
-  version "3.3.4"
-  resolved "https://registry.yarnpkg.com/event-stream/-/event-stream-3.3.4.tgz#4ab4c9a0f5a54db9338b4c34d86bfce8f4b35571"
-  dependencies:
-    duplexer "~0.1.1"
-    from "~0"
-    map-stream "~0.1.0"
-    pause-stream "0.0.11"
-    split "0.3"
-    stream-combiner "~0.0.4"
-    through "~2.3.1"
 
 events@^1.0.0, events@^1.1.1:
   version "1.1.1"
@@ -3744,10 +3732,6 @@ fresh@0.3.0:
 fresh@0.5.2:
   version "0.5.2"
   resolved "https://registry.yarnpkg.com/fresh/-/fresh-0.5.2.tgz#3d8cadd90d976569fa835ab1f8e4b23a105605a7"
-
-from@~0:
-  version "0.1.7"
-  resolved "https://registry.yarnpkg.com/from/-/from-0.1.7.tgz#83c60afc58b9c56997007ed1a768b3ab303a44fe"
 
 fs-extra@^4.0.2:
   version "4.0.3"
@@ -4270,9 +4254,9 @@ hull-client@1.1.5:
     uuid "^3.0.1"
     winston "^2.2.0"
 
-hull-connector-dev@^1.0.38:
-  version "1.0.38"
-  resolved "https://registry.yarnpkg.com/hull-connector-dev/-/hull-connector-dev-1.0.38.tgz#f276e19ca6316d99117053b62eb8466aa64363af"
+hull-connector-dev@^1.0.39:
+  version "1.0.39"
+  resolved "https://registry.yarnpkg.com/hull-connector-dev/-/hull-connector-dev-1.0.39.tgz#d2d28438891102f3e7263f0a624a0f54f216139f"
   dependencies:
     assert "^1.4.1"
     babel-jest "^22.0.3"
@@ -4296,11 +4280,16 @@ hull-connector-dev@^1.0.38:
     eslint-plugin-react "^7.5.1"
     eslint-plugin-standard "^3.0.1"
     exit-hook "^1.1.1"
+    faker "^4.1.0"
     flow-bin "^0.61.0"
     jest "^22.0.3"
+    jwt-simple "^0.5.1"
     lint-staged "^6.0.0"
+    lodash-id "^0.14.0"
+    mini-application "^1.0.6"
     minihull "^2.1.0"
     mocha "^4.0.1"
+    mocha-sinon "^2.0.0"
     ngrok "^2.2.24"
     npm-check "^5.5.2"
     prettier "^1.9.2"
@@ -4311,13 +4300,14 @@ hull-connector-dev@^1.0.38:
     reactotron-react-js "^1.13.0"
     reactotron-redux "^1.13.0"
     rimraf "^2.6.2"
+    shelljs "^0.8.1"
     sinon "^4.1.3"
     webpack-dev-middleware "^2.0.2"
     webpack-hot-middleware "^2.21.0"
 
-hull-connector@^1.0.38:
-  version "1.0.38"
-  resolved "https://registry.yarnpkg.com/hull-connector/-/hull-connector-1.0.38.tgz#3e4f239cc2f72d7b389e8d10ec9f0d728a1d1ee3"
+hull-connector@^1.0.39:
+  version "1.0.39"
+  resolved "https://registry.yarnpkg.com/hull-connector/-/hull-connector-1.0.39.tgz#e47724ea89aaf6a24a7f3f2aca49880d5e10b5ee"
   dependencies:
     autoprefixer "^7.2.3"
     babel-cli "^6.26.0"
@@ -4342,15 +4332,19 @@ hull-connector@^1.0.38:
     css-loader "^0.28.7"
     dotenv "^4.0.0"
     exit-hook "^1.1.1"
+    faker "^4.1.0"
     glob "^7.1.2"
     happypack "^4.0.0"
     lint-staged "^6.0.0"
     lodash "^4.17.4"
+    lodash-id "^0.14.0"
+    mini-application "^1.0.6"
     node-sass "^4.7.2"
     postcss-flexbugs-fixes "^3.2.0"
     postcss-loader "^2.0.9"
     request "^2.83.0"
     sass-loader "^6.0.6"
+    shelljs "^0.8.1"
     style-loader "^0.19.1"
     svg-inline-loader "^0.8.0"
     webpack "^3.10.0"
@@ -5893,10 +5887,6 @@ map-obj@^1.0.0, map-obj@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/map-obj/-/map-obj-1.0.1.tgz#d933ceb9205d82bdcf4886f6742bdc2b4dea146d"
 
-map-stream@~0.1.0:
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/map-stream/-/map-stream-0.1.0.tgz#e56aa94c4c8055a16404a0674b78f215f7c8e194"
-
 math-expression-evaluator@^1.2.14:
   version "1.2.17"
   resolved "https://registry.yarnpkg.com/math-expression-evaluator/-/math-expression-evaluator-1.2.17.tgz#de819fdbcd84dccd8fae59c6aeb79615b9d266ac"
@@ -6864,12 +6854,6 @@ pathval@^1.0.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/pathval/-/pathval-1.1.0.tgz#b942e6d4bde653005ef6b71361def8727d0645e0"
 
-pause-stream@0.0.11:
-  version "0.0.11"
-  resolved "https://registry.yarnpkg.com/pause-stream/-/pause-stream-0.0.11.tgz#fe5a34b0cbce12b5aa6a2b403ee2e73b602f1445"
-  dependencies:
-    through "~2.3"
-
 pause@0.0.1:
   version "0.0.1"
   resolved "https://registry.yarnpkg.com/pause/-/pause-0.0.1.tgz#1d408b3fdb76923b9543d96fb4c9dfd535d9cb5d"
@@ -7831,21 +7815,13 @@ redis-commands@^1.2.0:
   version "1.3.1"
   resolved "https://registry.yarnpkg.com/redis-commands/-/redis-commands-1.3.1.tgz#81d826f45fa9c8b2011f4cd7a0fe597d241d442b"
 
-redis-parser@^2.0.0, redis-parser@^2.4.0, redis-parser@^2.6.0:
+redis-parser@^2.0.0, redis-parser@^2.4.0:
   version "2.6.0"
   resolved "https://registry.yarnpkg.com/redis-parser/-/redis-parser-2.6.0.tgz#52ed09dacac108f1a631c07e9b69941e7a19504b"
 
 redis@^0.12.1:
   version "0.12.1"
   resolved "https://registry.yarnpkg.com/redis/-/redis-0.12.1.tgz#64df76ad0fc8acebaebd2a0645e8a48fac49185e"
-
-redis@^2.8.0:
-  version "2.8.0"
-  resolved "https://registry.yarnpkg.com/redis/-/redis-2.8.0.tgz#202288e3f58c49f6079d97af7a10e1303ae14b02"
-  dependencies:
-    double-ended-queue "^2.1.0-0"
-    redis-commands "^1.2.0"
-    redis-parser "^2.6.0"
 
 redis@~2.6.0-2:
   version "2.6.5"
@@ -8485,6 +8461,14 @@ shelljs@^0.7.7:
     interpret "^1.0.0"
     rechoir "^0.6.2"
 
+shelljs@^0.8.1:
+  version "0.8.1"
+  resolved "https://registry.yarnpkg.com/shelljs/-/shelljs-0.8.1.tgz#729e038c413a2254c4078b95ed46e0397154a9f1"
+  dependencies:
+    glob "^7.0.0"
+    interpret "^1.0.0"
+    rechoir "^0.6.2"
+
 shellwords@^0.1.1:
   version "0.1.1"
   resolved "https://registry.yarnpkg.com/shellwords/-/shellwords-0.1.1.tgz#d6b9181c1a48d397324c84871efbcfc73fc0654b"
@@ -8677,12 +8661,6 @@ spdx-license-ids@^1.0.2:
   version "1.2.2"
   resolved "https://registry.yarnpkg.com/spdx-license-ids/-/spdx-license-ids-1.2.2.tgz#c9df7a3424594ade6bd11900d596696dc06bac57"
 
-split@0.3:
-  version "0.3.3"
-  resolved "https://registry.yarnpkg.com/split/-/split-0.3.3.tgz#cd0eea5e63a211dfff7eb0f091c4133e2d0dd28f"
-  dependencies:
-    through "2"
-
 sprintf-js@~1.0.2:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/sprintf-js/-/sprintf-js-1.0.3.tgz#04e6926f662895354f3dd015203633b857297e2c"
@@ -8788,12 +8766,6 @@ stream-browserify@^2.0.1:
   dependencies:
     inherits "~2.0.1"
     readable-stream "^2.0.2"
-
-stream-combiner@~0.0.4:
-  version "0.0.4"
-  resolved "https://registry.yarnpkg.com/stream-combiner/-/stream-combiner-0.0.4.tgz#4d5e433c185261dde623ca3f44c586bcf5c4ad14"
-  dependencies:
-    duplexer "~0.1.1"
 
 stream-counter@~0.2.0:
   version "0.2.0"
@@ -9100,7 +9072,7 @@ throat@^4.0.0:
   version "4.1.0"
   resolved "https://registry.yarnpkg.com/throat/-/throat-4.1.0.tgz#89037cbc92c56ab18926e6ba4cbb200e15672a6a"
 
-through@2, "through@>=2.2.7 <3", through@^2.3.6, through@~2.3, through@~2.3.1:
+"through@>=2.2.7 <3", through@^2.3.6:
   version "2.3.8"
   resolved "https://registry.yarnpkg.com/through/-/through-2.3.8.tgz#0dd4c9ffaabc357960b1b724115d7e0e86a2e1f5"
 
