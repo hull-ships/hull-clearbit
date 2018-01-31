@@ -1,4 +1,5 @@
 import { expect } from "chai";
+import _ from "lodash";
 import mockr from "hull-connector-dev/lib/mockr";
 import server from "../../server/server";
 
@@ -24,13 +25,13 @@ describe("Clearbit API errors", () => {
       .reply(200, [{ email: "foo@foo.bar", id: "foobar" }]);
 
     mocks.minihull.stubApp("/api/v1/search/user_reports").respond({
-      pagination: { total: 0 },
+      pagination: { total: 2 },
       aggregations: {
         without_email: {
-          doc_count: 0
+          doc_count: 2
         },
         by_source: {
-          buckets: []
+          buckets: [{ key: "reveal", doc_count: 2 }]
         }
       }
     });
@@ -55,28 +56,63 @@ describe("Clearbit API errors", () => {
           }
         ]
       },
-      batch => {
-        const [first, second, third, fourth] = batch;
-        expect(batch.length).to.equal(4);
+      ({ batch, logs }) => {
+        try {
+          const [first, second, third, fourth] = _.sortBy(batch, "type");
+          const [, firstLog, secondLog, thirdLog, fourthLog, fifthLog] = logs;
 
-        expect(first.type).to.equal("track");
-        expect(first.body.properties.emails[0]).to.equal("foo@foo.bar");
-        expect(first.body.properties.found).to.equal(1);
-        expect(first.body.event).to.equal("Clearbit Prospector Triggered");
+          expect(batch.length).to.equal(4);
+          expect(logs.length).to.equal(6);
 
-        expect(second.type).to.equal("traits");
-        expect(second.body["clearbit/prospected_at"].value).to.not.be.null;
+          // Source user Event
+          expect(first.type).to.equal("track");
+          expect(first.body.properties.emails[0]).to.equal("foo@foo.bar");
+          expect(first.body.properties.found).to.equal(1);
+          expect(first.body.event).to.equal("Clearbit Prospector Triggered");
+          expect(first.claims.sub).to.equal("abc");
 
-        expect(third.type).to.equal("traits");
-        expect(third.body["clearbit/prospected_at"].value).to.not.be.null;
+          // Source user call
+          expect(second.type).to.equal("traits");
+          expect(second.body["clearbit/prospected_at"].operation).to.equal(
+            "setIfNull"
+          );
+          expect(second.body["clearbit/prospected_at"].value).to.not.be.null;
+          expect(second.claims.sub).to.equal("abc");
 
-        expect(fourth.type).to.equal("traits");
-        expect(fourth.body.email.value).to.equal("foo@foo.bar");
-        expect(fourth.body["clearbit/prospected_at"].value).to.not.be.null;
-        expect(fourth.body["clearbit/prospected_from"].value).to.equal("abc");
-        expect(fourth.body["clearbit/source"].value).to.equal("prospector");
-        clearbit.done();
-        done();
+          // New Prospect Call
+          expect(third.type).to.equal("traits");
+          expect(third.body.email.value).to.equal("foo@foo.bar");
+          expect(third.body["clearbit/prospected_at"].value).to.not.be.null;
+          expect(third.body["clearbit/source"].value).to.equal("prospector");
+          expect(third.body["clearbit/prospected_from"].value).to.equal("abc");
+          expect(third.body["clearbit/source"].value).to.equal("prospector");
+          expect(third.claims["io.hull.subjectType"]).to.equal("user");
+          expect(third.claims["io.hull.asUser"].email).to.equal("foo@foo.bar");
+          expect(third.claims["io.hull.asUser"].anonymous_id).to.equal(
+            "clearbit-prospect:foobar"
+          );
+
+          // Account Call
+          expect(fourth.type).to.equal("traits");
+          expect(fourth.body["clearbit/prospected_at"].value).to.not.be.null;
+          expect(fourth.body["clearbit/source"].value).to.equal("prospector");
+          expect(fourth.body["clearbit/prospected_from"].value).to.equal("abc");
+          expect(fourth.body["clearbit/source"].value).to.equal("prospector");
+          expect(fourth.claims["io.hull.subjectType"]).to.equal("account");
+          expect(fourth.claims["io.hull.asUser"].email).to.equal("foo@foo.bar");
+          expect(fourth.claims["io.hull.asAccount"].id).to.equal("ACCOUNTID");
+
+          expect(firstLog.message).to.equal("outgoing.account.start");
+          expect(secondLog.message).to.equal("outgoing.user.start");
+          expect(thirdLog.message).to.equal("outgoing.user.success");
+          expect(fourthLog.message).to.equal("incoming.user.success");
+          expect(fifthLog.message).to.equal("incoming.account.success");
+
+          clearbit.done();
+          done();
+        } catch (e) {
+          throw new Error(e);
+        }
       }
     );
   });
@@ -91,16 +127,16 @@ describe("Clearbit API errors", () => {
         email: true,
         title: "foo"
       })
-      .reply(200, [{ email: "foo@foo.bar" }]);
+      .reply(200, [{ email: "foo@foo.bar", id: "1234Clearbit" }]);
 
     mocks.minihull.stubApp("/api/v1/search/user_reports").respond({
-      pagination: { total: 0 },
+      pagination: { total: 1 },
       aggregations: {
         without_email: {
-          doc_count: 0
+          doc_count: 1
         },
         by_source: {
-          buckets: []
+          buckets: [{ key: "reveal", doc_count: 1 }]
         }
       }
     });
@@ -112,9 +148,11 @@ describe("Clearbit API errors", () => {
           private_settings: {
             api_key: "123",
             prospect_enabled: true,
+            handle_accounts: true,
             prospect_segments: ["1"],
             prospect_filter_titles: ["foo"],
-            prospect_limit_count: 2
+            prospect_limit_count: 2,
+            reveal_prospect_min_contacts: 1
           }
         },
         messages: [
@@ -128,28 +166,51 @@ describe("Clearbit API errors", () => {
           }
         ]
       },
-      batch => {
-        const [first, second, third, fourth] = batch;
-        expect(batch.length).to.equal(4);
+      ({ batch, logs }) => {
+        try {
+          const [first, second, third, fourth] = _.sortBy(batch, "type");
+          expect(batch.length).to.equal(4);
 
-        expect(first.type).to.equal("track");
-        expect(first.body.properties.emails[0]).to.equal("foo@foo.bar");
-        expect(first.body.properties.found).to.equal(1);
-        expect(first.body.event).to.equal("Clearbit Prospector Triggered");
+          expect(first.type).to.equal("track");
+          expect(first.claims["io.hull.subjectType"]).to.equal("user");
+          expect(first.claims["io.hull.asUser"].id).to.equal("abc");
+          expect(first.body.properties.emails[0]).to.equal("foo@foo.bar");
+          expect(first.body.properties.found).to.equal(1);
+          expect(first.body.event).to.equal("Clearbit Prospector Triggered");
 
-        expect(second.type).to.equal("traits");
-        expect(second.body["clearbit/prospected_at"].value).to.not.be.null;
+          expect(second.type).to.equal("traits");
+          expect(second.claims["io.hull.subjectType"]).to.equal("user");
+          expect(second.claims["io.hull.asUser"].id).to.equal("abc");
+          expect(second.body["clearbit/prospected_at"].value).to.not.be.null;
 
-        expect(third.type).to.equal("traits");
-        expect(third.body["clearbit/prospected_at"].value).to.not.be.null;
+          expect(third.type).to.equal("traits");
+          expect(third.claims["io.hull.subjectType"]).to.equal("user");
+          expect(third.claims["io.hull.asUser"].email).to.equal("foo@foo.bar");
+          expect(third.claims["io.hull.asUser"].anonymous_id).to.equal(
+            "clearbit-prospect:1234Clearbit"
+          );
+          expect(third.body["clearbit/prospect_id"]).to.equal("1234Clearbit");
+          expect(third.body["clearbit/prospected_at"].operation).to.equal(
+            "setIfNull"
+          );
+          expect(third.body["clearbit/prospected_from"].value).to.equal("abc");
+          expect(third.body["clearbit/source"].value).to.equal("prospector");
 
-        expect(fourth.type).to.equal("traits");
-        expect(fourth.body.email.value).to.equal("foo@foo.bar");
-        expect(fourth.body["clearbit/prospected_at"].value).to.not.be.null;
-        expect(fourth.body["clearbit/prospected_from"].value).to.equal("abc");
-        expect(fourth.body["clearbit/source"].value).to.equal("prospector");
-        clearbit.done();
-        done();
+          expect(fourth.type).to.equal("traits");
+          expect(fourth.claims["io.hull.subjectType"]).to.equal("account");
+          expect(fourth.claims["io.hull.asUser"].email).to.equal("foo@foo.bar");
+          expect(fourth.claims["io.hull.asUser"].anonymous_id).to.equal(
+            "clearbit-prospect:1234Clearbit"
+          );
+          expect(fourth.body["clearbit/prospected_at"].value).to.not.be.null;
+          expect(fourth.body["clearbit/prospected_from"].value).to.equal("abc");
+          expect(fourth.body["clearbit/source"].value).to.equal("prospector");
+          clearbit.done();
+          done();
+        } catch (e) {
+          console.log(e);
+          throw new Error(e);
+        }
       }
     );
   });
@@ -161,6 +222,7 @@ describe("Clearbit API errors", () => {
         api_key: "123",
         prospect_enabled: true,
         prospect_segments: ["1"],
+        handle_accounts: true,
         prospect_filter_titles: ["foo", "bar", "zyx"],
         prospect_limit_count: 2
       }
@@ -176,7 +238,7 @@ describe("Clearbit API errors", () => {
         email: true,
         title: "foo"
       })
-      .reply(200, [{ email: "foo@foo.bar" }])
+      .reply(200, [{ email: "foo@foo.bar", id: "clearbit123" }])
       .get("/v1/people/search")
       .query({
         domain: "foo.bar",
@@ -184,7 +246,7 @@ describe("Clearbit API errors", () => {
         email: true,
         title: "bar"
       })
-      .reply(200, [{ email: "foo@bar.bar" }]);
+      .reply(200, [{ email: "foo@bar.bar", id: "clearbit456" }]);
 
     const thirdTitleCall = mocks
       .nock("https://prospector.clearbit.com")
@@ -195,16 +257,16 @@ describe("Clearbit API errors", () => {
         email: true,
         title: "zyx"
       })
-      .reply(200, [{ email: "foo@zyx.bar" }]);
+      .reply(200, [{ email: "foo@zyx.bar", id: "clearbit789" }]);
 
     mocks.minihull.stubApp("/api/v1/search/user_reports").respond({
-      pagination: { total: 0 },
+      pagination: { total: 1 },
       aggregations: {
         without_email: {
-          doc_count: 0
+          doc_count: 1
         },
         by_source: {
-          buckets: []
+          buckets: [{ key: "reveal", doc_count: 1 }]
         }
       }
     });
@@ -220,9 +282,9 @@ describe("Clearbit API errors", () => {
           }
         ]
       },
-      batch => {
-        const [first, second, third, fourth, fifth] = batch;
-        expect(batch.length).to.equal(5);
+      ({ batch, logs }) => {
+        const [first, second, third, fourth, fifth] = _.sortBy(batch, "type");
+        expect(batch.length).to.equal(6);
 
         // Clearbit Prospector Triggered
         expect(first.type).to.equal("track");
@@ -230,21 +292,33 @@ describe("Clearbit API errors", () => {
         expect(first.body.properties.emails[1]).to.equal("foo@bar.bar");
         expect(first.body.properties.found).to.equal(2);
         expect(first.body.event).to.equal("Clearbit Prospector Triggered");
+        expect(first.claims["io.hull.subjectType"]).to.equal("user");
+        expect(first.claims["io.hull.asUser"].id).to.equal("abc");
 
         // Source user trait
         expect(second.type).to.equal("traits");
         expect(second.body["clearbit/prospected_at"].value).to.not.be.null;
+        expect(second.claims["io.hull.subjectType"]).to.equal("user");
+        expect(second.claims["io.hull.asUser"].id).to.equal("abc");
 
         // Accounts trait
-        expect(third.type).to.equal("traits");
-        expect(third.body["clearbit/prospected_at"].value).to.not.be.null;
-
         // Setting traits on first prospected email
+        expect(third.type).to.equal("traits");
+        expect(third.body.email.value).to.equal("foo@foo.bar");
+        expect(third.body["clearbit/prospected_at"].value).to.not.be.null;
+        expect(third.body["clearbit/prospected_from"].value).to.equal("abc");
+        expect(third.claims["io.hull.subjectType"]).to.equal("user");
+        expect(third.claims["io.hull.asUser"].anonymous_id).to.equal(
+          "clearbit-prospect:clearbit123"
+        );
+        expect(third.claims["io.hull.asUser"].email).to.equal("foo@foo.bar");
+
         expect(fourth.type).to.equal("traits");
-        expect(fourth.body.email.value).to.equal("foo@foo.bar");
         expect(fourth.body["clearbit/prospected_at"].value).to.not.be.null;
         expect(fourth.body["clearbit/prospected_from"].value).to.equal("abc");
         expect(fourth.body["clearbit/source"].value).to.equal("prospector");
+        expect(fourth.claims["io.hull.subjectType"]).to.equal("account");
+        expect(fourth.claims["io.hull.asUser"].email).to.equal("foo@foo.bar");
 
         // Setting traits on second prospected email
         expect(fifth.type).to.equal("traits");
@@ -252,6 +326,10 @@ describe("Clearbit API errors", () => {
         expect(fifth.body["clearbit/prospected_at"].value).to.not.be.null;
         expect(fifth.body["clearbit/prospected_from"].value).to.equal("abc");
         expect(fifth.body["clearbit/source"].value).to.equal("prospector");
+        expect(fifth.claims["io.hull.asUser"].anonymous_id).to.equal(
+          "clearbit-prospect:clearbit456"
+        );
+        expect(fifth.claims["io.hull.asUser"].email).to.equal("foo@bar.bar");
 
         expect(thirdTitleCall.isDone()).to.equal(false);
         done();
@@ -311,7 +389,7 @@ describe("Clearbit API errors", () => {
           }
         ]
       },
-      batch => {
+      ({ batch, logs }) => {
         expect(batch.length).to.equal(0);
         done();
       }

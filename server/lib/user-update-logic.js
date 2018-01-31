@@ -7,13 +7,8 @@ export default function userUpdateLogic({
   const { segments, user, account } = message;
   const acc = account || user.account;
 
-  const asUser = client.asUser(user);
-  asUser.logger.info("outgoing.user.start");
   const skips = {};
 
-  if (handle_accounts) {
-    client.asAccount(account).logger.info("outgoing.account.start");
-  }
   if (clearbit.canEnrich(user)) {
     const { should, message: msg } = clearbit.shouldEnrich(message);
     if (should) return clearbit.enrichUser(user);
@@ -41,7 +36,10 @@ export default function userUpdateLogic({
     user,
     account: acc
   });
-  if (shouldProspect) return clearbit.prospectUsers(user, acc);
+
+  if (shouldProspect) {
+    return clearbit.prospectUser(user, acc);
+  }
   skips.prospect = prospectMessage;
 
   const reason = { reason: "no action matched", ...skips };

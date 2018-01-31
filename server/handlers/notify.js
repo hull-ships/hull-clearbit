@@ -1,3 +1,4 @@
+import _ from "lodash";
 import Promise from "bluebird";
 import { smartNotifierHandler } from "hull/lib/utils";
 import Clearbit from "../clearbit";
@@ -23,11 +24,33 @@ export default function notifyHandler({ hostSecret, stream = false }) {
           metric,
           hostname
         });
+        const { private_settings } = ship;
+        const { handle_accounts } = private_settings;
+
+        const ids = _.reduce(
+          messages,
+          (memo, { user = {}, account = {} }) => {
+            if (user.id) memo.users.push(user.id);
+            if (account.id) memo.accounts.push(account.id);
+            return memo;
+          },
+          {
+            users: [],
+            accounts: []
+          }
+        );
+        if (handle_accounts && ids.accounts.length) {
+          client.logger.info("outgoing.account.start", { ids: ids.accounts });
+        }
+        client.logger.info("outgoing.user.start", { ids: ids.users });
+
         return Promise.all(
           messages.map(message =>
-            userUpdateLogic({ message, clearbit, client })
+            userUpdateLogic({ message, handle_accounts, clearbit, client })
           )
-        );
+        ).then(res => {
+          return res;
+        });
       }
     }
   });

@@ -4254,9 +4254,9 @@ hull-client@1.1.5:
     uuid "^3.0.1"
     winston "^2.2.0"
 
-hull-connector-dev@^1.0.39:
-  version "1.0.39"
-  resolved "https://registry.yarnpkg.com/hull-connector-dev/-/hull-connector-dev-1.0.39.tgz#d2d28438891102f3e7263f0a624a0f54f216139f"
+hull-connector-dev@^1.0.41:
+  version "1.0.41"
+  resolved "https://registry.yarnpkg.com/hull-connector-dev/-/hull-connector-dev-1.0.41.tgz#dbe4d7620feb9e9d41d86028dd4909a0a531a96b"
   dependencies:
     assert "^1.4.1"
     babel-jest "^22.0.3"
@@ -4305,9 +4305,9 @@ hull-connector-dev@^1.0.39:
     webpack-dev-middleware "^2.0.2"
     webpack-hot-middleware "^2.21.0"
 
-hull-connector@^1.0.39:
-  version "1.0.39"
-  resolved "https://registry.yarnpkg.com/hull-connector/-/hull-connector-1.0.39.tgz#e47724ea89aaf6a24a7f3f2aca49880d5e10b5ee"
+hull-connector@^1.0.41:
+  version "1.0.41"
+  resolved "https://registry.yarnpkg.com/hull-connector/-/hull-connector-1.0.41.tgz#78c4305c08267b0eaabda491758494ce740214c5"
   dependencies:
     autoprefixer "^7.2.3"
     babel-cli "^6.26.0"
@@ -4350,7 +4350,7 @@ hull-connector@^1.0.39:
     webpack "^3.10.0"
     webpack-alternate-require-loader "^0.0.3"
 
-hull@^0.13.9:
+hull@^0.13.10:
   version "0.13.10"
   resolved "https://registry.yarnpkg.com/hull/-/hull-0.13.10.tgz#7c9f55a7e3bca13be55eab5414973162444a1acd"
   dependencies:

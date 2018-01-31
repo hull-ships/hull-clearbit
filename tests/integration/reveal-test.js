@@ -68,7 +68,7 @@ describe("Reveal action", () => {
           }
         ]
       },
-      batch => {
+      ({ batch, logs }) => {
         const [first] = batch;
         expect(batch.length).to.equal(1);
         expect(first.type).to.equal("traits");
@@ -137,7 +137,7 @@ describe("Reveal action", () => {
           }
         ]
       },
-      batch => {
+      ({ batch, logs }) => {
         const [first, second] = batch;
         expect(batch.length).to.equal(2);
         expect(first.type).to.equal("traits");

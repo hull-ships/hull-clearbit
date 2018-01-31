@@ -62,9 +62,13 @@ export function shouldProspect(message = {}, settings = {}) {
  * @param  {Object(user)} payload - Hull user object
  * @return {Promise -> Bool}
  */
-export function shouldProspectUsersFromDomain({ domain, hull, settings }) {
+export function shouldprospectUserFromDomain({ domain, hull, settings }) {
   if (_.includes(excludes.domains, domain)) {
-    return Promise.resolve(false);
+    return Promise.resolve({
+      should: false,
+      reason:
+        "We don't prospect excluded domains. See https://github.com/hull-ships/hull-clearbit/blob/master/server/excludes.js"
+    });
   }
 
   const query = {
@@ -116,12 +120,13 @@ export function shouldProspectUsersFromDomain({ domain, hull, settings }) {
 
       const min_contacts = settings.reveal_prospect_min_contacts || 1;
 
+      // Prospect if we have at least a given number of reveals.
       if (bySource.reveal && anonymous >= min_contacts) {
         return { should: true };
       }
 
       return {
-        should: true,
+        should: false,
         reason:
           "We are under the unique anonymous visitors threshold for prospecting"
       };

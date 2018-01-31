@@ -25,7 +25,9 @@ export default function handleUserUpdate({ hostSecret, stream = false }) {
     });
 
     return Promise.all(
-      messages.map(message => userUpdateLogic({ message, clearbit, client, handle_accounts }))
+      messages.map(message =>
+        userUpdateLogic({ message, clearbit, client, handle_accounts })
+      )
     );
   };
 }

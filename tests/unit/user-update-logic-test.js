@@ -24,7 +24,7 @@ describe("User Update Logic", () => {
     clearbit.revealUser = revealSpy;
     clearbit.enrichUser = enrichSpy;
     clearbit.discoverSimilarCompanies = similarSpy;
-    clearbit.prospectUsers = prospectSpy;
+    clearbit.prospectUser = prospectSpy;
     clearbit.client = {};
     return { client, clearbit, revealSpy, enrichSpy, similarSpy, prospectSpy };
   };
