@@ -421,7 +421,7 @@ export default class Clearbit {
 
     const direction = incoming ? "incoming" : "outgoing";
 
-    if (!ident || _.size(ident)) {
+    if (!ident || !_.size(ident)) {
       const error = new Error("Missing identifier for user");
       error.status = 400;
       return Promise.reject(error);
