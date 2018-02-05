@@ -3459,7 +3459,7 @@ extendible@0.1.x:
   version "0.1.1"
   resolved "https://registry.yarnpkg.com/extendible/-/extendible-0.1.1.tgz#e2a37ed87129fb4f9533e8a8d7506230a539c905"
 
-external-editor@^2.0.4:
+external-editor@^2.0.4, external-editor@^2.1.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/external-editor/-/external-editor-2.1.0.tgz#3d026a21b7f95b5726387d4200ac160d372c3b48"
   dependencies:
@@ -4254,9 +4254,9 @@ hull-client@1.1.5:
     uuid "^3.0.1"
     winston "^2.2.0"
 
-hull-connector-dev@^1.0.41:
-  version "1.0.41"
-  resolved "https://registry.yarnpkg.com/hull-connector-dev/-/hull-connector-dev-1.0.41.tgz#dbe4d7620feb9e9d41d86028dd4909a0a531a96b"
+hull-connector-dev@1.0.42:
+  version "1.0.42"
+  resolved "https://registry.yarnpkg.com/hull-connector-dev/-/hull-connector-dev-1.0.42.tgz#e38340254c55b6066ccdbd6763b675e2e5bf36f3"
   dependencies:
     assert "^1.4.1"
     babel-jest "^22.0.3"
@@ -4282,15 +4282,21 @@ hull-connector-dev@^1.0.41:
     exit-hook "^1.1.1"
     faker "^4.1.0"
     flow-bin "^0.61.0"
+    hull "^0.13.10"
+    inquirer "^5.0.1"
     jest "^22.0.3"
+    json-colorizer "^1.1.0"
     jwt-simple "^0.5.1"
     lint-staged "^6.0.0"
+    lodash "^4.17.4"
     lodash-id "^0.14.0"
     mini-application "^1.0.6"
     minihull "^2.1.0"
+    minimist "^1.2.0"
     mocha "^4.0.1"
     mocha-sinon "^2.0.0"
     ngrok "^2.2.24"
+    nock "^9.1.6"
     npm-check "^5.5.2"
     prettier "^1.9.2"
     progress-bar-webpack-plugin "^1.10.0"
@@ -4299,15 +4305,16 @@ hull-connector-dev@^1.0.41:
     reactotron "^0.9.0"
     reactotron-react-js "^1.13.0"
     reactotron-redux "^1.13.0"
+    repl "^0.1.3"
     rimraf "^2.6.2"
     shelljs "^0.8.1"
     sinon "^4.1.3"
     webpack-dev-middleware "^2.0.2"
     webpack-hot-middleware "^2.21.0"
 
-hull-connector@^1.0.41:
-  version "1.0.41"
-  resolved "https://registry.yarnpkg.com/hull-connector/-/hull-connector-1.0.41.tgz#78c4305c08267b0eaabda491758494ce740214c5"
+hull-connector@1.0.42:
+  version "1.0.42"
+  resolved "https://registry.yarnpkg.com/hull-connector/-/hull-connector-1.0.42.tgz#5cb49c033ee78614ce926f45f4f310f0b1014cba"
   dependencies:
     autoprefixer "^7.2.3"
     babel-cli "^6.26.0"
@@ -4511,6 +4518,24 @@ inquirer@^0.12.0:
     rx-lite "^3.1.2"
     string-width "^1.0.1"
     strip-ansi "^3.0.0"
+    through "^2.3.6"
+
+inquirer@^5.0.1:
+  version "5.0.1"
+  resolved "https://registry.yarnpkg.com/inquirer/-/inquirer-5.0.1.tgz#5c0396c974fd98df4cab9afd26ed85874b563550"
+  dependencies:
+    ansi-escapes "^3.0.0"
+    chalk "^2.0.0"
+    cli-cursor "^2.1.0"
+    cli-width "^2.0.0"
+    external-editor "^2.1.0"
+    figures "^2.0.0"
+    lodash "^4.3.0"
+    mute-stream "0.0.7"
+    run-async "^2.2.0"
+    rxjs "^5.5.2"
+    string-width "^2.1.0"
+    strip-ansi "^4.0.0"
     through "^2.3.6"
 
 interpret@^1.0.0:
@@ -5312,6 +5337,12 @@ json-bigint@^0.1.4:
   resolved "https://registry.yarnpkg.com/json-bigint/-/json-bigint-0.1.4.tgz#b5d40b8a9009e92f157f7c079db097001830e01e"
   dependencies:
     bignumber.js "~1.1.1"
+
+json-colorizer@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/json-colorizer/-/json-colorizer-1.1.0.tgz#25b8aeb7403c9c3534d831b3f16b2f5219b8b423"
+  dependencies:
+    chalk "^1.1.3"
 
 json-loader@^0.5.4:
   version "0.5.7"
@@ -7973,6 +8004,10 @@ repeating@^2.0.0:
   dependencies:
     is-finite "^1.0.0"
 
+repl@^0.1.3:
+  version "0.1.3"
+  resolved "https://registry.yarnpkg.com/repl/-/repl-0.1.3.tgz#2f05d42b0c88b43d05ccbda10ed14aeff5699b60"
+
 request-promise-core@1.1.1:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/request-promise-core/-/request-promise-core-1.1.1.tgz#3eee00b2c5aa83239cfb04c5700da36f81cd08b6"
@@ -8211,7 +8246,7 @@ rx@2.3.24:
   version "2.3.24"
   resolved "https://registry.yarnpkg.com/rx/-/rx-2.3.24.tgz#14f950a4217d7e35daa71bbcbe58eff68ea4b2b7"
 
-rxjs@^5.4.2:
+rxjs@^5.4.2, rxjs@^5.5.2:
   version "5.5.6"
   resolved "https://registry.yarnpkg.com/rxjs/-/rxjs-5.5.6.tgz#e31fb96d6fd2ff1fd84bcea8ae9c02d007179c02"
   dependencies:
