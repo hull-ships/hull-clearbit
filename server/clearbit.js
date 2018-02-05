@@ -406,14 +406,13 @@ export default class Clearbit {
   saveUser(user = {}, person = {}, options = {}) {
     const { id, external_id } = user;
     const email = user.email || person.email;
-    const userIdent = { id, external_id, email };
     const { source, incoming } = options;
 
     // Custom Resolution strategy.
     // Only uses one identifier. [Why did we do this ?]
     let ident;
     if (id) {
-      ident = {};
+      ident = { id };
     } else if (external_id) {
       ident = { external_id };
     } else if (email) {
@@ -422,7 +421,7 @@ export default class Clearbit {
 
     const direction = incoming ? "incoming" : "outgoing";
 
-    if (!ident) {
+    if (!ident || _.size(ident)) {
       const error = new Error("Missing identifier for user");
       error.status = 400;
       return Promise.reject(error);
@@ -494,10 +493,7 @@ export default class Clearbit {
     }
 
     return Promise.all(promises).then(() => {
-      this.hull
-        .asUser(userIdent)
-        .logger.info(`${direction}.user.success`, { ...options, traits });
-
+      asUser.logger.info(`${direction}.user.success`, { ...options, traits });
       return { traits, user, person };
     });
   }
