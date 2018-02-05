@@ -171,7 +171,7 @@ describe("User Update Logic", () => {
     assert(cb.prospectSpy.notCalled);
   });
 
-  it("should not enrich or Reveale Users with Enrichment data", () => {
+  it("should not enrich or Reveal Users with Enrichment data", () => {
     const cb = makeClearbit({
       enrich_segments: ["1"],
       enrich_enabled: true,
