@@ -80,6 +80,7 @@ describe("Reveal action", () => {
         expect(first.body["clearbit/fetched_at"].value).to.not.be.null;
         expect(first.body["clearbit/fetched_at"].operation).to.eql("setIfNull");
         expect(first.body["clearbit_company/name"]).to.equal("Hull");
+        expect(first.claims["io.hull.asUser"].id).to.equal("1234");
         done();
       }
     );
