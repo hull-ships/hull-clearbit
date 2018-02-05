@@ -47,7 +47,6 @@ describe("Enrich action", () => {
           "//": "..."
         }
       });
-
     mocks.minihull.userUpdate(
       {
         connector,
@@ -61,8 +60,10 @@ describe("Enrich action", () => {
           }
         ]
       },
-      batch => {
+      ({ batch, logs }) => {
         const [first] = batch;
+        expect(logs[1].message).to.equal("outgoing.user.start");
+        expect(logs[2].message).to.equal("outgoing.user.success");
         expect(first.body.last_name).to.deep.equal({
           operation: "setIfNull",
           value: "MacCaw"
@@ -108,7 +109,8 @@ describe("Enrich action", () => {
           }
         ]
       },
-      batch => {
+      ({ batch, logs }) => {
+        expect(logs[2].message).to.equal("outgoing.user.error");
         expect(batch.length).to.equal(0);
         done();
       }

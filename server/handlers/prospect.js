@@ -16,16 +16,14 @@ export default function handleProspect({ hostSecret }) {
         metric
       });
       const prospecting = Promise.mapSeries(domains, domain => {
-        const params = {
+        const query = {
           domain,
           role,
           seniority,
           titles,
           limit
         };
-        return cb.fetchProspects(params).then(ret => {
-          return ret;
-        });
+        return cb.fetchProspects({ query });
       });
 
       Promise.all(prospecting)

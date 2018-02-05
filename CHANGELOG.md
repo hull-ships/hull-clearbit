@@ -1,6 +1,8 @@
 # Changelog
 
 ## 0.3.3
+- improve test coverage and integration tests
+- Fix prospector minimum anonymous user condition
 - Even better metrics.
 - Update dependencies
 - use `/test/mocha.opts` to centralize mocha config, now atom's `mocha-test-runner plugin can be used` - no need to open a terminal, open the test file and run `ctrl-alt-m`
