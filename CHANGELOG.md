@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.4.2
+- upgrade Node to v8 and install pm2
+
 ## 0.4.1
 - downgrade Node to v6
 
