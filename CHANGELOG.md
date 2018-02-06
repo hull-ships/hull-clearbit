@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.4.4
+- make pm2 output raw logs without prefix
+
 ## 0.4.3
 - adjust pm2 startup script
 
