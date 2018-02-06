@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.4.1
+- downgrade Node to v6
+
 ## 0.3.3
 - improve test coverage and integration tests
 - Fix prospector minimum anonymous user condition
