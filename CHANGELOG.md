@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.4.3
+- adjust pm2 startup script
+
 ## 0.4.2
 - upgrade Node to v8 and install pm2
 
