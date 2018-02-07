@@ -1,7 +1,7 @@
 {
   "name": "hull-clearbit",
   "description": "Enrich Customer data with Clearbit",
-  "version": "0.4.7",
+"version": "0.4.8",
   "main": "index.js",
   "license": "MIT",
   "homepage": "https://github.com/hull-ships/hull-clearbit",
@@ -51,7 +51,7 @@
     "test:modules": "builder run test:modules",
     "test:specs": "builder run test:specs",
     "test:units": "builder run test:units",
-    "start": "NODE_ENV=production node --optimize_for_size --max_old_space_size=$MEMORY_AVAILABLE -r newrelic ./node_modules/.bin/pm2-runtime --raw lib",
+    "start": "NODE_ENV=production node --optimize_for_size --max_old_space_size=$MEMORY_AVAILABLE -r newrelic ./node_modules/.bin/pm2-runtime --raw process.yml",
     "dev": "builder run dev",
     "test": "builder run npm:test"
   },

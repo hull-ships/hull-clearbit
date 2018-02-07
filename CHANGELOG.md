@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.4.8
+- add pm2 max memory limit
+
 ## 0.4.7
 - introduce separate babelJS configuration for server side code
 
