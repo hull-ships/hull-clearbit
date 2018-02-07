@@ -13,8 +13,8 @@ export default function notifyHandler({ hostSecret, stream = false }) {
       ) => {
         smartNotifierResponse.setFlowControl({
           type: "next",
-          size: 200,
-          in: 100
+          size: parseInt(process.env.FLOW_CONTROL_SIZE, 10) || 200,
+          in: parseInt(process.env.FLOW_CONTROL_IN, 10) || 100
         });
         const clearbit = new Clearbit({
           hull: client,

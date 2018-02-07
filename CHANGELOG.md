@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.4.6
+- optimize node for memory usage and add flow control env vars
+
 ## 0.4.5
 - fix batch endpoint by correcting Bottleneck signature
 
