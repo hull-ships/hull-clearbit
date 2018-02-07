@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.4.7
+- introduce separate babelJS configuration for server side code
+
 ## 0.4.6
 - optimize node for memory usage and add flow control env vars
 

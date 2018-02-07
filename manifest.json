@@ -7,7 +7,7 @@
   "admin": "admin.html",
   "source": "clearbit",
   "readme": "readme.md",
-  "version": "0.4.6",
+  "version": "0.4.7",
   "private_settings": [
     {
       "type": "string",
