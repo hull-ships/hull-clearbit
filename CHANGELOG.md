@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.4.5
+- fix batch endpoint by correcting Bottleneck signature
+
 ## 0.4.4
 - make pm2 output raw logs without prefix
 

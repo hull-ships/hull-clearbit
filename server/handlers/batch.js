@@ -3,7 +3,10 @@ import _ from "lodash";
 import Bottleneck from "bottleneck";
 import Clearbit from "../clearbit";
 
-const Limiter = new Bottleneck.Group(3, 250);
+const Limiter = new Bottleneck.Group({
+  maxConcurrent: 3,
+  minTime: 250
+});
 
 const printLimits = _.throttle(() => {
   Limiter.limiters().map(({ limiter }) => {
