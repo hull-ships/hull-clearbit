@@ -1,7 +1,7 @@
 {
   "name": "hull-clearbit",
   "description": "Enrich Customer data with Clearbit",
-"version": "0.4.8",
+  "version": "0.4.9",
   "main": "index.js",
   "license": "MIT",
   "homepage": "https://github.com/hull-ships/hull-clearbit",

@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.4.9
+- Fix Prospector UI not having a Source user to assign track & traits
+
 ## 0.4.8
 - add pm2 max memory limit
 
