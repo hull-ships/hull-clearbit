@@ -232,19 +232,24 @@ export default class Clearbit {
           prospects: response
         };
         asUser.logger.info("outgoing.user.success", log);
-        asUser.track(
-          "Clearbit Prospector Triggered",
-          {
-            ..._.mapKeys(query, (v, k) => `query_${k}`),
-            found: response.length,
-            emails: _.keys(prospects)
-          },
-          { ip: 0 }
-        );
-        asUser.traits(
-          { prospected_at: { value: now(), operation: "setIfNull" } },
-          { source: "clearbit" }
-        );
+
+        // If we're scoped as Hull (and not as a User)
+        // - when coming from the Prospector UI, then we can't add Track & Traits.
+        if (asUser.track && asUser.traits) {
+          asUser.track(
+            "Clearbit Prospector Triggered",
+            {
+              ..._.mapKeys(query, (v, k) => `query_${k}`),
+              found: response.length,
+              emails: _.keys(prospects)
+            },
+            { ip: 0 }
+          );
+          asUser.traits(
+            { prospected_at: { value: now(), operation: "setIfNull" } },
+            { source: "clearbit" }
+          );
+        }
         return response;
       })
       .then(response =>
