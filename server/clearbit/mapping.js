@@ -67,5 +67,18 @@ export default function getUserTraitsFromPerson(
     {}
   );
 
+  // Overcome the value:key restrictions and add last_name and first_name to top level traits
+  // if the mappingName is Person
+  if (mappingName === "Person") {
+    _.set(traits, "last_name", {
+      value: _.get(person, "name.familyName"),
+      operation: "setIfNull"
+    });
+    _.set(traits, "first_name", {
+      value: _.get(person, "name.givenName"),
+      operation: "setIfNull"
+    });
+  }
+
   return _.omitBy(traits, _.isNil);
 }

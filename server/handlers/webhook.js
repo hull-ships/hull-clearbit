@@ -52,7 +52,10 @@ export default function handleWebhook({ hostSecret, Hull }) {
         metric("ship.clearbit.incoming_webhook", 1);
       }
     } catch (err) {
-      console.warn("Error on webhook onMetric: ", err);
+      Hull.logger.debug(
+        "Error when trying to increase ship.clearbit.incoming_webhook counter",
+        err
+      );
     }
   };
 }
