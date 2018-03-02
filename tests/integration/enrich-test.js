@@ -79,6 +79,14 @@ describe("Enrich action", () => {
         expect(_.get(first, "body.clearbit_company/domain", "")).to.equal(
           "clearbit.com"
         );
+        expect(_.get(first, "body.last_name", "")).to.deep.equal({
+          value: "MacCaw",
+          operation: "setIfNull"
+        });
+        expect(_.get(first, "body.first_name", "")).to.deep.equal({
+          value: "Alex",
+          operation: "setIfNull"
+        });
         expect(batch.length).to.equal(1);
         done();
       }
