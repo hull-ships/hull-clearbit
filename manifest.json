@@ -5,6 +5,14 @@
   "ui": false,
   "picture": "picture.png",
   "admin": "admin.html",
+  "tabs": [
+    {
+      "title": "Prospector",
+      "url": "admin.html",
+      "size": "large",
+      "editable": false
+    }
+  ],
   "source": "clearbit",
   "readme": "readme.md",
   "version": "0.4.9",
