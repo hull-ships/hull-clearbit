@@ -1,4 +1,5 @@
 import { expect } from "chai";
+import _ from "lodash";
 import mockr from "hull-connector-dev/lib/mockr";
 import server from "../../server/server";
 
@@ -64,20 +65,20 @@ describe("Enrich action", () => {
         const [first] = batch;
         expect(logs[1].message).to.equal("outgoing.user.start");
         expect(logs[2].message).to.equal("outgoing.user.success");
-        expect(first.body.last_name).to.deep.equal({
-          operation: "setIfNull",
-          value: "MacCaw"
+        expect(_.get(first, "body.clearbit/last_name", "")).to.equal("MacCaw");
+        expect(_.get(first, "body.clearbit/email", "")).to.equal(
+          "alex@clearbit.com"
+        );
+        expect(_.get(first, "body.clearbit/first_name", "")).to.deep.equal(
+          "Alex"
+        );
+        expect(_.get(first, "body.clearbit/source", "")).to.deep.equal({
+          value: "enrich",
+          operation: "setIfNull"
         });
-        expect(first.body.last_name).to.deep.equal({
-          operation: "setIfNull",
-          value: "MacCaw"
-        });
-        expect(first.body.first_name).to.deep.equal({
-          operation: "setIfNull",
-          value: "Alex"
-        });
-        expect(first.body["clearbit/source"].value).to.equal("enrich");
-        expect(first.body["clearbit_company/domain"]).to.equal("clearbit.com");
+        expect(_.get(first, "body.clearbit_company/domain", "")).to.equal(
+          "clearbit.com"
+        );
         expect(batch.length).to.equal(1);
         done();
       }
