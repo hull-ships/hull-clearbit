@@ -409,8 +409,6 @@ export default class Clearbit {
    * @return {Promise -> Object({ user, person })}
    */
   saveUser(user = {}, person = {}, options = {}) {
-    // const { id, external_id } = user;
-    // const email = user.email || person.email;
     const { source, incoming } = options;
 
     // Never ever change the email address (Clearbit strips +xxx parts, so we end up with complete
