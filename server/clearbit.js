@@ -409,20 +409,12 @@ export default class Clearbit {
    * @return {Promise -> Object({ user, person })}
    */
   saveUser(user = {}, person = {}, options = {}) {
-    const { id, external_id } = user;
-    const email = user.email || person.email;
     const { source, incoming } = options;
 
-    // Custom Resolution strategy.
-    // Only uses one identifier. [Why did we do this ?]
-    let ident;
-    if (id) {
-      ident = { id };
-    } else if (external_id) {
-      ident = { external_id };
-    } else if (email) {
-      ident = { email };
-    }
+    // Never ever change the email address (Clearbit strips +xxx parts, so we end up with complete
+    // messed up ident claims if we do this). We need to pass all claims
+    // to the platform to allow proper identity resolution.
+    const ident = _.pick(user, ["id", "external_id", "email"]);
 
     const direction = incoming ? "incoming" : "outgoing";
 

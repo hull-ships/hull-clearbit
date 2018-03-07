@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.10
+- adds dashboard tab
+- changes ident building when saving users
+- write email, first and last name to clearbit traits group, add setIfNull for `first_name` and `last_name`
+
 ## 0.4.9
 - Fix Prospector UI not having a Source user to assign track & traits
 
