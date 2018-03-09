@@ -1,4 +1,4 @@
 apps:
   - script: 'lib/index.js'
     name: 'hull-clearbit'
-    max_memory_restart: '750M'
+    max_memory_restart: '850M'
