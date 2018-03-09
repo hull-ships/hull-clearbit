@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.4.11
+- upgrade nodejs to v8.10.0
+
 ## 0.4.10
 - adds dashboard tab
 - changes ident building when saving users
