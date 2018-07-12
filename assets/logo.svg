@@ -1,1 +1,22 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="257" height="257" viewBox="0 0 257 257"><defs><circle id="logo-a" cx="128.5" cy="128.5" r="124.5"/></defs><g fill="none" fill-rule="evenodd"><circle cx="128" cy="128" r="125" fill="#FFF" transform="translate(.5 .5)"/><mask id="logo-b" fill="#fff"><use xlink:href="#logo-a"/></mask><use fill="#4693F5" xlink:href="#logo-a"/><g fill="#FFF" mask="url(#logo-b)"><g><path d="M76,0 L128.6,0 C141.523463,-2.37400167e-15 152,10.4765369 152,23.4 L152,76 L76,76 L76,0 Z" opacity=".9" transform="translate(53 53)"/><path d="M23.4,0 L76,0 L76,152 L23.4,152 C10.4765369,152 1.58266778e-15,141.523463 0,128.6 L0,23.4 C-1.58266778e-15,10.4765369 10.4765369,2.37400167e-15 23.4,0 Z" transform="translate(53 53)"/><path d="M76,76 L152,76 L152,128.6 C152,141.523463 141.523463,152 128.6,152 L76,152 L76,76 Z" opacity=".1" transform="translate(53 53)"/></g></g></g></svg>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="257px" height="257px" viewBox="0 0 257 257" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 50.2 (55047) - http://www.bohemiancoding.com/sketch -->
+    <title>clearbit/logo</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <circle id="path-1" cx="128.5" cy="128.5" r="125.5"></circle>
+    </defs>
+    <g id="clearbit/logo" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <mask id="mask-2" fill="white">
+            <use xlink:href="#path-1"></use>
+        </mask>
+        <use id="Mask" fill="#4693F5" xlink:href="#path-1"></use>
+        <g id="Group" mask="url(#mask-2)" fill="#FFFFFF">
+            <g transform="translate(53.000000, 53.000000)">
+                <path d="M76,0 L128.6,0 C141.523463,-2.37400167e-15 152,10.4765369 152,23.4 L152,76 L76,76 L76,0 Z" id="Rectangle-96-Copy-4" opacity="0.900000036"></path>
+                <path d="M23.4,0 L76,0 L76,152 L23.4,152 C10.4765369,152 1.58266778e-15,141.523463 0,128.6 L0,23.4 C-1.58266778e-15,10.4765369 10.4765369,2.37400167e-15 23.4,0 Z" id="Rectangle-96"></path>
+                <path d="M76,76 L152,76 L152,128.6 C152,141.523463 141.523463,152 128.6,152 L76,152 L76,76 Z" id="Rectangle-96-Copy-3" opacity="0.100000001"></path>
+            </g>
+        </g>
+    </g>
+</svg>
