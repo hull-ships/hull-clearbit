@@ -32,8 +32,9 @@ function handleBatchUpdate({ hostSecret }) {
     const limiter = Limiter.key(ship.id);
 
     const users = messages.map(m => m.user).filter(u => u.email);
+    const accounts = messages.map(m => m.account).filter(a => a.domain);
 
-    if (users.length === 0) {
+    if (users.length === 0 && accounts.length === 0) {
       return false;
     }
 
@@ -55,9 +56,22 @@ function handleBatchUpdate({ hostSecret }) {
       done(user);
     };
 
-    return users.map(user =>
+    const handleAccountMessage = (account, done) => {
+      if (clearbit.canEnrichAcct(account)) {
+        clearbit.enrichAcct(account);
+      }
+      done(account);
+    };
+
+    users.map(user =>
       limiter.submit(handleMessage, user, () => {
         // DO NOT REMOVE THIS CALLBACK
+        printLimits();
+      })
+    );
+
+    return accounts.map(acct =>
+      limiter.submit(handleAccountMessage, acct, () => {
         printLimits();
       })
     );

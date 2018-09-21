@@ -13,6 +13,10 @@ export default function userUpdateLogic({
     const { should, message: msg } = clearbit.shouldEnrich(message);
     if (should) return clearbit.enrichUser(user);
     skips.enrich = msg;
+  } else if (clearbit.canEnrichAcct(account)) {
+    const { should, message: msg } = clearbit.shouldEnrichAcct(message);
+    if (should) return clearbit.enrichAcct(account);
+    skips.enrich = msg;
   }
 
   if (clearbit.canReveal(user)) {

@@ -34,6 +34,20 @@ function lookupIsPending(user) {
 }
 
 /**
+ * Checks if an enrich call is pending and we are waiting for
+ * the webhook result.
+ *
+ * @param {Account} account - A Hull account
+ * @return {Boolean}
+ */
+function lookupForAccountIsPending(account) {
+  const fetchedAt = _.get(account, "clearbit/fetched_at");
+  const cbId = _.get(account, "clearbit/id");
+  const timeThreshold = moment().subtract(1, "hours");
+  return fetchedAt && moment(fetchedAt).isAfter(timeThreshold) && !cbId;
+}
+
+/**
  * Fetch data from Clearbit's Enrichment API and save it as
  * traits on the Hull user
  * @param  {User} user - Hull User
@@ -66,6 +80,23 @@ function fetchFromEnrich(user = {}, clearbit) {
     .then(({ person = {}, company = {} }) => ({ ...person, company }));
 }
 
+function fetchAccountFromEnrich(account = {}, clearbit) {
+  const payload = {
+    domain: account.domain
+  };
+
+  if (clearbit.hostname) {
+    payload.webhook_url = `https://${
+      clearbit.hostname
+    }/clearbit-enrich-account?ship=${clearbit.ship.id}&id=${getWebhookId(
+      account.id,
+      clearbit
+    )}`;
+  }
+
+  return clearbit.client.enrichCompany(payload);
+}
+
 /**
  * Check if we can Enrich the User (based on user data and ship configuration)
  * @param  {User({ email })} user - A user profile
@@ -76,6 +107,20 @@ export function canEnrich(user = {}, settings = {}) {
   // To check if the user matches one of them
   const { enrich_enabled } = settings;
   return enrich_enabled && !_.isEmpty(user.email);
+}
+
+/**
+ * Check if we can enrich the Account (based on account data and ship configuration)
+ *
+ * @param {*} [account={}] account - An account profile
+ * @param {*} [settings={}] - The connector settings
+ * @returns {Bollean}
+ */
+export function canEnrichAccount(account = {}, settings = {}) {
+  const { enrich_enabled, handle_accounts } = settings;
+  return (
+    enrich_enabled && !_.isEmpty(_.get(account, "domain")) && handle_accounts
+  );
 }
 
 /**
@@ -118,6 +163,51 @@ export function shouldEnrich(message = {}, settings = {}) {
   return { should: true };
 }
 
+/**
+ * Check if we should Enrich the Account (based on account data and ship configuration)
+ *
+ * @param {*} [message={}] message - A user:update message
+ * @param {*} [settings={}] settings - Connector settings
+ * @return {Boolean}
+ */
+export function shouldEnrichAccount(message = {}, settings = {}) {
+  const { user = {}, segments = [], account = {} } = message;
+  const { enrich_segments = [], enrich_enabled } = settings;
+
+  // Skip if enrich is disabled
+  if (!enrich_enabled) {
+    return { should: false, message: "Enrich isn't enabled" };
+  }
+
+  // Skip if no segments match
+  if (!_.isEmpty(enrich_segments) && !isInSegments(segments, enrich_segments)) {
+    return {
+      should: false,
+      message: "Enrich Segments are defined but User isn't in any of them"
+    };
+  }
+
+  // Skip if we are waiting for the webhook
+  if (lookupIsPending(user) || lookupForAccountIsPending(account)) {
+    return { should: false, message: "Waiting for webhook" };
+  }
+
+  // Skip if we have a Clearbit ID already
+  if (user["traits_clearbit/id"] || _.get(account, "clearbit/id")) {
+    return { should: false, message: "Clearbit ID present" };
+  }
+
+  // Skip if we have already tried enriching
+  if (
+    user["traits_clearbit/enriched_at"] ||
+    _.get(account, "clearbit/enriched_at")
+  ) {
+    return { should: false, message: "enriched_at present" };
+  }
+
+  return { should: true };
+}
+
 export function enrichUser(user, clearbit) {
   if (!user) {
     return Promise.reject(new Error("Empty user"));
@@ -127,6 +217,21 @@ export function enrichUser(user, clearbit) {
     return fetchFromEnrich(user, clearbit).then(person => ({
       source: "enrich",
       person
+    }));
+  }
+
+  return Promise.resolve(false);
+}
+
+export function enrichAccount(account, clearbit) {
+  if (!account) {
+    return Promise.reject(new Error("Empty account"));
+  }
+
+  if (account.domain) {
+    return fetchAccountFromEnrich(account, clearbit).then(company => ({
+      source: "enrich",
+      company
     }));
   }
 

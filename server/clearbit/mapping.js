@@ -16,7 +16,7 @@ function getMapping(key) {
  * @param  {mappings} mappings - mappings to user
  * @return {Object}
  */
-export default function getUserTraitsFromPerson(
+export function getUserTraitsFromPerson(
   { user = {}, person = {} },
   mappingName
 ) {
@@ -80,5 +80,22 @@ export default function getUserTraitsFromPerson(
     });
   }
 
+  return _.omitBy(traits, _.isNil);
+}
+
+export function getAccountTraitsFromCompany(company = {}) {
+  const mappings = getMapping("Company");
+  const traits = _.reduce(
+    mappings,
+    (map, key, val) => {
+      _.set(
+        map,
+        `clearbit/${key.replace("clearbit_company/", "")}`,
+        _.get(company, val.replace("company.", ""))
+      );
+      return map;
+    },
+    {}
+  );
   return _.omitBy(traits, _.isNil);
 }

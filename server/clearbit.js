@@ -9,9 +9,19 @@ import {
   shouldProspect,
   shouldprospectUserFromDomain
 } from "./clearbit/prospect";
-import { canEnrich, shouldEnrich, enrichUser } from "./clearbit/enrich";
+import {
+  canEnrich,
+  shouldEnrich,
+  enrichUser,
+  canEnrichAccount,
+  shouldEnrichAccount,
+  enrichAccount
+} from "./clearbit/enrich";
 import { canReveal, shouldReveal, revealUser } from "./clearbit/reveal";
-import getUserTraitsFromPerson from "./clearbit/mapping";
+import {
+  getUserTraitsFromPerson,
+  getAccountTraitsFromCompany
+} from "./clearbit/mapping";
 
 const FILTERED_ERRORS = ["unknown_ip"];
 
@@ -66,8 +76,16 @@ export default class Clearbit {
     return canEnrich(user, this.settings);
   }
 
+  canEnrichAcct(account) {
+    return canEnrichAccount(account, this.settings);
+  }
+
   shouldEnrich(msg) {
     return this.shouldLogic(msg, shouldEnrich, "enrich");
+  }
+
+  shouldEnrichAcct(msg) {
+    return this.shouldLogic(msg, shouldEnrichAccount, "enrich");
   }
 
   shouldReveal(msg) {
@@ -100,6 +118,27 @@ export default class Clearbit {
         return this.saveUser(user, person, { source });
       }, logError)
       .catch(logError);
+  }
+
+  enrichAcct(account) {
+    const asAccount = this.hull.asAccount(
+      _.pick(account, ["id", "external_id", "domain"])
+    );
+
+    return enrichAccount(account, this)
+      .then(response => {
+        if (!response || !response.source) {
+          return false;
+        }
+        const { company, source } = response;
+        return this.saveAccount(account, company, { source });
+      })
+      .catch(error => {
+        asAccount.logger.info("outgoing.user.error", {
+          errors: error,
+          method: "enrichAccount"
+        });
+      });
   }
 
   revealUser(user = {}) {
@@ -492,6 +531,42 @@ export default class Clearbit {
     return Promise.all(promises).then(() => {
       asUser.logger.info(`${direction}.user.success`, { ...options, traits });
       return { traits, user, person };
+    });
+  }
+
+  saveAccount(account = {}, company = {}, options = {}) {
+    const { source, incoming } = options;
+
+    const ident = _.pick(account, ["id", "external_id", "domain"]);
+    const direction = incoming ? "incoming" : "outgoing";
+
+    if (!ident || !_.size(ident)) {
+      const error = new Error("Missing identifier for account");
+      error.status = 400;
+      return Promise.reject(error);
+    }
+
+    const asAccount = this.hull.asAccount(ident);
+    const traits = getAccountTraitsFromCompany(company);
+
+    traits["clearbit/fetched_at"] = { value: now(), operation: "setIfNull" };
+
+    if (source) {
+      traits[`clearbit/${source}ed_at`] = {
+        value: now(),
+        operation: "setIfNull"
+      };
+      traits["clearbit/source"] = { value: source, operation: "setIfNull" };
+    }
+
+    this.metric(`ship.${direction}.users`, 1, ["saveAccount"]);
+
+    return asAccount.traits(traits).then(() => {
+      asAccount.logger.info(`${direction}.account.success`, {
+        ...options,
+        traits
+      });
+      return { traits, account, company };
     });
   }
 

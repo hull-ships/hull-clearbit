@@ -65,6 +65,23 @@ export default class ClearbitClient {
     );
   }
 
+  enrichCompany(params) {
+    this.hull.logger.debug("clearbit.start", {
+      params,
+      action: "enrichCompany"
+    });
+    this.metric("ship.service_api.call", 1, [
+      "ship_action:clearbit:enrichCompany"
+    ]);
+    return this.client.Company.find(params).catch(
+      this.client.Company.QueuedError,
+      this.client.Company.NotFoundError,
+      () => {
+        return {};
+      }
+    );
+  }
+
   reveal(params) {
     this.hull.logger.debug("clearbit.start", { params, action: "reveal" });
     this.metric("ship.service_api.call", 1, ["ship_action:clearbit:reveal"]);

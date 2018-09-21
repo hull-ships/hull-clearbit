@@ -7,8 +7,7 @@ const expect = require("chai").expect;
 const sinon = require("sinon");
 
 const Clearbit = require("../../server/clearbit").default;
-const getUserTraitsFromPerson = require("../../server/clearbit/mapping")
-  .default;
+const { getUserTraitsFromPerson } = require("../../server/clearbit/mapping");
 const {
   shouldprospectUserFromDomain
 } = require("../../server/clearbit/prospect");
