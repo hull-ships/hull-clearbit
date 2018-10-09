@@ -16,6 +16,10 @@ export function isInSegments(userSegments = [], segmentsListIds = []) {
 }
 
 export function getDomain(user = {}, account = {}, attribute) {
+  if (!attribute) {
+    return null;
+  }
+
   return (
     (attribute.indexOf("account.") === 0
       ? _.get(account, attribute.replace(/^account./, ""))
