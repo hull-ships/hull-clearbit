@@ -23,9 +23,9 @@
     "url": "https://github.com/hull-ships/hull-clearbit/issues"
   },
   "engines": {
-    "node": "8.10.x",
+    "node": "^8.10.x",
     "npm": "5.6.x",
-    "yarn": "1.5.x"
+    "yarn": "1.9.x"
   },
   "lint-staged": {
     "*.{js,jsx,css,scss,json}": [
