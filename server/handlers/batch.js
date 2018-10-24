@@ -13,6 +13,7 @@ const printLimits = _.throttle(() => {
     const nbRunning = limiter.running();
     const nbQueued = limiter.queued();
     if (nbRunning || nbQueued) {
+      // eslint-disable-next-line no-console
       console.warn(
         "Limiter",
         JSON.stringify({

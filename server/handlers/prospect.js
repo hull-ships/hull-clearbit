@@ -39,6 +39,7 @@ export default function handleProspect({ hostSecret }) {
           }
         })
         .catch(error => {
+          // eslint-disable-next-line no-console
           console.warn("Error prospecting...", error);
           res.status(500).json({ error: error.message });
         });
