@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.12
+
+- [hotfix] specify explicitely API version for Prospector to prevent breaking changes
+
 ## 0.4.11
 - upgrade nodejs to v8.10.0
 
