@@ -362,9 +362,10 @@ export default class Clearbit {
    * @param  {Object} filters - Criteria to use as filters
    * @return {Promise}
    */
-  discoverSimilarCompanies(user) {
+  discoverSimilarCompanies({ user = {}, account = {} }) {
+    const { discover_domain = "domain" } = this.settings || {};
     // TODO -> Support Accounts
-    const domain = getDomain(user);
+    const domain = getDomain(user, account, discover_domain);
     if (!domain) return Promise.resolve([]);
     const limit = this.settings.discover_limit_count;
     const query = { similar: domain };

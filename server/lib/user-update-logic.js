@@ -29,7 +29,7 @@ export default function userUpdateLogic({
     should: shouldDiscover,
     message: discoverMessage
   } = clearbit.shouldDiscover(message);
-  if (shouldDiscover) return clearbit.discoverSimilarCompanies(user);
+  if (shouldDiscover) return clearbit.discoverSimilarCompanies(message);
   skips.discover = discoverMessage;
 
   const {
