@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.13
+
+- upgrade hull-node
+
 ## 0.4.12
 
 - [hotfix] specify explicitely API version for Prospector to prevent breaking changes
