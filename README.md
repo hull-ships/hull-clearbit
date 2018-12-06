@@ -36,7 +36,7 @@ gulp
 
 
       - `outgoing.user.skip` with `"action": "discover"`: Logged when Clearbit Enrichment is skipped. The `message` gives context on why it was skipped.
-        possible params: `message`, `email`, `id`, `external_id`, `domain`, `discover_segments`
+        possible params: `message`, `email`, `id`, `external_id`, `domain`, `discover_account_segments`
         possible `message` :
         - `"Discover not enabled"` : `Enable Discovery` is not checked in settings or the segment list to discover is empty.
         - `"No 'domain' in User. We need a domain"` : The user does not have a `clearbit/employment_domain` nor a `clearbit_company/domain`

@@ -1,31 +1,44 @@
 import _ from "lodash";
-import Promise from "bluebird";
+import jwt from "jwt-simple";
 
 import Client from "./clearbit/client";
 
-import { isInSegments, getDomain, now } from "./clearbit/utils";
+import { getDomain, now } from "./clearbit/utils";
 import {
-  canProspect,
   shouldProspect,
-  shouldprospectUserFromDomain
+  shouldProspectDomain,
+  prospect
 } from "./clearbit/prospect";
-import { canEnrich, shouldEnrich, enrichUser } from "./clearbit/enrich";
-import { canReveal, shouldReveal, revealUser } from "./clearbit/reveal";
-import getUserTraitsFromPerson from "./clearbit/mapping";
+import { shouldEnrich, enrich } from "./clearbit/enrich";
+import { shouldDiscover, discover } from "./clearbit/discover";
+import { shouldReveal, reveal } from "./clearbit/reveal";
+import {
+  getUserTraitsFrom,
+  getAccountTraitsFromCompany
+} from "./clearbit/mapping";
+
+const debug = require("debug")("hull-clearbit:clearbit_class");
 
 const FILTERED_ERRORS = ["unknown_ip"];
 
 export default class Clearbit {
-  constructor({ hull, ship, stream = false, hostSecret, metric, hostname }) {
-    this.ship = ship;
+  constructor({
+    hull,
+    connector,
+    stream = false,
+    hostSecret,
+    metric,
+    hostname
+  }) {
+    this.connector = connector;
 
-    if (!ship.private_settings) {
-      console.error("MissingPrivateSettingsError", ship); // eslint-disable-line no-console
+    if (!connector.private_settings) {
+      console.error("MissingPrivateSettingsError", connector); // eslint-disable-line no-console
     }
 
-    const { api_key } = ship.private_settings || {};
+    const { api_key } = connector.private_settings || {};
     this.settings = {
-      ...ship.private_settings,
+      ...connector.private_settings,
       hostSecret,
       stream
     };
@@ -50,63 +63,91 @@ export default class Clearbit {
     });
   };
 
+  getDomain(account, user) {
+    return getDomain(account, user, this.settings.lookup_domain || "domain");
+  }
+
   /** *********************************************************
    * Clearbit Enrichment
    */
 
-  canProspect(user, account) {
-    return canProspect(user, account, this.settings);
+  shouldEnrich(message) {
+    return this.shouldLogic(message, shouldEnrich);
   }
 
-  canReveal(user) {
-    return canReveal(user, this.settings);
+  shouldReveal(message) {
+    return this.shouldLogic(message, shouldReveal);
   }
 
-  canEnrich(user) {
-    return canEnrich(user, this.settings);
+  shouldProspect(message) {
+    return this.shouldLogic(message, shouldProspect);
   }
 
-  shouldEnrich(msg) {
-    return this.shouldLogic(msg, shouldEnrich, "enrich");
+  shouldDiscover(message) {
+    return this.shouldLogic(message, shouldDiscover);
   }
 
-  shouldReveal(msg) {
-    return this.shouldLogic(msg, shouldReveal, "reveal");
-  }
-
-  shouldProspect(msg) {
-    return this.shouldLogic(msg, shouldProspect, "prospect");
-  }
-
-  shouldLogic(msg, action) {
+  shouldLogic(message, action) {
     if (!this.client) return { should: false, message: "no api_key set" };
-    return action(msg, this.settings);
+    const should = action(this.settings, message);
+    debug(action.name, should);
+    return should;
   }
 
-  enrichUser(user) {
-    const asUser = this.hull.asUser(
-      _.pick(user, ["id", "external_id", "email"])
-    );
+  /**
+   * Build context to pass a webhook_id
+   * @param  {String} userId - Hull User id
+   * @return {String}
+   */
+  getWebhookId(payload = {}) {
+    const { id, secret, organization } = this.hull.configuration();
+    const claims = {
+      ship: id,
+      secret,
+      organization,
+      ...payload
+    };
+    const { hostSecret } = this.settings;
+    return hostSecret && jwt.encode(claims, hostSecret);
+  }
+
+  async enrich(message = {}) {
+    const { user, account } = message;
     const logError = error => {
-      asUser.logger.info("outgoing.user.error", {
+      this.hull.asUser(user).logger.info("outgoing.user.error", {
         errors: error,
         method: "enrichUser"
       });
     };
-    return enrichUser(user, this)
-      .then(response => {
-        if (!response || !response.source) return false;
-        const { person, source } = response;
-        return this.saveUser(user, person, { source });
-      }, logError)
-      .catch(logError);
+    try {
+      this.metric("enrich");
+      const response = await enrich({
+        settings: this.settings,
+        hostname,
+        connector_id: this.connector.id,
+        getWebhookId: this.getWebhookId,
+        client: this.client,
+        message
+      });
+      if (!response || !response.source) return false;
+      const { person, company, source } = response;
+      return Promise.all([
+        user
+          ? this.saveUser({ user, person, account, company }, { source })
+          : Promise.resolve(),
+        account
+          ? this.saveAccount({ account, company }, { source })
+          : Promise.resolve()
+      ]).catch(logError);
+    } catch (err) {
+      logError(err);
+      return Promise.reject(err);
+    }
   }
 
-  revealUser(user = {}) {
-    const asUser = this.hull.asUser(
-      _.pick(user, ["id", "external_id", "email"])
-    );
-    const { last_known_ip } = user;
+  async reveal(message = {}) {
+    const { user, account } = message;
+    const asUser = this.hull.asUser(user);
     const logError = error => {
       // we filter error messages
       if (!_.includes(FILTERED_ERRORS, error.type)) {
@@ -116,30 +157,39 @@ export default class Clearbit {
         });
       }
     };
-    return revealUser(user, this)
-      .then(response => {
-        if (!response || !response.source) return false;
-        const { person = {}, source } = response;
-        const { company } = person;
-        return this.saveUser(user, person, {
-          source,
-          company: _.pick(company, "name", "domain"),
-          ip: last_known_ip
-        });
-      }, logError)
-      .catch(logError);
+    try {
+      this.metric("reveal");
+      const response = await reveal({
+        settings: this.settings,
+        client: this.client,
+        message
+      });
+      if (!response || !response.source) return false;
+      const { company, source, ip } = response;
+      return [
+        this.saveUser({ user, company }, { source }),
+        this.saveAccount(
+          { account, user, company },
+          {
+            source,
+            company: _.pick(company, "name", "domain"),
+            ip
+          }
+        )
+      ];
+    } catch (err) {
+      logError(err);
+      return Promise.reject(err);
+    }
   }
 
-  prospectUser(user, account = {}) {
-    const { prospect_domain = "domain" } = this.settings;
-    const domain = getDomain(user, account, prospect_domain);
+  async prospect(message = {}) {
+    const { account } = message;
+    const scope = account ? this.hull.asAccount(account) : this.hull;
 
-    if (!domain) return false;
-
-    const asUser = this.hull.asUser(user);
     // const asAccount = this.hull.asAccount(account);
     const logError = error => {
-      asUser.logger.info("outgoing.user.error", {
+      scope.logger.info("outgoing.account.error", {
         errors: _.get(error, "message", error),
         method: "prospectUser"
       });
@@ -147,116 +197,64 @@ export default class Clearbit {
 
     // Since user update logic is synchronous,
     // There is a second, asynchronous part of checks in here.
-    return shouldprospectUserFromDomain({
-      domain,
+    const { should, message: msg } = await shouldProspectDomain({
+      domain: this.getDomain(account),
       hull: this.hull,
       settings: this.settings
-    })
-      .then(({ should, reason }) => {
-        if (!should) {
-          this.logSkip(asUser, "prospector", reason);
-          // asUser.track( "Clearbit Prospector Triggered", { action: "skipped", reason }, { ip: 0 } );
-          return false;
-        }
-        return this.prospect(user, account, domain);
-      })
-      .catch(logError);
-  }
-
-  prospect(user, account, domain) {
-    const query = {
-      domain,
-      limit: this.settings.prospect_limit_count,
-      email: true
-    };
-
-    ["seniority", "titles", "role"].forEach(k => {
-      const filter = this.settings[`prospect_filter_${k}`];
-      if (!_.isEmpty(filter)) {
-        query[k] = filter;
-      }
     });
 
-    const company_traits = _.reduce(
-      user,
-      (traits, val, k) => {
-        const [group, key] = k.split("/");
-        if (group === "traits_clearbit_company") {
-          traits[`clearbit_company/${key}`] = val;
-        }
-        return traits;
-      },
-      {}
-    );
-    return this.fetchProspects({
-      query,
-      company_traits,
-      user,
-      account
-    });
-  }
+    if (!should) {
+      logError(msg);
+      return Promise.reject(msg);
+    }
 
-  fetchProspects({ query = {}, company_traits = {}, user = {}, account }) {
-    const { titles = [], domain, role, seniority, limit = 5 } = query;
-
-    const asUser = user.id ? this.hull.asUser(user) : this.hull;
-    // Allow prospecting even if no titles passed
-    if (titles.length === 0) titles.push(null);
-
-    const prospects = {};
-
-    return Promise.mapSeries(titles, title => {
-      const newLimit = limit - _.size(prospects);
-      if (newLimit <= 0) return Promise.resolve(prospects);
-      const params = {
-        domain,
-        role,
-        seniority,
-        title,
-        limit: newLimit,
-        email: true
-      };
-      return this.client.prospect(params, asUser).then((results = []) => {
-        results.forEach(p => {
-          prospects[p.email] = p;
-        });
+    try {
+      this.metric("prospect");
+      const { prospects, query } = await prospect({
+        message,
+        client: this.client,
+        settings: this.settings
       });
-    })
-      .then(() => {
-        const response = _.values(prospects);
-        const log = {
-          source: "prospector",
-          message: `Found ${response.length} new Prospects`,
-          ...query,
-          company_traits,
-          prospects: response
-        };
-        asUser.logger.info("outgoing.user.success", log);
+      const log = {
+        source: "prospector",
+        message: `Found ${_.size(prospects)} new Prospects`,
+        ...query,
+        prospects
+      };
 
-        // If we're scoped as Hull (and not as a User)
-        // - when coming from the Prospector UI, then we can't add Track & Traits.
-        if (asUser.track && asUser.traits) {
-          asUser.track(
-            "Clearbit Prospector Triggered",
-            {
-              ..._.mapKeys(query, (v, k) => `query_${k}`),
-              found: response.length,
-              emails: _.keys(prospects)
-            },
-            { ip: 0 }
-          );
-          asUser.traits(
-            { prospected_at: { value: now(), operation: "setIfNull" } },
-            { source: "clearbit" }
-          );
-        }
-        return response;
-      })
-      .then(response =>
-        Promise.all(
-          response.map(p => this.saveProspect(user, account, company_traits, p))
+      scope.logger.info("outgoing.user.success", log);
+
+      // If we're scoped as Hull (and not as a User)
+      // - when coming from the Prospector UI, then we can't add Track & Traits.
+      if (scope.traits) {
+        scope.traits({
+          "clearbit/prospected_at": { value: now(), operation: "setIfNull" }
+        });
+      }
+
+      if (scope.track) {
+        scope.track(
+          "Clearbit Prospector Triggered",
+          {
+            ..._.mapKeys(query, (v, k) => `query_${k}`),
+            found: _.size(prospects),
+            emails: _.keys(prospects)
+          },
+          { ip: 0 }
+        );
+      }
+      return Promise.all(
+        prospects.map(person =>
+          this.saveProspect({
+            account,
+            person
+          })
         )
       );
+    } catch (err) {
+      logError(err);
+      return Promise.reject(err);
+    }
   }
 
   /** *********************************************************
@@ -264,141 +262,68 @@ export default class Clearbit {
    */
 
   /**
-   * Check if we should fetch similar companies from clearbit (based on user data and ship configuration)
-   * @param  {Message({ user, segments })} message - A user:update message
-   * @return {Boolean}
-   */
-  shouldDiscover({ segments = [], user = {}, account = {} }) {
-    const {
-      discover_enabled,
-      discover_segments = [],
-      discover_domain = "domain"
-    } =
-      this.settings || {};
-    const domain = getDomain(user, account, discover_domain);
-
-    if (!this.client || !discover_enabled) {
-      return { should: false, message: "discover not enabled" };
-    }
-
-    if (_.isEmpty(discover_segments)) {
-      return { should: false, message: "No segments defined in Discover" };
-    }
-
-    if (!domain) {
-      return {
-        should: false,
-        message: "No 'domain' in User nor account. We need a domain"
-      };
-    }
-
-    if (user["traits_clearbit/discovered_similar_companies_at"]) {
-      return { should: false, message: "Already discovered similar companies" };
-    }
-
-    if (!user.last_seen_at || !user.email) {
-      return { should: false, message: "User has no email or no last_seen_at" };
-    }
-
-    if (user["traits_clearbit/discovered_from_domain"]) {
-      return {
-        should: false,
-        message: "User is himself a discovery. Prevent Loops"
-      };
-    }
-
-    if (!isInSegments(segments, discover_segments)) {
-      return {
-        should: false,
-        message: "User is not in a discoverable segment"
-      };
-    }
-
-    return { should: true };
-  }
-
-  /**
    * Find companies similar to a given company
    * @param  {Company} domain - A company domain name
    * @param  {Object} filters - Criteria to use as filters
    * @return {Promise}
    */
-  discoverSimilarCompanies({ user = {}, account = {} }) {
-    const { discover_domain = "domain" } = this.settings || {};
+  async discover({ account = {} }) {
     // TODO -> Support Accounts
-    const domain = getDomain(user, account, discover_domain);
-    if (!domain) return Promise.resolve([]);
-    const limit = this.settings.discover_limit_count;
-    const query = { similar: domain };
+    const domain = this.getDomain(account);
+    const asAccount = this.hull.asAccount(account);
 
-    // Let's not call the Discovery API if we have already done it before...
-    return this.companiesDiscoveredFromDomain(domain)
-      .then(({ pagination }) => {
-        if (pagination && pagination.total > 0) {
-          this.hull.logger.debug("domain.discover.skip", {
-            reason: "domain already used for discovery !",
-            domain
-          });
-          return false;
-        }
+    try {
+      // Let's not call the Discovery API if we have already done it before...
+      const results = (await discover(account)) || [];
+      if (!results || !results.length) {
+        return asAccount.logger.info("outgoing.account.success", {
+          reason: "no results from discovery attempt"
+        });
+      }
+      if (account.id && !account["clearbit/discovered_similar_companies_at"]) {
+        asAccount.traits(
+          {
+            "clearbit/discovered_similar_companies_at": now()
+          },
+          { sync: true }
+        );
+      }
 
-        return this.client
-          .discover({ query, limit })
-          .then(({ results = [] }) => {
-            const discovered_similar_companies_at =
-              user["traits_clearbit/discovered_similar_companies_at"];
-            if (user.id && !discovered_similar_companies_at) {
-              this.hull.asUser(user.id).traits(
-                {
-                  discovered_similar_companies_at: now()
-                },
-                { source: "clearbit", sync: true }
-              );
-            }
-
-            return this.saveDiscoveredCompanies(results, domain);
-          });
-      })
-      .catch(error => {
-        this.hull
-          .asUser(_.pick(user, ["id", "external_id", "email"]))
-          .logger.info("outgoing.user.error", {
-            errors: _.get(error, "message", error)
-          });
+      return this.saveDiscoveredCompanies(results, domain);
+    } catch (err) {
+      asAccount.logger.info("outgoing.user.error", {
+        errors: _.get(err, "message", err)
       });
-  }
-
-  companiesDiscoveredFromDomain(domain) {
-    // TODO -> Support Accounts
-    const query = {
-      term: { "traits_clearbit/discovered_from_domain.exact": domain }
-    };
-    return this.hull.post("search/user_reports", { query });
+      return Promise.reject(err);
+    }
   }
 
   saveDiscoveredCompanies(companies = [], discovered_from_domain) {
     // TODO -> Support Accounts
     return Promise.all(
       companies.map(company => {
-        const person = { company };
         // TODO: save account instead of user
-        const traits = getUserTraitsFromPerson({ person });
-        traits["clearbit/discovered_from_domain"] = {
-          value: discovered_from_domain,
-          operation: "setIfNull"
-        };
-        traits["clearbit/discovered_at"] = {
-          value: now(),
-          operation: "setIfNull"
-        };
-        traits["clearbit/source"] = {
-          value: "discover",
-          operation: "setIfNull"
+        const traits = {
+          ...getAccountTraitsFromCompany(company),
+          "clearbit/discovered_from_domain": {
+            value: discovered_from_domain,
+            operation: "setIfNull"
+          },
+          "clearbit/discovered_at": {
+            value: now(),
+            operation: "setIfNull"
+          },
+          "clearbit/source": {
+            value: "discover",
+            operation: "setIfNull"
+          }
         };
         return this.hull
-          .asUser({ anonymous_id: `clearbit-company:${company.id}` })
-          .traits(traits)
-          .then(() => traits);
+          .asAccount({
+            anonymous_id: `clearbit-company:${company.id}`,
+            domain: traits.domain
+          })
+          .traits(traits);
       })
     );
   }
@@ -409,7 +334,7 @@ export default class Clearbit {
    * @param  {Object} person - Clearbit Person object
    * @return {Promise -> Object({ user, person })}
    */
-  saveUser(user = {}, person = {}, options = {}) {
+  async saveUser({ user = {}, person = {}, company = {} }, options = {}) {
     const { source, incoming } = options;
 
     // Never ever change the email address (Clearbit strips +xxx parts, so we end up with complete
@@ -426,10 +351,11 @@ export default class Clearbit {
     }
 
     const asUser = this.hull.asUser(ident);
-
-    const traits = getUserTraitsFromPerson({ user, person }, "Person");
-
-    traits["clearbit/fetched_at"] = { value: now(), operation: "setIfNull" };
+    const traits = {
+      ...getUserTraitsFrom(person, "Person"),
+      ...getUserTraitsFrom(company, "PersonCompany"),
+      "clearbit/fetched_at": { value: now(), operation: "setIfNull" }
+    };
 
     if (source) {
       traits[`clearbit/${source}ed_at`] = {
@@ -441,58 +367,51 @@ export default class Clearbit {
 
     this.metric(`ship.${direction}.users`, 1, ["saveUser"]);
 
-    const promises = [];
+    await asUser.traits(traits);
+    asUser.logger.info(`${direction}.user.success`, { ...options, traits });
+    return { traits, user, person, company };
+  }
 
-    if (this.settings.handle_accounts) {
-      const all_traits = { user: {}, account: {} };
+  /**
+   * Save traits on Hull user
+   * @param  {Object} user - Hull User object
+   * @param  {Object} person - Clearbit Person object
+   * @return {Promise -> Object({ user, person })}
+   */
+  saveAccount({ account = {}, company, user }, options = {}) {
+    const { source, incoming } = options;
+    const direction = incoming ? "incoming" : "outgoing";
 
-      _.map(
-        traits,
-        (v, k) => {
-          const [group, trait] = k.split("/");
-          if (group === "clearbit_company") {
-            all_traits.account[`clearbit/${trait}`] = v;
-          } else {
-            all_traits.user[k] = v;
-          }
-        },
-        {}
-      );
+    const traits = {
+      ...getAccountTraitsFromCompany(company),
+      "clearbit/fetched_at": { value: now(), operation: "setIfNull" }
+    };
 
-      const domain = all_traits.account["clearbit/domain"];
-
-      // Set top level traits
-      const top_level_traits = {
-        name: "name",
-        domain: "domain"
+    if (source) {
+      traits[`clearbit/${source}ed_at`] = {
+        value: now(),
+        operation: "setIfNull"
       };
-      _.forIn(top_level_traits, (clearbit_name, top_level_name) => {
-        const value = all_traits.account[`clearbit/${clearbit_name}`];
-        if (value) {
-          _.set(all_traits.account, top_level_name, {
-            value,
-            operation: "setIfNull"
-          });
-        }
-      });
-
-      promises.push(asUser.traits(all_traits.user));
-
-      if (domain) {
-        const asAccount = asUser.account({ domain });
-        asAccount.logger.info(`${direction}.account.success`, {
-          source,
-          traits: all_traits.account
-        });
-        promises.push(asAccount.traits(all_traits.account));
-      }
-    } else {
-      promises.push(asUser.traits(traits));
+      traits["clearbit/source"] = { value: source, operation: "setIfNull" };
     }
 
-    return Promise.all(promises).then(() => {
-      asUser.logger.info(`${direction}.user.success`, { ...options, traits });
-      return { traits, user, person };
+    const domain = account.domain || traits["clearbit/domain"];
+    const asAccount = _.isEmpty(account)
+      ? this.hull.asUser(user).account({ domain })
+      : this.hull.asAccount({ ...account, domain });
+
+    asAccount.logger.info(`${direction}.account.success`, {
+      source,
+      traits
+    });
+
+    this.metric(`ship.${direction}.accounts`, 1, ["saveAccount"]);
+
+    return asAccount.traits(traits).then(() => {
+      asAccount.logger.info(`${direction}.account.success`, {
+        ...options,
+        traits
+      });
     });
   }
 
@@ -501,56 +420,41 @@ export default class Clearbit {
    * @param  {Object({ person })} payload - Clearbit/Person object
    * @return {Promise -> Object({ person })}
    */
-  saveProspect(user = {}, account = {}, company_traits, person = {}) {
-    const traits = getUserTraitsFromPerson({ person }, "Prospect");
+  saveProspect(account = {}, person = {}) {
+    const traits = getUserTraitsFrom(person, "Prospect");
     const attribution = {
       "clearbit/prospected_at": { operation: "setIfNull", value: now() },
-      "clearbit/source": { operation: "setIfNull", value: "prospector" },
-      ...(user.id && {
-        "clearbit/prospected_from": {
-          operation: "setIfNull",
-          value: user.id
-        }
-      })
+      "clearbit/source": { operation: "setIfNull", value: "prospector" }
     };
     // as a new user
-    const hullUser = this.hull.asUser({
+    const scope = this.hull.asUser({
       email: person.email,
       anonymous_id: `clearbit-prospect:${person.id}`
     });
 
     this.metric("ship.incoming.users", 1, ["prospect"]);
-    hullUser.logger.info("incoming.user.success", {
+    scope.logger.info("incoming.user.success", {
       personId: _.pick(person, "id"),
       source: "prospector"
     });
 
-    if (!this.settings.handle_accounts) {
-      return hullUser
-        .traits({ ...company_traits, ...traits, ...attribution })
-        .then(() => person);
-    }
-
-    hullUser.traits({ ...traits, ...attribution });
-
-    const company = _.mapKeys(company_traits, (v, k) =>
-      k.replace("clearbit_company/", "clearbit/")
-    );
+    scope.traits({ ...traits, ...attribution });
 
     // as the existing account
-    const hullAccount = hullUser.account(account);
+    const domain = account.domain || traits["clearbit/domain"];
+    const accountScope = _.isEmpty(account)
+      ? scope.account({ domain })
+      : this.hull.asAccount({ ...account, domain });
 
-    hullAccount.logger.info("incoming.account.success", {
+    accountScope.logger.info("incoming.account.success", {
       person,
       source: "prospector"
     });
 
-    const domain = company_traits["clearbit_company/domain"];
-    return hullAccount
+    return accountScope
       .traits({
-        ...company,
         ...attribution,
-        ...(domain && { domain: { operation: "setIfNull", value: domain } })
+        domain: { operation: "setIfNull", value: account["clearbit/domain"] }
       })
       .then(() => person);
   }

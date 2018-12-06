@@ -1,52 +1,34 @@
-export default function userUpdateLogic({
-  message = {},
-  handle_accounts,
-  clearbit,
-  client
-}) {
-  const { segments, user, account } = message;
-  const acc = account || user.account;
+import _ from "lodash";
 
+export default function userUpdateLogic({ message = {}, clearbit, client }) {
+  const { user } = message;
   const skips = {};
 
-  if (clearbit.canEnrich(user)) {
-    const { should, message: msg } = clearbit.shouldEnrich(message);
-    if (should) return clearbit.enrichUser(user);
-    skips.enrich = msg;
-  }
-
-  if (clearbit.canReveal(user)) {
-    const { should, message: msg } = clearbit.shouldReveal(message);
-    if (should) return clearbit.revealUser(user);
-    skips.reveal = msg;
+  const {
+    should: shouldEnrich,
+    message: enrichMessage
+  } = clearbit.shouldEnrich(message);
+  if (shouldEnrich) {
+    clearbit.enrich(message);
+  } else {
+    skips.enrich = enrichMessage;
   }
 
   const {
-    should: shouldDiscover,
-    message: discoverMessage
-  } = clearbit.shouldDiscover(message);
-  if (shouldDiscover) return clearbit.discoverSimilarCompanies(message);
-  skips.discover = discoverMessage;
-
-  const {
-    should: shouldProspect,
-    message: prospectMessage
-  } = clearbit.shouldProspect({
-    segments,
-    user,
-    account: acc
-  });
-
-  if (shouldProspect) {
-    return clearbit.prospectUser(user, acc);
-  }
-  skips.prospect = prospectMessage;
-
-  const reason = { reason: "no action matched", ...skips };
-  client.asUser(user).logger.info("outgoing.user.skip", reason);
-  if (handle_accounts) {
-    client.asAccount(account).logger.info("outgoing.account.skip", reason);
+    should: shouldReveal,
+    message: revealMessage
+  } = clearbit.shouldReveal(message);
+  if (shouldReveal) {
+    clearbit.reveal(message);
+  } else {
+    skips.reveal = revealMessage;
   }
 
-  return false;
+  if (_.size(skips)) {
+    const reason = { reason: "no action matched", ...skips };
+    client.asUser(user).logger.info("outgoing.user.skip", reason);
+    return false;
+  }
+
+  return true;
 }

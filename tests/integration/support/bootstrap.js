@@ -12,7 +12,7 @@ module.exports = function bootstrap({ beforeEach, afterEach, port, segments }) {
   beforeEach(done => {
     const minihull = new Minihull();
     minihull.listen(8001).then(done);
-    minihull.stubSegments(segments);
+    minihull.stubUserSegments(segments);
     mocks.firehose = "firehose";
     minihull.userUpdate = ({ connector, messages }, callback = noop) => {
       const t = setTimeout(() => {

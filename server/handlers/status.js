@@ -10,7 +10,7 @@ export default function statusCheck(req, res) {
     discover_enabled,
     enrich_enabled,
     prospect_enabled,
-    enrich_segments,
+    enrich_user_segments,
     reveal_segments,
     reveal_enabled,
     prospect_filter_seniority,
@@ -33,7 +33,7 @@ export default function statusCheck(req, res) {
     status = "warning";
     messages.push("No Clearbit API enabled, enable some sections in Settings");
   }
-  if (enrich_enabled && !_.size(enrich_segments)) {
+  if (enrich_enabled && !_.size(enrich_user_segments)) {
     status = "warning";
     messages.push(
       "Enrich enabled, but no segments are listed. No one will be enriched"

@@ -9,6 +9,11 @@ describe("User Update Logic", () => {
   const makeHull = () => {
     const mock = {};
     mock.logger = { info: () => {} };
+    mock.configuration = () => ({
+      id: 1,
+      secret: 1,
+      organization: "foo.hullapp.io"
+    });
     mock.traits = sinon.spy(() => Promise.resolve());
     mock.asUser = sinon.spy(() => mock);
     return mock;
@@ -16,28 +21,36 @@ describe("User Update Logic", () => {
 
   const makeClearbit = (private_settings = {}) => {
     const client = makeHull();
-    const clearbit = new Clearbit({ ship: { private_settings }, hull: client });
+    const metric = { increment: () => {} };
+    const clearbit = new Clearbit({
+      connector: { private_settings },
+      hull: client,
+      metric
+    });
     const revealSpy = sinon.spy();
     const enrichSpy = sinon.spy();
     const similarSpy = sinon.spy();
     const prospectSpy = sinon.spy();
-    clearbit.revealUser = revealSpy;
-    clearbit.enrichUser = enrichSpy;
-    clearbit.discoverSimilarCompanies = similarSpy;
-    clearbit.prospectUser = prospectSpy;
+    clearbit.reveal = revealSpy;
+    clearbit.enrich = enrichSpy;
+    clearbit.discover = similarSpy;
+    clearbit.prospect = prospectSpy;
     clearbit.client = {};
     return { client, clearbit, revealSpy, enrichSpy, similarSpy, prospectSpy };
   };
 
-  it("should not do anything if nothing enabled", () => {
+  it("should not do anything if no segments active", () => {
     const cb = makeClearbit({
-      enrich_segments: ["1"],
-      enrich_enabled: false,
-      reveal_segments: ["1"],
-      reveal_enabled: false
+      enrich_user_segments: [],
+      reveal_segments: [],
+      enrich_account_segments: [],
+      prospect_account_segments: [],
+      discover_account_segments: []
     });
     const message = {
       user: { last_known_ip: "1.2.3.4", email: "foo@bar.com" },
+      account: { domain: "foo.com" },
+      account_segments: [{ id: "1" }],
       segments: [{ id: "1" }]
     };
     userUpdateLogic({ message, clearbit: cb.clearbit, client: cb.client });
@@ -47,12 +60,13 @@ describe("User Update Logic", () => {
     assert(cb.prospectSpy.notCalled);
   });
 
-  it("should reveal anonymous Users", () => {
+  it("should reveal anonymous users", () => {
     const cb = makeClearbit({
-      enrich_segments: ["1"],
-      enrich_enabled: true,
+      enrich_user_segments: ["1"],
       reveal_segments: ["1"],
-      reveal_enabled: true
+      enrich_account_segments: [],
+      prospect_account_segments: [],
+      discover_account_segments: []
     });
     const message = {
       user: { last_known_ip: "1.2.3.4", email: undefined },
@@ -65,19 +79,17 @@ describe("User Update Logic", () => {
     assert(cb.prospectSpy.notCalled);
   });
 
-  it("should enrich Users with an email, but not reveal them", () => {
+  it("should enrich and reveal users with an email", () => {
     const cb = makeClearbit({
-      enrich_segments: ["1"],
-      enrich_enabled: true,
-      reveal_segments: ["1"],
-      reveal_enabled: true
+      enrich_user_segments: ["1"],
+      reveal_segments: ["1"]
     });
     const message = {
       user: { last_known_ip: "1.2.3.4", email: "foo@bar.com" },
       segments: [{ id: "1" }]
     };
     userUpdateLogic({ message, clearbit: cb.clearbit, client: cb.client });
-    assert(cb.revealSpy.notCalled);
+    assert(cb.revealSpy.called);
     assert(cb.enrichSpy.called);
     assert(cb.similarSpy.notCalled);
     assert(cb.prospectSpy.notCalled);
@@ -85,17 +97,18 @@ describe("User Update Logic", () => {
 
   it("should not reveal Users with a company", () => {
     const cb = makeClearbit({
-      enrich_segments: ["1"],
-      enrich_enabled: true,
-      reveal_segments: ["1"],
-      reveal_enabled: true
+      enrich_user_segments: [],
+      reveal_segments: ["1"]
     });
     const message = {
       user: {
-        last_known_ip: "1.2.3.4",
-        "traits_clearbit_company/id": "1234"
+        last_known_ip: "1.2.3.4"
       },
-      segments: [{ id: "1" }]
+      account: {
+        "clearbit/id": "1234"
+      },
+      segments: [{ id: "1" }],
+      account_segments: [{ id: "1" }]
     };
     userUpdateLogic({ message, clearbit: cb.clearbit, client: cb.client });
     assert(cb.revealSpy.notCalled);
@@ -104,39 +117,17 @@ describe("User Update Logic", () => {
     assert(cb.prospectSpy.notCalled);
   });
 
-  it("should not do anything for already enriched users", () => {
+  it("should not do anything for already enriched and revealed users", () => {
     const cb = makeClearbit({
-      enrich_segments: ["1"],
-      enrich_enabled: true,
-      reveal_segments: ["1"],
-      reveal_enabled: true
+      enrich_user_segments: ["1"],
+      reveal_segments: ["1"]
     });
     const message = {
       user: {
         last_known_ip: "1.2.3.4",
         email: "foo@bar.com",
-        "traits_clearbit/id": "1234"
-      },
-      segments: [{ id: "1" }]
-    };
-    userUpdateLogic({ message, clearbit: cb.clearbit, client: cb.client });
-    assert(cb.revealSpy.notCalled);
-    assert(cb.enrichSpy.notCalled);
-    assert(cb.similarSpy.notCalled);
-    assert(cb.prospectSpy.notCalled);
-  });
-
-  it("should not do anything for users without a match", () => {
-    const cb = makeClearbit({
-      enrich_segments: ["1"],
-      enrich_enabled: true,
-      reveal_segments: ["1"],
-      reveal_enabled: true
-    });
-    const message = {
-      user: {
-        last_known_ip: "1.2.3.4",
-        email: "foo@bar.com",
+        "traits_clearbit/id": "1234",
+        "traits_clearbit/revealed_at": "1234",
         "traits_clearbit/enriched_at": "1234"
       },
       segments: [{ id: "1" }]
@@ -148,12 +139,30 @@ describe("User Update Logic", () => {
     assert(cb.prospectSpy.notCalled);
   });
 
+  it("should not do anything for users in wrong segments", () => {
+    const cb = makeClearbit({
+      enrich_user_segments: ["1"],
+      reveal_segments: ["1"]
+    });
+    const message = {
+      user: {
+        last_known_ip: "1.2.3.4",
+        email: "foo@bar.com",
+        "traits_clearbit/enriched_at": "1234"
+      },
+      segments: [{ id: "2" }]
+    };
+    userUpdateLogic({ message, clearbit: cb.clearbit, client: cb.client });
+    assert(cb.revealSpy.notCalled);
+    assert(cb.enrichSpy.notCalled);
+    assert(cb.similarSpy.notCalled);
+    assert(cb.prospectSpy.notCalled);
+  });
+
   it("should enrich Revealed Users without enrichment data", () => {
     const cb = makeClearbit({
-      enrich_segments: ["1"],
-      enrich_enabled: true,
-      reveal_segments: ["1"],
-      reveal_enabled: true
+      enrich_user_segments: ["1"],
+      reveal_segments: ["1"]
     });
     const message = {
       user: {
@@ -171,27 +180,50 @@ describe("User Update Logic", () => {
     assert(cb.prospectSpy.notCalled);
   });
 
-  it("should not enrich or Reveal Users with Enrichment data", () => {
-    const cb = makeClearbit({
-      enrich_segments: ["1"],
-      enrich_enabled: true,
-      reveal_segments: ["1"],
-      reveal_enabled: true
-    });
-    const message = {
-      user: {
-        last_known_ip: "1.2.3.4",
-        email: "foo@bar.com",
-        "traits_clearbit/enriched_at": moment().format(),
-        "traits_clearbit/revealed_at": moment().format(),
-        "traits_clearbit_company/id": "1234"
-      },
-      segments: [{ id: "1" }]
-    };
-    userUpdateLogic({ message, clearbit: cb.clearbit, client: cb.client });
-    assert(cb.revealSpy.notCalled);
-    assert(cb.enrichSpy.notCalled);
-    assert(cb.similarSpy.notCalled);
-    assert(cb.prospectSpy.notCalled);
-  });
+  // POTENTIAL BEHAVIOUR CHANGE: => do we want to allow enriched users to be revealed?
+  // If so, how do we combine this with them belonging to an account with Enrich data
+  // it("should reveal enriched Users without reveal data", () => {
+  //   const cb = makeClearbit({
+  //     enrich_user_segments: ["1"],
+  //     reveal_segments: ["1"]
+  //   });
+  //   const message = {
+  //     user: {
+  //       last_known_ip: "1.2.3.4",
+  //       email: "foo@bar.com",
+  //       "traits_clearbit/enriched_at": moment().format()
+  //     },
+  //     account: {
+  //       "clearbit/id": "1234"
+  //     },
+  //     segments: [{ id: "1" }]
+  //   };
+  //   userUpdateLogic({ message, clearbit: cb.clearbit, client: cb.client });
+  //   assert(cb.revealSpy.called);
+  //   assert(cb.enrichSpy.notCalled);
+  //   assert(cb.similarSpy.notCalled);
+  //   assert(cb.prospectSpy.notCalled);
+  // });
+
+  // it("should not enrich or Reveal Users with Enrichment data", () => {
+  //   const cb = makeClearbit({
+  //     enrich_user_segments: ["1"],
+  //     reveal_segments: ["1"]
+  //   });
+  //   const message = {
+  //     user: {
+  //       last_known_ip: "1.2.3.4",
+  //       email: "foo@bar.com",
+  //       "traits_clearbit/enriched_at": moment().format(),
+  //       "traits_clearbit/revealed_at": moment().format(),
+  //       "traits_clearbit_company/id": "1234"
+  //     },
+  //     segments: [{ id: "1" }]
+  //   };
+  //   userUpdateLogic({ message, clearbit: cb.clearbit, client: cb.client });
+  //   assert(cb.revealSpy.notCalled);
+  //   assert(cb.enrichSpy.notCalled);
+  //   assert(cb.similarSpy.notCalled);
+  //   assert(cb.prospectSpy.notCalled);
+  // });
 });

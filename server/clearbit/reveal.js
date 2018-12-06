@@ -6,9 +6,12 @@ import { isInSegments, isValidIpAddress } from "./utils";
  * @param  {User({ last_known_ip, email })} user - A user profile
  * @return {Boolean}
  */
-export function canReveal(user = {}, settings = {}) {
-  const { reveal_enabled } = settings;
-  return reveal_enabled && isValidIpAddress(user.last_known_ip) && !user.email;
+export function canReveal(settings, message = {}) {
+  const { user } = message;
+  if (!user) {
+    return false;
+  }
+  return isValidIpAddress(user.last_known_ip);
 }
 
 /**
@@ -16,42 +19,39 @@ export function canReveal(user = {}, settings = {}) {
  * @param  {Message({ user, segments })} message - A user:update message
  * @return {Boolean}
  */
-export function shouldReveal(message = {}, settings = {}) {
-  const { user = {}, account = {}, segments = [] } = message;
-  const {
-    handle_accounts = false,
-    reveal_segments = [],
-    reveal_enabled
-  } = settings;
+export function shouldReveal(settings = {}, message = {}) {
+  const { user, account = {}, segments = [] } = message;
+  const { reveal_segments = [] } = settings;
+
+  if (!canReveal(settings, message)) {
+    return {
+      should: false,
+      message: "Cannot reveal because missing IP"
+    };
+  }
 
   // Skip if reveal is disabled
-  if (!reveal_enabled) {
-    // console.log("---Deprecated feature enabled----", "`reveal_enabled: true`");
-    return { should: false, message: "Reveal isn't enabled" };
+  if (_.isEmpty(reveal_segments)) {
+    return { should: false, message: "No reveal Segments enabled" };
   }
 
   // Skip if no segments match
-  if (!_.isEmpty(reveal_segments) && !isInSegments(segments, reveal_segments)) {
+  if (!isInSegments(segments, reveal_segments)) {
     return {
       should: false,
       message: "Reveal segments are defined but user isn't in any of them"
     };
   }
 
-  // Skip if clearbit company already set
-  if (user["traits_clearbit_company/id"]) {
-    return { should: false, message: "Clearbit Company ID present" };
-  }
-
   // Skip if clearbit company already set on account
-  if (handle_accounts && account["clearbit_company/id"]) {
-    return { should: false, message: "Clearbit Company ID present" };
+  if (account["clearbit/id"]) {
+    return { should: false, message: "Clearbit Company ID present on Account" };
   }
 
   // Skip if user has been enriched
-  if (user["traits_clearbit/enriched_at"]) {
-    return { should: false, message: "enriched_at present" };
-  }
+  // if (user["traits_clearbit/enriched_at"]) {
+  //   return { should: false, message: "enriched_at present" };
+  // }
 
   // Skip if user has been revealed
   if (user["traits_clearbit/revealed_at"]) {
@@ -61,9 +61,13 @@ export function shouldReveal(message = {}, settings = {}) {
   return { should: true };
 }
 
-export function revealUser(user = {}, clearbit) {
-  clearbit.metric("reveal");
-  return clearbit.client
-    .reveal({ ip: user.last_known_ip })
-    .then(person => person && { source: "reveal", person });
+export async function reveal({ client, message }) {
+  const { user } = message;
+  const { last_known_ip: ip } = user;
+  const response = await client.reveal({ ip });
+  return {
+    ...response,
+    source: "reveal",
+    ip
+  };
 }

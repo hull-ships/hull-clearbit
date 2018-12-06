@@ -1,4 +1,28 @@
+const _ = require("lodash");
+
+// Maps a single key in the source object to multiple in the destination object.
+// The boolean value defines if we set the value or use `setIfNull`
+// { domain: true, 'company/domain': false } =>
+// { domain: { operation: "setIfNull", value: xxx }, "company/domain": xxx }
+
+const multi = attributes =>
+  _.map(
+    attributes,
+    (v, key) =>
+      v
+        ? {
+            key,
+            transform: value => ({ value, operation: "setIfNull" })
+          }
+        : {
+            key,
+            transform: value => value
+          }
+  );
 export default {
+  PersonCompany: {
+    domain: multi({ domain: true })
+  },
   Person: {
     "aboutme.avatar": "clearbit/aboutme_avatar",
     "aboutme.bio": "clearbit/aboutme_bio",
@@ -9,7 +33,7 @@ export default {
     "angellist.followers": "clearbit/angellist_followers",
     "angellist.handle": "clearbit/angellist_handle",
     "angellist.site": "clearbit/angellist_site",
-    avatar: "picture",
+    avatar: multi({ picture: true, "clearbit/avatar": false }),
     bio: "clearbit/bio",
     email: "clearbit/email",
     emailProvider: "clearbit/email_provider",
@@ -20,12 +44,14 @@ export default {
     "employment.title": "clearbit/employment_title",
     "facebook.handle": "clearbit/facebook_handle",
     gender: "clearbit/gender",
-    "geo.city": "address.city",
-    "geo.country": "address.country",
+    "geo.city": multi({ address_city: true, "clearbit/geo_city": false }),
     "geo.countryCode": "clearbit/country_code",
     "geo.lat": "clearbit/lat",
     "geo.lng": "clearbit/lng",
-    "geo.state": "address.state",
+    "geo.state": multi({
+      address_state: true,
+      "clearbit/geo_state": false
+    }),
     "geo.stateCode": "clearbit/state_code",
     "github.avatar": "clearbit/github_avatar",
     "github.blog": "clearbit/github_blog",
@@ -41,9 +67,15 @@ export default {
     fuzzy: "clearbit/fuzzy",
     "linkedin.handle": "clearbit/linkedin_handle",
     location: "clearbit/location",
-    "name.familyName": "clearbit/last_name",
+    "name.familyName": multi({
+      last_name: true,
+      "clearbit/last_name": false
+    }),
     "name.fullName": "clearbit/full_name",
-    "name.givenName": "clearbit/first_name",
+    "name.givenName": multi({
+      first_name: true,
+      "clearbit/first_name": false
+    }),
     site: "clearbit/site",
     timeZone: "clearbit/time_zone",
     "twitter.avatar": "clearbit/twitter_avatar",
@@ -57,86 +89,88 @@ export default {
     utcOffset: "clearbit/utc_offset"
   },
   Prospect: {
-    email: "email",
+    email: multi({ email: true, "clearbit/email": false }),
     id: "clearbit/prospect_id",
-    "name.familyName": "last_name",
+    "name.familyName": multi({
+      last_name: true,
+      "clearbit/last_name": false
+    }),
     "name.fullName": "clearbit/full_name",
-    "name.givenName": "first_name",
+    "name.givenName": multi({
+      first_name: true,
+      "clearbit/first_name": false
+    }),
     phone: "clearbit/phone",
     role: "clearbit/employment_role",
     seniority: "clearbit/employment_seniority",
     title: "clearbit/employment_title",
-    verified: "clearbit/verified",
-    "company.name": "clearbit/employment_name"
+    verified: "clearbit/verified"
   },
   Company: {
-    "company.angellist.avatar": "clearbit_company/angellist_avatar",
-    "company.angellist.bio": "clearbit_company/angellist_bio",
-    "company.angellist.blog": "clearbit_company/angellist_blog",
-    "company.angellist.followers": "clearbit_company/angellist_followers",
-    "company.angellist.handle": "clearbit_company/angellist_handle",
-    "company.angellist.site": "clearbit_company/angellist_site",
-    "company.category.industry": "clearbit_company/category_industry",
-    "company.category.industryGroup":
-      "clearbit_company/category_industry_group",
-    "company.category.sector": "clearbit_company/category_sector",
-    "company.category.subIndustry": "clearbit_company/category_sub_industry",
-    "company.category.sicCode": "clearbit_company/category_sic_code",
-    "company.category.naicsCode": "clearbit_company/category_naics_code",
-    "company.crunchbase.handle": "clearbit_company/crunchbase_handle",
-    "company.description": "clearbit_company/description",
-    "company.domain": "clearbit_company/domain",
-    "company.domainAliases": "clearbit_company/domain_aliases",
-    "company.emailProvider": "clearbit_company/email_provider",
-    "company.facebook.handle": "clearbit_company/facebook_handle",
-    "company.foundedYear": "clearbit_company/founded_year",
-    "company.geo.city": "clearbit_company/geo_city",
-    "company.geo.country": "clearbit_company/geo_country",
-    "company.geo.countryCode": "clearbit_company/geo_country_code",
-    "company.geo.lat": "clearbit_company/geo_lat",
-    "company.geo.lng": "clearbit_company/geo_lng",
-    "company.geo.postalCode": "clearbit_company/geo_postal_code",
-    "company.geo.state": "clearbit_company/geo_state",
-    "company.geo.stateCode": "clearbit_company/geo_state_code",
-    "company.geo.streetName": "clearbit_company/geo_street_name",
-    "company.geo.streetNumber": "clearbit_company/geo_street_number",
-    "company.geo.subPremise": "clearbit_company/geo_sub_premise",
-    "company.id": "clearbit_company/id",
-    "company.identifiers.usEIN": "clearbit_company/identifiers_us_ein",
-    "company.legalName": "clearbit_company/legal_name",
-    "company.linkedin.handle": "clearbit_company/linkedin_handle",
-    "company.location": "clearbit_company/location",
-    "company.logo": "clearbit_company/logo",
-    "company.metrics.alexaGlobalRank":
-      "clearbit_company/metrics_alexa_global_rank",
-    "company.metrics.alexaUsRank": "clearbit_company/metrics_alexa_us_rank",
-    "company.metrics.annualRevenue": "clearbit_company/metrics_annual_revenue",
-    "company.metrics.employees": "clearbit_company/metrics_employees",
-    "company.metrics.employeesRange":
-      "clearbit_company/metrics_employees_range",
-    "company.metrics.estimatedAnnualRevenue":
-      "clearbit_company/metrics_estimated_annual_revenue",
-    "company.metrics.fiscalYearEnd": "clearbit_company/metrics_fiscal_year_end",
-    "company.metrics.marketCap": "clearbit_company/metrics_market_cap",
-    "company.metrics.raised": "clearbit_company/metrics_raised",
-    "company.name": "clearbit_company/name",
-    "company.phone": "clearbit_company/phone",
-    "company.site.emailAddresses": "clearbit_company/site_email_addresses",
-    "company.site.phoneNumbers": "clearbit_company/site_phone_numbers",
-    "company.site.title": "clearbit_company/site_title",
-    "company.site.url": "clearbit_company/site_url",
-    "company.tags": "clearbit_company/tags",
-    "company.timeZone": "clearbit_company/time_zone",
-    "company.twitter.avatar": "clearbit_company/twitter_avatar",
-    "company.twitter.bio": "clearbit_company/twitter_bio",
-    "company.twitter.followers": "clearbit_company/twitter_followers",
-    "company.twitter.following": "clearbit_company/twitter_following",
-    "company.twitter.handle": "clearbit_company/twitter_handle",
-    "company.twitter.id": "clearbit_company/twitter_id",
-    "company.twitter.location": "clearbit_company/twitter_location",
-    "company.twitter.site": "clearbit_company/twitter_site",
-    "company.type": "clearbit_company/type",
-    "company.utcOffset": "clearbit_company/utc_offset",
-    "company.tech": "clearbit_company/tech"
+    "angellist.avatar": "clearbit/angellist_avatar",
+    "angellist.bio": "clearbit/angellist_bio",
+    "angellist.blog": "clearbit/angellist_blog",
+    "angellist.followers": "clearbit/angellist_followers",
+    "angellist.handle": "clearbit/angellist_handle",
+    "angellist.site": "clearbit/angellist_site",
+    "category.industry": "clearbit/category_industry",
+    "category.industryGroup": "clearbit/category_industry_group",
+    "category.sector": "clearbit/category_sector",
+    "category.subIndustry": "clearbit/category_sub_industry",
+    "category.sicCode": "clearbit/category_sic_code",
+    "category.naicsCode": "clearbit/category_naics_code",
+    "crunchbase.handle": "clearbit/crunchbase_handle",
+    description: "clearbit/description",
+    domain: multi({ domain: true, "clearbit/domain": false }),
+    domainAliases: "clearbit/domain_aliases",
+    emailProvider: "clearbit/email_provider",
+    "facebook.handle": "clearbit/facebook_handle",
+    foundedYear: "clearbit/founded_year",
+    "geo.city": "clearbit/geo_city",
+    "geo.country": "clearbit/geo_country",
+    "geo.countryCode": "clearbit/geo_country_code",
+    "geo.lat": "clearbit/geo_lat",
+    "geo.lng": "clearbit/geo_lng",
+    "geo.postalCode": "clearbit/geo_postal_code",
+    "geo.state": "clearbit/geo_state",
+    "geo.stateCode": "clearbit/geo_state_code",
+    "geo.streetName": "clearbit/geo_street_name",
+    "geo.streetNumber": "clearbit/geo_street_number",
+    "geo.subPremise": "clearbit/geo_sub_premise",
+    id: "clearbit/id",
+    "identifiers.usEIN": "clearbit/identifiers_us_ein",
+    legalName: "clearbit/legal_name",
+    "linkedin.handle": "clearbit/linkedin_handle",
+    location: "clearbit/location",
+    logo: "clearbit/logo",
+    "metrics.alexaGlobalRank": "clearbit/metrics_alexa_global_rank",
+    "metrics.alexaUsRank": "clearbit/metrics_alexa_us_rank",
+    "metrics.annualRevenue": "clearbit/metrics_annual_revenue",
+    "metrics.employees": "clearbit/metrics_employees",
+    "metrics.employeesRange": "clearbit/metrics_employees_range",
+    "metrics.estimatedAnnualRevenue":
+      "clearbit/metrics_estimated_annual_revenue",
+    "metrics.fiscalYearEnd": "clearbit/metrics_fiscal_year_end",
+    "metrics.marketCap": "clearbit/metrics_market_cap",
+    "metrics.raised": "clearbit/metrics_raised",
+    name: multi({ name: true, "clearbit/name": false }),
+    phone: "clearbit/phone",
+    "site.emailAddresses": "clearbit/site_email_addresses",
+    "site.phoneNumbers": "clearbit/site_phone_numbers",
+    "site.title": "clearbit/site_title",
+    "site.url": "clearbit/site_url",
+    tags: "clearbit/tags",
+    timeZone: "clearbit/time_zone",
+    "twitter.avatar": "clearbit/twitter_avatar",
+    "twitter.bio": "clearbit/twitter_bio",
+    "twitter.followers": "clearbit/twitter_followers",
+    "twitter.following": "clearbit/twitter_following",
+    "twitter.handle": "clearbit/twitter_handle",
+    "twitter.id": "clearbit/twitter_id",
+    "twitter.location": "clearbit/twitter_location",
+    "twitter.site": "clearbit/twitter_site",
+    type: "clearbit/type",
+    utcOffset: "clearbit/utc_offset",
+    tech: "clearbit/tech"
   }
 };

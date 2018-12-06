@@ -4,12 +4,12 @@ import mockr from "hull-connector-dev/lib/mockr";
 import server from "../../server/server";
 
 describe("Enrich action", () => {
-  const connector = {
+/*   const connector = {
     id: "123456789012345678901234",
     private_settings: {
       api_key: "123",
       enrich_enabled: true,
-      enrich_segments: ["1"]
+      enrich_user_segments: ["1"]
     }
   };
   const mocks = mockr({
@@ -125,4 +125,4 @@ describe("Enrich action", () => {
       }
     );
   });
-});
+ */});

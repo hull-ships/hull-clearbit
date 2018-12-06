@@ -32,11 +32,12 @@
     },
 
     {
-      "name": "handle_accounts",
-      "title": "Use Accounts Feature",
-      "type": "boolean",
-      "default": false,
-      "format": "hidden"
+      "name": "lookup_domain",
+      "title": "Attribute that defines the company domain",
+      "type": "string",
+      "format": "account_trait",
+      "default": "domain",
+      "description": "The connector will use the value of this account attribute as domain when fetching people from Clearbit."
     },
 
     {
@@ -47,18 +48,23 @@
     },
 
     {
-      "title": "Enable Enrich API",
-      "name": "enrich_enabled",
-      "description": "Transform the email address or domain in a person or company profile with more than 85 data points.",
-      "type": "boolean",
-      "default": true
-    },
-    {
       "title": "Enrich users belonging to one of these segments",
-      "name": "enrich_segments",
-      "description": "Specify one or more segments for which enrichment will be performed. *No one is sent if this is empty*",
+      "name": "enrich_user_segments",
+      "description": "Specify one or more segments for which enrichment will be performed",
       "type": "array",
       "format": "segment",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+
+    {
+      "title": "Enrich Accounts belonging to one of these segments",
+      "name": "enrich_account_segments",
+      "description": "Specify one or more segments for which enrichment will be performed",
+      "type": "array",
+      "format": "account_segment",
       "items": {
         "type": "string"
       },
@@ -74,13 +80,6 @@
       "name": "reveal"
     },
     {
-      "title": "Enable Reveal API",
-      "name": "reveal_enabled",
-      "description": "Please set some revealable segments and stop relying on this checkbox - Keep it enabled for now",
-      "type": "boolean",
-      "default": false
-    },
-    {
       "title": "Reveal users belonging to one of these segments",
       "description": "Specify one or more segments to filter who will be sent to Reveal. *Every anonymous user is sent if this is empty*. We never send anyone who has identifiable information",
       "name": "reveal_segments",
@@ -91,19 +90,6 @@
       },
       "default": []
     },
-    {
-      "title": "Minimum distinct visitors from same company to trigger Prospect API",
-      "name": "reveal_prospect_min_contacts",
-      "type": "number",
-      "description": "As soon as this number of distinct visitors from the same Company is met, the connector will run the Prospect workflow (if it's enabled)",
-      "format": "range",
-      "default": 1,
-      "minimum": 1,
-      "maximum": 10,
-      "multipleOf": 1
-    },
-
-
     {
       "title": "Discovery",
       "type": "string",
@@ -126,7 +112,7 @@
       "description": "Use this attribute as domain when fetching people from Clearbit."
     },
     {
-      "name": "discover_segments",
+      "name": "discover_account_segments",
       "title": "Discover companies similar to the ones in these segments",
       "description": "Specify one or more segments to Define which companies are going to trigger new Discovery calls to find similar companies.",
       "type": "array",
@@ -146,9 +132,6 @@
       "maximum": 10,
       "multipleOf": 1
     },
-
-
-
     {
       "type": "string",
       "format": "title",
@@ -156,31 +139,26 @@
       "title": "Prospector"
     },
     {
-      "name": "prospect_enabled",
-      "title": "Enable Prospector",
-      "type": "boolean",
-      "default": false
-    },
-
-
-    {
-      "name": "prospect_domain",
-      "title": "Attribute that defines the company domain",
-      "type": "string",
-      "format": "trait",
-      "default": "domain",
-      "description": "The connector will use the value of this attribute as domain when fetching people from Clearbit."
-    },
-    {
-      "name": "prospect_segments",
-      "title": "Prospect companies for these Segments",
-      "description": "Select one or more segments. When Users belonging to an Account enter the segments listed above, The Clearbit Prospector API will be called to find leads for this Account that match your targeted profiles.",
+      "name": "prospect_account_segments",
+      "title": "Prospect companies for these Account Segments",
+      "description": "Select one or more segments. When Accounts match, The Clearbit Prospector API will be called to find leads for this Account that match your targeted profiles.",
       "type": "array",
-      "format": "segment",
+      "format": "account_segment",
       "items": {
         "type": "string"
       },
       "default": []
+    },
+    {
+      "title": "Minimum anonymous visitor count in account to trigger Prospection",
+      "name": "reveal_prospect_min_contacts",
+      "type": "number",
+      "description": "Don't prospect unless we have at least this number of anonymous revealed visitors. A value of 0 will prospect any account in segment",
+      "format": "range",
+      "default": 0,
+      "minimum": 0,
+      "maximum": 10,
+      "multipleOf": 1
     },
     {
       "name": "prospect_limit_count",
@@ -200,7 +178,7 @@
       "headerTemplate": "Search by role, seniority or title to identify your ideal prospects."
     },
     {
-      "name": "prospect_filter_role",
+      "name": "prospect_filter_roles",
       "title": "Filter for a certain Role",
       "type": "array",
       "options": {
@@ -235,7 +213,7 @@
       "description": "Specify a certain role or leave blank to search without restriction."
     },
     {
-      "name": "prospect_filter_seniority",
+      "name": "prospect_filter_seniorities",
       "title": "Filter for specific Seniority",
       "type": "array",
       "options": {
@@ -263,6 +241,48 @@
         "allowCreate": true
       },
       "description": "Restrict your search by specifying criteria for the prospect's title. If left blank, search is carried out without restriction."
+    },
+    {
+      "name": "prospect_filter_cities",
+      "title": "Search for Cities containing",
+      "type": "array",
+      "items": {
+        "title": "City",
+        "type": "string"
+      },
+      "format": "select",
+      "options": {
+        "allowCreate": true
+      },
+      "description": "Restrict your search by specifying criteria for the prospect's city. If left blank, search is carried out without restriction."
+    },
+    {
+      "name": "prospect_filter_states",
+      "title": "Search for States containing",
+      "type": "array",
+      "items": {
+        "title": "State",
+        "type": "string"
+      },
+      "format": "select",
+      "options": {
+        "allowCreate": true
+      },
+      "description": "Restrict your search by specifying criteria for the prospect's State. If left blank, search is carried out without restriction."
+    },
+    {
+      "name": "prospect_filter_countries",
+      "title": "Search for Countries containing",
+      "type": "array",
+      "items": {
+        "title": "Country",
+        "type": "string"
+      },
+      "format": "select",
+      "options": {
+        "allowCreate": true
+      },
+      "description": "Restrict your search by specifying criteria for the prospect's Country. If left blank, search is carried out without restriction."
     }
   ],
   "settings": [],
