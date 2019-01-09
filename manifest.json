@@ -1,21 +1,16 @@
 {
   "name": "Clearbit",
   "description": "Synchronize Data with Clearbit",
-  "tags": ["incoming", "outgoing", "batch", "oneColumn", "smart-notifier"],
-  "ui": false,
   "picture": "picture.png",
-  "admin": "admin.html",
-  "tabs": [
-    {
-      "title": "Prospector",
-      "url": "admin.html",
-      "size": "large",
-      "editable": false
-    }
+  "version": "0.4.12",
+  "tags": [
+    "incoming",
+    "outgoing",
+    "batch",
+    "oneColumn",
+    "smart-notifier"
   ],
-  "source": "clearbit",
-  "readme": "readme.md",
-  "version": "0.4.11",
+  "settings": [],
   "private_settings": [
     {
       "type": "string",
@@ -30,22 +25,18 @@
       "type": "string",
       "format": "text"
     },
-
     {
       "name": "handle_accounts",
       "title": "Use Accounts Feature",
       "type": "boolean",
-      "default": true,
-      "format": "hidden"
+      "default": false
     },
-
     {
       "type": "string",
       "format": "title",
       "name": "enrich",
       "title": "Enrich"
     },
-
     {
       "title": "Enable Enrich API",
       "name": "enrich_enabled",
@@ -54,7 +45,7 @@
       "default": true
     },
     {
-      "title": "Enrich users belonging to one of these segments",
+      "title": "Enrich users",
       "name": "enrich_segments",
       "description": "Specify one or more segments for which enrichment will be performed. *No one is sent if this is empty*",
       "type": "array",
@@ -64,9 +55,6 @@
       },
       "default": []
     },
-
-
-
     {
       "title": "Reveal",
       "type": "string",
@@ -81,7 +69,7 @@
       "default": false
     },
     {
-      "title": "Reveal users belonging to one of these segments",
+      "title": "Reveal users",
       "description": "Specify one or more segments to filter who will be sent to Reveal. *Every anonymous user is sent if this is empty*. We never send anyone who has identifiable information",
       "name": "reveal_segments",
       "type": "array",
@@ -102,8 +90,6 @@
       "maximum": 10,
       "multipleOf": 1
     },
-
-
     {
       "title": "Discovery",
       "type": "string",
@@ -127,7 +113,7 @@
     },
     {
       "name": "discover_segments",
-      "title": "Discover companies similar to the ones in these segments",
+      "title": "Discover companies",
       "description": "Specify one or more segments to Define which companies are going to trigger new Discovery calls to find similar companies.",
       "type": "array",
       "format": "segment",
@@ -146,9 +132,6 @@
       "maximum": 10,
       "multipleOf": 1
     },
-
-
-
     {
       "type": "string",
       "format": "title",
@@ -161,8 +144,6 @@
       "type": "boolean",
       "default": false
     },
-
-
     {
       "name": "prospect_domain",
       "title": "Attribute that defines the company domain",
@@ -173,7 +154,7 @@
     },
     {
       "name": "prospect_segments",
-      "title": "Prospect companies for these Segments",
+      "title": "Prospect companies",
       "description": "Select one or more segments. When Users belonging to an Account enter the segments listed above, The Clearbit Prospector API will be called to find leads for this Account that match your targeted profiles.",
       "type": "array",
       "format": "segment",
@@ -265,14 +246,24 @@
       "description": "Restrict your search by specifying criteria for the prospect's title. If left blank, search is carried out without restriction."
     }
   ],
-  "settings": [],
   "resources": [],
+  "readme": "readme.md",
+  "admin": "admin.html",
+  "tabs": [
+    {
+      "title": "Prospector",
+      "url": "admin.html",
+      "size": "large",
+      "editable": false
+    }
+  ],
+  "ui": false,
   "subscriptions": [
     {
       "url": "/smart-notifier"
     }
   ],
-  "schedules" : [
+  "schedules": [
     {
       "url": "/status",
       "type": "interval",

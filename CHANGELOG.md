@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.4.12
+- use shorter titles for segments list settings
+
 ## 0.4.11
 - upgrade nodejs to v8.10.0
 
