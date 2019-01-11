@@ -29,7 +29,7 @@
       "name": "handle_accounts",
       "title": "Use Accounts Feature",
       "type": "boolean",
-      "default": false
+      "default": true
     },
     {
       "type": "string",
