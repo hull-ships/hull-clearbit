@@ -29,7 +29,8 @@
       "name": "handle_accounts",
       "title": "Use Accounts Feature",
       "type": "boolean",
-      "default": true
+      "default": true,
+      "format": "hidden"
     },
     {
       "type": "string",
