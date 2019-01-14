@@ -4,7 +4,9 @@ import qs from "qs";
 import Promise from "bluebird";
 import { STATUS_CODES } from "http";
 
-function ClearbitApi({ path, method = "get", params = {}, key }) {
+const PROSPECTOR_API_VERSION = "2018-06-06";
+
+function ClearbitApi({ path, method = "get", params = {}, key, versioning }) {
   const baseUrl = `https://prospector.clearbit.com/v1${path}`;
   const url = `${baseUrl}?${qs.stringify(params, { arrayFormat: "brackets" })}`;
   return new Promise((resolve, reject) => {
@@ -14,7 +16,8 @@ function ClearbitApi({ path, method = "get", params = {}, key }) {
         method,
         headers: {
           "content-type": "application/json",
-          accept: "application/json"
+          accept: "application/json",
+          "API-Version": versioning
         },
         auth: { bearer: key }
       },
@@ -101,6 +104,11 @@ export default class ClearbitClient {
       action: "prospect"
     });
     this.metric("ship.service_api.call", 1, ["ship_action:clearbit:prospect"]);
-    return ClearbitApi({ path: "/people/search", params, key: this.key });
+    return ClearbitApi({
+      path: "/people/search",
+      params,
+      key: this.key,
+      versioning: PROSPECTOR_API_VERSION
+    });
   }
 }

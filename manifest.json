@@ -2,7 +2,19 @@
   "name": "Clearbit",
   "description": "Synchronize Data with Clearbit",
   "picture": "picture.png",
-  "version": "0.4.12",
+  "version": "0.4.14",
+  "admin": "admin.html",
+  "readme": "readme.md",
+  "source": "clearbit",
+  "ui": false,
+  "tabs": [
+    {
+      "title": "Prospector",
+      "url": "admin.html",
+      "size": "large",
+      "editable": false
+    }
+  ],
   "tags": [
     "incoming",
     "outgoing",
@@ -10,7 +22,6 @@
     "oneColumn",
     "smart-notifier"
   ],
-  "settings": [],
   "private_settings": [
     {
       "type": "string",
@@ -247,18 +258,6 @@
       "description": "Restrict your search by specifying criteria for the prospect's title. If left blank, search is carried out without restriction."
     }
   ],
-  "resources": [],
-  "readme": "readme.md",
-  "admin": "admin.html",
-  "tabs": [
-    {
-      "title": "Prospector",
-      "url": "admin.html",
-      "size": "large",
-      "editable": false
-    }
-  ],
-  "ui": false,
   "subscriptions": [
     {
       "url": "/smart-notifier"
