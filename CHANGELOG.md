@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.4.14
+- use shorter titles for segments list settings
+
 ## 0.4.13
 
 - upgrade hull-node
