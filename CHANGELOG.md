@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.14
+
+- [hotfix] rename filter settings
+
 ## 0.4.13
 
 - upgrade hull-node
