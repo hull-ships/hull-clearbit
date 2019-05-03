@@ -13,13 +13,13 @@ const printLimits = _.throttle(() => {
     const nbRunning = limiter.running();
     const nbQueued = limiter.queued();
     if (nbRunning || nbQueued) {
-      console.warn(
-        "Limiter",
-        JSON.stringify({
-          nbRunning,
-          nbQueued
-        })
-      );
+      // console.warn(
+      //   "Limiter",
+      //   JSON.stringify({
+      //     nbRunning,
+      //     nbQueued
+      //   })
+      // );
     }
     return true;
   });
