@@ -10,7 +10,7 @@ export default function handleWebhook({ hostSecret, Hull }) {
     const { status, type, body } = req.body;
     const { client: hull, ship, metric } = req.hull;
     const { hostname } = req;
-    const { userId } = req.hull.config;
+    const { userId, accountId } = req.hull.config;
 
     if (
       (type === "person" || type === "person_company") &&
@@ -36,10 +36,15 @@ export default function handleWebhook({ hostSecret, Hull }) {
           hostname,
           metric
         });
-        cb.saveUser({ id: userId }, person, {
-          source: "enrich",
-          incoming: true
-        });
+        cb.saveUser(
+          { id: userId },
+          person,
+          {
+            source: "enrich",
+            incoming: true
+          },
+          { id: accountId }
+        );
       }
 
       res.json({ message: "thanks" });

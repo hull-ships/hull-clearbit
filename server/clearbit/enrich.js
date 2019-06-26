@@ -8,14 +8,15 @@ import { isInSegments } from "./utils";
  * @param  {String} userId - Hull User id
  * @return {String}
  */
-function getWebhookId(userId, clearbit) {
+function getWebhookId(userId, clearbit, accountId) {
   const { hostSecret } = clearbit.settings;
   const { id, secret, organization } = clearbit.hull.configuration();
   const claims = {
     ship: id,
     secret,
     organization,
-    userId
+    userId,
+    accountId
   };
   return hostSecret && jwt.encode(claims, hostSecret);
 }
@@ -53,7 +54,7 @@ function lookupForAccountIsPending(account) {
  * @param  {User} user - Hull User
  * @return {Promise -> ClearbitPerson}
  */
-function fetchFromEnrich(user = {}, clearbit) {
+function fetchFromEnrich(user = {}, clearbit, account = {}) {
   // const saveUser = this.saveUser.bind(this, user);
 
   const payload = {
@@ -63,16 +64,18 @@ function fetchFromEnrich(user = {}, clearbit) {
     stream: clearbit.settings.stream
   };
 
+  const accountId = account.id;
+
   if (clearbit.settings.stream) {
     payload.stream = true;
   } else {
-    payload.webhook_id = getWebhookId(user.id, clearbit);
+    payload.webhook_id = getWebhookId(user.id, clearbit, accountId);
   }
 
   if (clearbit.hostname) {
     payload.webhook_url = `https://${clearbit.hostname}/clearbit-enrich?ship=${
       clearbit.ship.id
-    }&id=${getWebhookId(user.id, clearbit)}`;
+    }&id=${getWebhookId(user.id, clearbit, accountId)}`;
   }
 
   return clearbit.client
@@ -208,13 +211,13 @@ export function shouldEnrichAccount(message = {}, settings = {}) {
   return { should: true };
 }
 
-export function enrichUser(user, clearbit) {
+export function enrichUser(user, clearbit, account) {
   if (!user) {
     return Promise.reject(new Error("Empty user"));
   }
 
   if (user.email) {
-    return fetchFromEnrich(user, clearbit).then(person => ({
+    return fetchFromEnrich(user, clearbit, account).then(person => ({
       source: "enrich",
       person
     }));
