@@ -31,10 +31,10 @@ function handleBatchUpdate({ hostSecret }) {
   return ({ metric, client, ship, hostname }, messages = []) => {
     const limiter = Limiter.key(ship.id);
 
-    const users = messages.map(m => m.user).filter(u => u.email);
+    const userMessages = messages.filter(u => u.user.email);
     const accounts = messages.map(m => m.account).filter(a => a.domain);
 
-    if (users.length === 0 && accounts.length === 0) {
+    if (userMessages.length === 0 && accounts.length === 0) {
       return false;
     }
 
@@ -47,11 +47,12 @@ function handleBatchUpdate({ hostSecret }) {
       hostname
     });
 
-    const handleMessage = (user, done) => {
-      if (clearbit.canReveal(user)) {
+    const handleMessage = (userMessage, done) => {
+      const { user, account } = userMessage;
+      if (clearbit.canReveal(user, account)) {
         clearbit.revealUser(user);
       } else if (clearbit.canEnrich(user)) {
-        clearbit.enrichUser(user);
+        clearbit.enrichUser(user, account);
       }
       done(user);
     };
@@ -63,8 +64,8 @@ function handleBatchUpdate({ hostSecret }) {
       done(account);
     };
 
-    users.map(user =>
-      limiter.submit(handleMessage, user, () => {
+    userMessages.map(userMessage =>
+      limiter.submit(handleMessage, userMessage, () => {
         // DO NOT REMOVE THIS CALLBACK
         printLimits();
       })

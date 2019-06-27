@@ -101,7 +101,7 @@ export default class Clearbit {
     return action(msg, this.settings);
   }
 
-  enrichUser(user) {
+  enrichUser(user, account) {
     const asUser = this.hull.asUser(
       _.pick(user, ["id", "external_id", "email"])
     );
@@ -111,11 +111,11 @@ export default class Clearbit {
         method: "enrichUser"
       });
     };
-    return enrichUser(user, this)
+    return enrichUser(user, this, account)
       .then(response => {
         if (!response || !response.source) return false;
         const { person, source } = response;
-        return this.saveUser(user, person, { source });
+        return this.saveUser(user, person, { source }, account);
       }, logError)
       .catch(logError);
   }
@@ -141,7 +141,7 @@ export default class Clearbit {
       });
   }
 
-  revealUser(user = {}) {
+  revealUser(user = {}, account) {
     const asUser = this.hull.asUser(
       _.pick(user, ["id", "external_id", "email"])
     );
@@ -160,11 +160,16 @@ export default class Clearbit {
         if (!response || !response.source) return false;
         const { person = {}, source } = response;
         const { company } = person;
-        return this.saveUser(user, person, {
-          source,
-          company: _.pick(company, "name", "domain"),
-          ip: last_known_ip
-        });
+        return this.saveUser(
+          user,
+          person,
+          {
+            source,
+            company: _.pick(company, "name", "domain"),
+            ip: last_known_ip
+          },
+          account
+        );
       }, logError)
       .catch(logError);
   }
@@ -447,7 +452,7 @@ export default class Clearbit {
    * @param  {Object} person - Clearbit Person object
    * @return {Promise -> Object({ user, person })}
    */
-  saveUser(user = {}, person = {}, options = {}) {
+  saveUser(user = {}, person = {}, options = {}, account = {}) {
     const { source, incoming } = options;
 
     // Never ever change the email address (Clearbit strips +xxx parts, so we end up with complete
@@ -516,8 +521,15 @@ export default class Clearbit {
 
       promises.push(asUser.traits(all_traits.user));
 
-      if (domain) {
-        const asAccount = asUser.account({ domain });
+      if (domain || !_.isEmpty(account)) {
+        const accountIdent = _.pick(account, "id", "external_id", "domain");
+
+        // Will need to decide under what conditions we want to do this, but for now do it in all cases
+        if (domain) {
+          accountIdent.domain = domain;
+        }
+
+        const asAccount = asUser.account(accountIdent);
         asAccount.logger.info(`${direction}.account.success`, {
           source,
           traits: all_traits.account

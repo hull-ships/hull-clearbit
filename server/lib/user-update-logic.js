@@ -11,7 +11,7 @@ export default function userUpdateLogic({
 
   if (clearbit.canEnrich(user)) {
     const { should, message: msg } = clearbit.shouldEnrich(message);
-    if (should) return clearbit.enrichUser(user);
+    if (should) return clearbit.enrichUser(user, acc);
     skips.enrich = msg;
   } else if (clearbit.canEnrichAcct(account)) {
     const { should, message: msg } = clearbit.shouldEnrichAcct(message);
@@ -21,7 +21,7 @@ export default function userUpdateLogic({
 
   if (clearbit.canReveal(user)) {
     const { should, message: msg } = clearbit.shouldReveal(message);
-    if (should) return clearbit.revealUser(user);
+    if (should) return clearbit.revealUser(user, acc);
     skips.reveal = msg;
   }
 
