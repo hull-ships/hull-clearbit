@@ -2,7 +2,7 @@
   "name": "Clearbit",
   "description": "Synchronize Data with Clearbit",
   "picture": "picture.png",
-  "version": "0.4.14",
+  "version": "0.4.15",
   "admin": "admin.html",
   "readme": "readme.md",
   "source": "clearbit",

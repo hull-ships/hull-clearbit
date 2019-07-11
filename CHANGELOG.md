@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.4.15
+- added external id to account identity
+
 ## 0.4.14
 - use shorter titles for segments list settings
 
