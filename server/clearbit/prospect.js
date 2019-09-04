@@ -93,7 +93,7 @@ export function shouldprospectUserFromDomain({ domain, hull, settings }) {
     by_source: { terms: { field: "traits_clearbit/source.exact" } }
   };
 
-  const params = { query, aggs, search_type: "count" };
+  const params = { query, aggs, per_page: 0 };
 
   return hull
     .post("search/user_reports", params)
