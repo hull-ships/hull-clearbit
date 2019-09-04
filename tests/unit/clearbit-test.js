@@ -941,7 +941,7 @@ describe("HullClearbit Client", () => {
           hull.post.firstCall.args[1].aggs.without_email.missing.field,
           "email"
         );
-        assert.equal(hull.post.firstCall.args[1].search_type, "count");
+        assert.equal(hull.post.firstCall.args[1].per_page, 0);
 
         assert.equal(
           cb.fetchProspects.firstCall.args[0].query.domain,
