@@ -40,9 +40,9 @@ export default function notifyHandler({ hostSecret, stream = false }) {
           }
         );
         if (handle_accounts && ids.accounts.length) {
-          client.logger.info("outgoing.account.start", { ids: ids.accounts });
+          client.logger.debug("outgoing.account.start", { ids: ids.accounts });
         }
-        client.logger.info("outgoing.user.start", { ids: ids.users });
+        client.logger.debug("outgoing.user.start", { ids: ids.users });
 
         return Promise.all(
           messages.map(message =>
