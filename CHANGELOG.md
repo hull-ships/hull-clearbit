@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.15
+
+- Move outgoing skip and start messages to debug
+
 ## 0.4.14
 
 - [hotfix] rename filter settings

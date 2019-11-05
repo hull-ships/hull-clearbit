@@ -15,7 +15,7 @@
   ],
   "source": "clearbit",
   "readme": "readme.md",
-  "version": "0.4.14",
+  "version": "0.4.15",
   "private_settings": [
     {
       "type": "string",
