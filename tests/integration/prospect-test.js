@@ -62,7 +62,7 @@ describe("Clearbit API errors", () => {
           const [, firstLog, secondLog, thirdLog, fourthLog, fifthLog] = logs;
 
           expect(batch.length).to.equal(4);
-          expect(logs.length).to.equal(6);
+          expect(logs.length).to.equal(4);
 
           // Source user Event
           expect(first.type).to.equal("track");
@@ -102,11 +102,9 @@ describe("Clearbit API errors", () => {
           expect(fourth.claims["io.hull.asUser"].email).to.equal("foo@foo.bar");
           expect(fourth.claims["io.hull.asAccount"].id).to.equal("ACCOUNTID");
 
-          expect(firstLog.message).to.equal("outgoing.account.start");
-          expect(secondLog.message).to.equal("outgoing.user.start");
-          expect(thirdLog.message).to.equal("outgoing.user.success");
-          expect(fourthLog.message).to.equal("incoming.user.success");
-          expect(fifthLog.message).to.equal("incoming.account.success");
+          expect(firstLog.message).to.equal("outgoing.user.success");
+          expect(secondLog.message).to.equal("incoming.user.success");
+          expect(thirdLog.message).to.equal("incoming.account.success");
 
           clearbit.done();
           done();
