@@ -89,8 +89,8 @@ export function shouldprospectUserFromDomain({ domain, hull, settings }) {
   }
 
   const aggs = {
-    without_email: { missing: { field: "email" } },
-    by_source: { terms: { field: "traits_clearbit/source.exact" } }
+    without_email: { missing: { field: "email.keyword" } },
+    by_source: { terms: { field: "traits_clearbit/source.keyword" } }
   };
 
   const params = { query, aggs, per_page: 0 };
