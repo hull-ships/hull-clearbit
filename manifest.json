@@ -2,7 +2,7 @@
   "name": "Clearbit",
   "description": "Synchronize Data with Clearbit",
   "picture": "picture.png",
-  "version": "0.4.14",
+  "version": "0.4.15",
   "admin": "admin.html",
   "readme": "readme.md",
   "source": "clearbit",
@@ -16,10 +16,7 @@
     }
   ],
   "tags": [
-    "incoming",
-    "outgoing",
     "batch",
-    "oneColumn",
     "smart-notifier"
   ],
   "private_settings": [
@@ -57,7 +54,7 @@
       "default": true
     },
     {
-      "title": "Enrich Users Filter",
+      "title": "Enrich Filter",
       "name": "enrich_segments",
       "description": "Specify one or more segments for which enrichment will be performed. *No one is sent if this is empty*",
       "type": "array",
@@ -81,8 +78,8 @@
       "default": false
     },
     {
-      "title": "Reveal Users Filter",
-      "description": "Specify one or more segments to filter who will be sent to Reveal. *Every anonymous user is sent if this is empty*. We never send anyone who has identifiable information",
+      "title": "Reveal filter",
+      "description": "Who will be sent to Reveal. *Every anonymous user is sent if this is empty*. We never send anyone who has identifiable information",
       "name": "reveal_segments",
       "type": "array",
       "format": "segment",
@@ -125,8 +122,8 @@
     },
     {
       "name": "discover_segments",
-      "title": "Discover Companies Filter",
-      "description": "Specify one or more segments to Define which companies are going to trigger new Discovery calls to find similar companies.",
+      "title": "Discover filter",
+      "description": "Define which companies are going to trigger new Discovery calls to find similar companies.",
       "type": "array",
       "format": "segment",
       "items": {
@@ -166,8 +163,8 @@
     },
     {
       "name": "prospect_segments",
-      "title": "Prospect Companies Filter",
-      "description": "Select one or more segments. When Users belonging to an Account enter the segments listed above, The Clearbit Prospector API will be called to find leads for this Account that match your targeted profiles.",
+      "title": "Prospect filter",
+      "description": "The Clearbit Prospector API will be called for the users matching these segments to find leads for their parent Account",
       "type": "array",
       "format": "segment",
       "items": {

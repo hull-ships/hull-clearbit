@@ -47,9 +47,9 @@ export default function userUpdateLogic({
   skips.prospect = prospectMessage;
 
   const reason = { reason: "no action matched", ...skips };
-  client.asUser(user).logger.info("outgoing.user.skip", reason);
+  client.asUser(user).logger.debug("outgoing.user.skip", reason);
   if (handle_accounts) {
-    client.asAccount(account).logger.info("outgoing.account.skip", reason);
+    client.asAccount(account).logger.debug("outgoing.account.skip", reason);
   }
 
   return false;

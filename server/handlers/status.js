@@ -24,7 +24,7 @@ export default function statusCheck(req, res) {
     discover_enabled || enrich_enabled || prospect_enabled || reveal_enabled;
 
   if (!api_key) {
-    status = "warning";
+    status = "setupRequired";
     messages.push(
       "No API Key stored, connector is inactive. Enter API key in Settings"
     );
@@ -53,7 +53,7 @@ export default function statusCheck(req, res) {
         "Prospector enabled, but no segments are listed. No one will trigger prospection"
       );
     } else if (_.size(prospect_filter_role)) {
-      status = "warning";
+      status = "ok";
       messages.push(
         "Prospector enabled, but no Roles are listed. Prospection will be unpredictable"
       );
@@ -63,7 +63,7 @@ export default function statusCheck(req, res) {
         "Prospector enabled, but no 'Company Domain' field is set. We need to know what domain to lookup"
       );
     } else if (!prospect_filter_seniority) {
-      status = "warning";
+      status = "ok";
       messages.push(
         "Prospector enabled, but no Seniority is listed. Prospection might return underqualified results"
       );
@@ -73,7 +73,7 @@ export default function statusCheck(req, res) {
         "Prospector enabled, but no Titles are listed. Prospection might return underqualified results"
       );
     } else if (!prospect_filter_role) {
-      status = "warning";
+      status = "ok";
       messages.push(
         "Prospector enabled, but no Roles are listed. Prospection might return underqualified results"
       );

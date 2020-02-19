@@ -53,7 +53,7 @@ export default class Clearbit {
   }
 
   logSkip = (asUser, action, reason, additionalData = {}) => {
-    asUser.logger.info("outgoing.user.skip", {
+    asUser.logger.debug("outgoing.user.skip", {
       reason,
       action,
       additionalData

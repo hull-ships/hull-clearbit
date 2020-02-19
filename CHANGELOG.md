@@ -1,7 +1,12 @@
 # Changelog
 
+## 0.4.15
+
+- Move outgoing skip and start messages to debug
+
 ## 0.4.14
-- use shorter titles for segments list settings
+
+- [hotfix] rename filter settings
 
 ## 0.4.13
 
