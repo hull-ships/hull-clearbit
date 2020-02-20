@@ -370,8 +370,9 @@ export default class Clearbit {
   companiesDiscoveredFromDomain(domain) {
     // TODO -> Support Accounts
     const query = {
-      term: { "traits_clearbit/discovered_from_domain.exact": domain }
+      term: { "traits_clearbit/discovered_from_domain.keyword": domain }
     };
+
     return this.hull.post("search/user_reports", { query });
   }
 
