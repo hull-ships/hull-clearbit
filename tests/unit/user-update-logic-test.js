@@ -8,7 +8,7 @@ const userUpdateLogic = require("../../server/lib/user-update-logic").default;
 describe("User Update Logic", () => {
   const makeHull = () => {
     const mock = {};
-    mock.logger = { info: () => {} };
+    mock.logger = { info: () => {}, debug: () => {} };
     mock.traits = sinon.spy(() => Promise.resolve());
     mock.asUser = sinon.spy(() => mock);
     return mock;

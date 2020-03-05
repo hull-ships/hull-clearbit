@@ -63,8 +63,7 @@ describe("Enrich action", () => {
       },
       ({ batch, logs }) => {
         const [first] = batch;
-        expect(logs[1].message).to.equal("outgoing.user.start");
-        expect(logs[2].message).to.equal("outgoing.user.success");
+        expect(logs[1].message).to.equal("outgoing.user.success");
         expect(_.get(first, "body.clearbit/last_name", "")).to.equal("MacCaw");
         expect(_.get(first, "body.clearbit/email", "")).to.equal(
           "alex@clearbit.com"
@@ -119,7 +118,7 @@ describe("Enrich action", () => {
         ]
       },
       ({ batch, logs }) => {
-        expect(logs[2].message).to.equal("outgoing.user.error");
+        expect(logs[1].message).to.equal("outgoing.user.error");
         expect(batch.length).to.equal(0);
         done();
       }

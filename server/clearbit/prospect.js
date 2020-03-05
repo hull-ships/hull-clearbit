@@ -89,11 +89,12 @@ export function shouldprospectUserFromDomain({ domain, hull, settings }) {
   }
 
   const aggs = {
-    without_email: { missing: { field: "email" } },
-    by_source: { terms: { field: "traits_clearbit/source.exact" } }
+    without_email: { missing: { field: "email.keyword" } },
+    by_source: { terms: { field: "traits_clearbit/source.raw" } }
   };
 
-  const params = { query, aggs, per_page: 0 };
+  const params = { query, aggs, per_page: 1, include: ["_id"] };
+
 
   return hull
     .post("search/user_reports", params)
@@ -124,7 +125,6 @@ export function shouldprospectUserFromDomain({ domain, hull, settings }) {
       if (bySource.reveal && anonymous >= min_contacts) {
         return { should: true };
       }
-
       return {
         should: false,
         reason:
