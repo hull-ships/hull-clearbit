@@ -203,35 +203,37 @@
       "name": "prospect_filter_role",
       "title": "Filter for a certain Role",
       "type": "array",
-      "options": {
-        "multiple": true
-      },
       "format": "select",
-      "enum": [
-        "",
-        "ceo",
-        "communications",
-        "consulting",
-        "customer_service",
-        "education",
-        "engineering",
-        "finance",
-        "founder",
-        "health_professional",
-        "human_resources",
-        "information_technology",
-        "legal",
-        "marketing",
-        "operations",
-        "owner",
-        "president",
-        "product",
-        "public_relations",
-        "real_estate",
-        "recruiting",
-        "research",
-        "sales"
-      ],
+      "items": {
+        "type": "string",
+        "enum": [
+          "",
+          "ceo",
+          "communications",
+          "consulting",
+          "customer_service",
+          "education",
+          "engineering",
+          "finance",
+          "founder",
+          "health_professional",
+          "human_resources",
+          "information_technology",
+          "legal",
+          "marketing",
+          "operations",
+          "owner",
+          "president",
+          "product",
+          "public_relations",
+          "real_estate",
+          "recruiting",
+          "research",
+          "sales"
+        ]
+      },
+      "default": [],
+      "uniqueItems": true,
       "description": "Specify a certain role or leave blank to search without restriction."
     },
     {
@@ -242,12 +244,17 @@
         "multiple": true
       },
       "format": "select",
-      "enum": [
-        "",
-        "executive",
-        "director",
-        "manager"
-      ],
+      "items": {
+        "type": "string",
+        "enum": [
+          "",
+          "executive",
+          "director",
+          "manager"
+        ]
+      },
+      "default": [],
+      "uniqueItems": true,
       "description": "Define a specific seniority or leave blank if you don't want to restrict your search."
     },
     {
@@ -262,6 +269,8 @@
       "options": {
         "allowCreate": true
       },
+      "default": [],
+      "uniqueItems": true,
       "description": "Restrict your search by specifying criteria for the prospect's title. If left blank, search is carried out without restriction."
     }
   ],
