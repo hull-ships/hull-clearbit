@@ -15,9 +15,9 @@ export function isInSegments(userSegments = [], segmentsListIds = []) {
   );
 }
 
-export function getDomain(user = {}, account = {}, attribute) {
+export function getDomain(user = {}, account = {}, attribute = "") {
   return (
-    (attribute.indexOf("account.") === 0
+    ((attribute || "").indexOf("account.") === 0
       ? _.get(account, attribute.replace(/^account./, ""))
       : _.get(user, attribute)) ||
     _.get(user, "traits_clearbit/employment_domain") ||
