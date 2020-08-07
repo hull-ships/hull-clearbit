@@ -95,7 +95,6 @@ export function shouldprospectUserFromDomain({ domain, hull, settings }) {
 
   const params = { query, aggs, per_page: 1, include: ["_id"] };
 
-
   return hull
     .post("search/user_reports", params)
     .then(({ pagination, aggregations }) => {
