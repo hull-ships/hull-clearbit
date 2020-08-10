@@ -59,8 +59,10 @@
       "description": "Specify one or more segments for which enrichment will be performed. *No one is sent if this is empty*",
       "type": "array",
       "format": "segment",
-      "items": {
-        "type": "string"
+      "options": {
+        "standard": {
+          "ALL": "All Users"
+        }
       },
       "default": []
     },

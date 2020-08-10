@@ -203,6 +203,30 @@ describe("HullClearbit Client", () => {
       });
       assert.equal(shouldEnrich.should, true);
     });
+
+    it("should enrich people with 'ALL' user segments whitelisted", () => {
+      const clearbit = makeClearbit({
+        enrich_segments: ["ALL", "2"],
+        enrich_enabled: true
+      });
+      const shouldEnrich = clearbit.shouldEnrich({
+        user: { "traits_clearbit/revealed_at": moment().format() },
+        segments: [{ id: "1" }]
+      });
+      assert.equal(shouldEnrich.should, true);
+    });
+
+    it("should not enrich people if the segments whitelist is empty", () => {
+      const clearbit = makeClearbit({
+        enrich_segments: [],
+        enrich_enabled: true
+      });
+      const shouldEnrich = clearbit.shouldEnrich({
+        user: { "traits_clearbit/revealed_at": moment().format() },
+        segments: [{ id: "1" }]
+      });
+      assert.equal(shouldEnrich.should, false);
+    });
   });
 
   describe("canReveal function", () => {
