@@ -95,7 +95,7 @@ export function shouldEnrich(message = {}, settings = {}) {
   if (_.isEmpty(enrich_segments)) {
     return {
       should: false,
-      message: "Synchronized segments are not defined."
+      message: "Enrich Segments are not defined."
     };
   }
 
