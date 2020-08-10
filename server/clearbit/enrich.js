@@ -92,11 +92,22 @@ export function shouldEnrich(message = {}, settings = {}) {
     return { should: false, message: "Enrich isn't enabled" };
   }
 
-  // Skip if no segments match
-  if (!_.isEmpty(enrich_segments) && !isInSegments(segments, enrich_segments)) {
+  if (_.isEmpty(enrich_segments)) {
     return {
       should: false,
-      message: "Enrich Segments are defined but User isn't in any of them"
+      message: "Enrich Segments are not defined."
+    };
+  }
+
+  // Skip if no segments match
+  if (
+    !_.isEmpty(enrich_segments) &&
+    !_.includes(enrich_segments, "ALL") &&
+    !isInSegments(segments, enrich_segments)
+  ) {
+    return {
+      should: false,
+      message: "User is not in enriched segments whitelist."
     };
   }
 
