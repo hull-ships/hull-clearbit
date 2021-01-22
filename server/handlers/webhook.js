@@ -27,7 +27,7 @@ export default function handleWebhook({ hostSecret, Hull }) {
 
       if (person) {
         hull
-          .asUser({ id: userId })
+          .asUser({ id: userId }, { create: false })
           .logger.info("incoming.user.start", { source: "webhook" });
         const cb = new Clearbit({
           hull,

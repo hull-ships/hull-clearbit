@@ -425,7 +425,7 @@ export default class Clearbit {
       return Promise.reject(error);
     }
 
-    const asUser = this.hull.asUser(ident);
+    const asUser = this.hull.asUser(ident, { create: false });
 
     const traits = getUserTraitsFromPerson({ user, person }, "Person");
 
