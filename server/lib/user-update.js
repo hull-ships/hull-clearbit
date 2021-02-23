@@ -14,7 +14,9 @@ export default function handleUserUpdate({ hostSecret, stream = false }) {
       });
     }
 
-    const { private_settings: { handle_accounts } } = ship;
+    const {
+      private_settings: { handle_accounts }
+    } = ship;
     const clearbit = new Clearbit({
       hull: client,
       ship,

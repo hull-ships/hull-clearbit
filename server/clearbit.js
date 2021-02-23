@@ -273,8 +273,7 @@ export default class Clearbit {
       discover_enabled,
       discover_segments = [],
       discover_domain = "domain"
-    } =
-      this.settings || {};
+    } = this.settings || {};
     const domain = getDomain(user, account, discover_domain);
 
     if (!this.client || !discover_enabled) {

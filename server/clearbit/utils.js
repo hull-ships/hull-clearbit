@@ -11,7 +11,10 @@ import excludes from "../excludes";
 export function isInSegments(userSegments = [], segmentsListIds = []) {
   return (
     _.isEmpty(segmentsListIds) ||
-    _.intersection(userSegments.map(({ id }) => id), segmentsListIds).length > 0
+    _.intersection(
+      userSegments.map(({ id }) => id),
+      segmentsListIds
+    ).length > 0
   );
 }
 
