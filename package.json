@@ -1,7 +1,7 @@
 {
   "name": "hull-clearbit",
   "description": "Enrich Customer data with Clearbit",
-  "version": "0.4.15",
+  "version": "0.4.16",
   "main": "index.js",
   "license": "MIT",
   "homepage": "https://github.com/hull-ships/hull-clearbit",
@@ -25,7 +25,7 @@
   "engines": {
     "node": "^10.x",
     "npm": "5.6.x",
-    "yarn": "^1.22.x"
+    "yarn": "^1.17.x"
   },
   "lint-staged": {
     "*.{js,jsx,css,scss,json}": [
