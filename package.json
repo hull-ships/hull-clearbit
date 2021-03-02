@@ -67,7 +67,7 @@
     "hull": "0.13.17",
     "hull-connector": "1.0.41",
     "hull-connector-dev": "1.0.41",
-    "jquery": "^3.3.1",
+    "jquery": "^3.5.0",
     "jwt-simple": "^0.5.1",
     "lodash": "^4.17.19",
     "moment": "^2.20.1",
