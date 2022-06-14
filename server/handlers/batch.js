@@ -67,15 +67,13 @@ function handleBatchUpdate({ hostSecret }) {
 export default function batchHandlerFactory(options) {
   return notifHandler({
     hostSecret: options.hostSecret,
+    options: {
+      groupTraits: false,
+      maxSize: 100,
+      maxTime: 120
+    },
     handlers: {
-      "user:update": {
-        callback: handleBatchUpdate(options),
-        options: {
-          groupTraits: false,
-          maxSize: 100,
-          maxTime: 120
-        }
-      }
+      "user:update": handleBatchUpdate(options)
     }
   });
 }
