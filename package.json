@@ -55,6 +55,7 @@
     "test": "builder run npm:test"
   },
   "dependencies": {
+    "@babel/register": "^7.17.7",
     "bluebird": "^3.7.2",
     "body-parser": "^1.19.0",
     "bottleneck": "^2.19.5",
@@ -62,8 +63,19 @@
     "classnames": "^2.2.6",
     "clearbit": "^1.3.5",
     "ejs": "^2.7.4",
+    "eslint-config-airbnb": "^16.1.0",
+    "eslint-config-prettier": "^2.9.0",
+    "eslint-plugin-flowtype": "^8.0.3",
+    "eslint-plugin-flowtype-errors": "^4.5.0",
+    "eslint-plugin-import": "^2.8.0",
+    "eslint-plugin-jest": "^21.5.0",
+    "eslint-plugin-jsx-a11y": "^6.0.3",
+    "eslint-plugin-prettier": "^2.4.0",
+    "eslint-plugin-react": "^7.5.1",
+    "eslint-plugin-standard": "^3.0.1",
     "express": "^4.17.1",
-    "hull-connector": "1.0.48",
+    "hull": "^0.14.2",
+    "hull-connector": "1.0.51",
     "hull-connector-dev": "1.0.47",
     "jquery": "^3.5.1",
     "jwt-simple": "^0.5.6",
@@ -83,16 +95,27 @@
     "redux-logger": "^3.0.6",
     "redux-promise": "^0.6.0",
     "redux-thunk": "^2.3.0",
-    "request": "^2.83.0",
     "select2": "^4.1.0-rc.0",
-    "sinon": "^4.5.0"
+    "sinon": "^4.5.0",
+    "superagent": "^7.1.6"
   },
   "devDependencies": {
-    "babel-register": "^6.26.0",
+    "@babel/core": "^7.18.5",
+    "@babel/eslint-parser": "^7.18.2",
+    "@babel/plugin-transform-flow-strip-types": "^7.17.12",
+    "@babel/plugin-transform-runtime": "^7.18.2",
+    "@babel/preset-env": "^7.18.2",
+    "@babel/preset-flow": "^7.0.0",
+    "babel-loader": "^8.2.5",
+    "eslint": "^8.17.0",
     "react-hot-loader": "^3.1.3",
     "reactotron-react-js": "^1.13.0",
     "reactotron-redux": "^1.13.0",
     "updtr": "^2.0.0",
+    "webpack": "^5.73.0",
     "webpack-cli": "^4.9.2"
+  },
+  "resolutions": {
+    "babel-register": "link:./node_modules/@babel/register"
   }
 }

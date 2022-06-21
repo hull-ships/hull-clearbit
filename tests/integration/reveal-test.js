@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import mockr from "hull-connector-dev/lib/mockr";
+import mockr from "hull-connector/dev/lib/mockr";
 import server from "../../server/server";
 
 describe("Reveal action", () => {

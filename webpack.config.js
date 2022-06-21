@@ -16,7 +16,8 @@ if (process.env.NODE_ENV === "production") {
     minimizer: [
       new TerserPlugin({
         terserOptions: {
-          ie8: true
+          ie8: true,
+          sourceMap: true
         }
       })
     ],
