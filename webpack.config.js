@@ -1,19 +1,27 @@
 const path = require("path");
 const webpack = require("webpack");
+const TerserPlugin = require("terser-webpack-plugin");
+
 let plugins = [];
+let optimization = {};
 
 if (process.env.NODE_ENV === "production") {
   plugins = [
-    new webpack.optimize.UglifyJsPlugin({
-      compressor: {
-        warnings: false,
-        screw_ie8: false
-      }
-    }),
     new webpack.DefinePlugin({
       "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV)
     })
   ];
+  optimization = {
+    minimize: true,
+    minimizer: [
+      new TerserPlugin({
+        terserOptions: {
+          ie8: true,
+          sourceMap: true
+        }
+      })
+    ],
+  }
 }
 
 module.exports = {
@@ -26,6 +34,7 @@ module.exports = {
     filename: "[name].js",
     publicPath: "/"
   },
+  optimization,
   plugins,
   resolve: { extensions: [".css", ".scss", ".js", ".svg", ".jsx"] },
   module: {

@@ -1,7 +1,6 @@
 import { Client } from "clearbit";
-import request from "request";
+import superagent from "superagent";
 import qs from "qs";
-import Promise from "bluebird";
 import { STATUS_CODES } from "http";
 
 const PROSPECTOR_API_VERSION = "2018-06-06";
@@ -9,43 +8,29 @@ const PROSPECTOR_API_VERSION = "2018-06-06";
 function ClearbitApi({ path, method = "get", params = {}, key, versioning }) {
   const baseUrl = `https://prospector.clearbit.com/v1${path}`;
   const url = `${baseUrl}?${qs.stringify(params, { arrayFormat: "brackets" })}`;
-  return new Promise((resolve, reject) => {
-    request(
-      url,
-      {
-        method,
-        headers: {
-          "content-type": "application/json",
-          accept: "application/json",
-          "API-Version": versioning
-        },
-        auth: { bearer: key }
-      },
-      (error, response, rawBody) => {
-        let body;
+  return superagent(method, url)
+    .set({
+      "content-type": "application/json",
+      accept: "application/json",
+      "API-Version": versioning
+    })
+    .auth(key, { type: "bearer" })
+    .then(response => {
+      let body;
 
-        try {
-          body = JSON.parse(rawBody);
-        } catch (err) {
-          body = {};
-        }
-        if (error) {
-          reject(error);
-        } else if (response.statusCode === 202 || response.statusCode >= 400) {
-          const message = body.error
-            ? body.error.message
-            : STATUS_CODES[response.statusCode] || "Unknown";
-          reject(new Error(message));
-        } else {
-          try {
-            resolve(body);
-          } catch (err) {
-            reject(err);
-          }
-        }
+      try {
+        body = JSON.parse(response.text);
+      } catch (err) {
+        body = {};
       }
-    );
-  });
+      if (response.statusCode === 202 || response.statusCode >= 400) {
+        const message = body.error
+          ? body.error.message
+          : STATUS_CODES[response.statusCode] || "Unknown";
+        throw new Error(message);
+      }
+      return body;
+    });
 }
 
 export default class ClearbitClient {

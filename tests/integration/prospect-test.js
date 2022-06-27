@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import _ from "lodash";
-import mockr from "hull-connector-dev/lib/mockr";
+import mockr from "hull-connector/dev/lib/mockr";
 import server from "../../server/server";
 
 describe("Clearbit API errors", () => {

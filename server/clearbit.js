@@ -15,6 +15,14 @@ import getUserTraitsFromPerson from "./clearbit/mapping";
 
 const FILTERED_ERRORS = ["unknown_ip"];
 
+function logSkip(asUser, action, reason, additionalData = {}) {
+  asUser.logger.debug("outgoing.user.skip", {
+    reason,
+    action,
+    additionalData
+  });
+}
+
 export default class Clearbit {
   constructor({ hull, ship, stream = false, hostSecret, metric, hostname }) {
     this.ship = ship;
@@ -41,14 +49,6 @@ export default class Clearbit {
       this.client = new Client(api_key, this.metric, this.hull);
     }
   }
-
-  logSkip = (asUser, action, reason, additionalData = {}) => {
-    asUser.logger.debug("outgoing.user.skip", {
-      reason,
-      action,
-      additionalData
-    });
-  };
 
   /** *********************************************************
    * Clearbit Enrichment
@@ -154,7 +154,7 @@ export default class Clearbit {
     })
       .then(({ should, reason }) => {
         if (!should) {
-          this.logSkip(asUser, "prospector", reason);
+          logSkip(asUser, "prospector", reason);
           // asUser.track( "Clearbit Prospector Triggered", { action: "skipped", reason }, { ip: 0 } );
           return false;
         }
@@ -245,10 +245,9 @@ export default class Clearbit {
             },
             { ip: 0 }
           );
-          asUser.traits(
-            { prospected_at: { value: now(), operation: "setIfNull" } },
-            { source: "clearbit" }
-          );
+          asUser.traits({
+            "clearbit/prospected_at": { value: now(), operation: "setIfNull" }
+          });
         }
         return response;
       })
@@ -346,12 +345,9 @@ export default class Clearbit {
             const discovered_similar_companies_at =
               user["traits_clearbit/discovered_similar_companies_at"];
             if (user.id && !discovered_similar_companies_at) {
-              this.hull.asUser(user.id).traits(
-                {
-                  discovered_similar_companies_at: now()
-                },
-                { source: "clearbit", sync: true }
-              );
+              this.hull
+                .asUser(user.id)
+                .traits({ "clearbit/discovered_similar_companies_at": now() });
             }
 
             return this.saveDiscoveredCompanies(results, domain);
