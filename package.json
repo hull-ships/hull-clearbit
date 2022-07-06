@@ -87,7 +87,7 @@
     "redux-promise": "^0.5.3",
     "redux-thunk": "^2.2.0",
     "request": "^2.83.0",
-    "select2": "^4.0.6-rc.1",
+    "select2": "^4.0.6",
     "sinon": "^4.2.0"
   },
   "devDependencies": {
