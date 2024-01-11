@@ -1,1 +1,12 @@
-<svg height="257" viewBox="0 0 257 257" width="257" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><circle cx="128.5" cy="128.5" fill="#4693f5" r="125.5"/><g fill="#fff" transform="translate(53 53)"><path d="m76 0h52.6c12.923463 0 23.4 10.4765369 23.4 23.4v52.6h-76z" opacity=".9"/><path d="m23.4 0h52.6v152h-52.6c-12.9234631 0-23.4-10.476537-23.4-23.4v-105.2c0-12.9234631 10.4765369-23.4 23.4-23.4z"/><path d="m76 76h76v52.6c0 12.923463-10.476537 23.4-23.4 23.4h-52.6z" opacity=".1"/></g></g></svg>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="257px" height="257px" viewBox="0 0 257 257" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 52.6 (67491) - http://www.bohemiancoding.com/sketch -->
+    <title>clearbit/logo</title>
+    <desc>Created with Sketch.</desc>
+    <g id="clearbit/logo" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <rect fill="#4693F5" x="0" y="0" width="257" height="257"></rect>
+        <path d="M129,53 L181.6,53 C194.523463,53 205,63.4765369 205,76.4 L205,129 L129,129 L129,53 Z" id="Rectangle-96-Copy-4" fill="#FFFFFF" opacity="0.900000036"></path>
+        <path d="M76.4,53 L129,53 L129,205 L76.4,205 C63.4765369,205 53,194.523463 53,181.6 L53,76.4 C53,63.4765369 63.4765369,53 76.4,53 Z" id="Rectangle-96" fill="#FFFFFF"></path>
+        <path d="M129,129 L205,129 L205,181.6 C205,194.523463 194.523463,205 181.6,205 L129,205 L129,129 Z" id="Rectangle-96-Copy-3" fill="#FFFFFF" opacity="0.100000001"></path>
+    </g>
+</svg>
